@@ -1,0 +1,48 @@
+package it.unibo;
+
+import java.util.concurrent.ConcurrentMap;
+import org.mapdb.Serializer;
+import org.mapdb.DB;
+
+public class UtenteDatabase {
+
+    private static final DB db = DatabaseCore.getDB();
+
+    /**
+     * Creiamo una collezione chiamata "utenti" che contiene coppie:
+     * - CHIAVE: String (l'email dell'utente)
+     * - VALORE: UtenteDTO (l'oggetto con i dati dell'utente)
+     * 
+     * Nota: Per serializzare l'oggetto UtenteDTO, MapDB usare Serializer.JAVA
+     */
+    private static final ConcurrentMap<String, UtenteDTO> utentiCollection =
+            db.hashMap(
+                "utenti",              // Nome della collezione nel DB
+                Serializer.STRING,     // Tipo della chiave (email)
+                Serializer.JAVA        // Tipo del valore (l'oggetto DTO serializzabile)
+            ).createOrOpen();
+
+    public static Boolean registraUtente(String email, UtenteDTO utente) {
+        // Controlli che i valori siano ammissibili
+        if (email == null || email.trim().isEmpty() || utente == null) {
+            return false;
+        }
+
+        // Controlliamo se l'utente esiste già (chiave già presente)
+        if (utentiCollection.containsKey(email)) {
+            return false; // Email già in uso
+        }
+
+        // Aggiungiamo l'utente alla mappa
+        utentiCollection.put(email, utente);
+
+        // commit per salvare i cambiamenti su disco
+        DatabaseCore.commit();
+
+        return true;
+    }
+
+    public static UtenteDTO getUtente(String email) {
+        return utentiCollection.get(email);
+    }
+}
