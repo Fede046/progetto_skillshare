@@ -31,4 +31,35 @@ public class UtenteDatabaseTest {
         boolean esitoDuplicato = UtenteDatabase.registra(utenteDuplicato);
         assertFalse(esitoDuplicato, "La registrazione con email già esistente deve fallire");
     }
+
+    @Test
+    void testLoginRiuscitoEErroreCredenziali() {
+        // 1.email unica e una password valida
+        String emailUnivoca = "login.test_" + System.currentTimeMillis() + "@unibo.it";
+        String passwordValida = "@Password123";
+
+        // Registriamo prima l'utente per poter fare il login
+        UtenteDTO utente = new UtenteDTO();
+        utente.setNome("Anna");
+        utente.setCognome("Neri");
+        utente.setEmail(emailUnivoca);
+        utente.setPassword(passwordValida);
+        UtenteDatabase.registra(utente);
+
+        // --- TEST 1: Login riuscito con credenziali corrette ---
+        boolean loginOK = UtenteDatabase.verificaCredenziali(emailUnivoca, passwordValida);
+        assertTrue(loginOK, "Il login con credenziali corrette deve avere successo");
+
+        // --- TEST 2: Errore "User not found" con email inesistente ---
+        Exception exceptionNotFound = assertThrows(IllegalArgumentException.class, () -> {
+            UtenteDatabase.verificaCredenziali("email.inesistente@unibo.it", passwordValida);
+        });
+        assertEquals("Utente non trovato", exceptionNotFound.getMessage());
+
+        // --- TEST 3: Errore "Wrong password" con password errata ---
+        Exception exceptionWrongPwd = assertThrows(IllegalArgumentException.class, () -> {
+            UtenteDatabase.verificaCredenziali(emailUnivoca, "PasswordErrata123!");
+        });
+        assertEquals("Password errata", exceptionWrongPwd.getMessage());
+    }
 }
