@@ -10,13 +10,29 @@ import java.nio.charset.StandardCharsets;
 public class UtenteDatabase {
 
     private static final DB db = DatabaseCore.getDB();
-    
+
     // Mappa per memorizzare gli utenti: Chiave = Email (String), Valore = UtenteDTO
     private static final ConcurrentMap<String, UtenteDTO> utentiCollection = db.hashMap(
             "utenti",
             Serializer.STRING,
-            Serializer.JAVA
-    ).createOrOpen();
+            Serializer.JAVA).createOrOpen();
+
+    static {
+        // Se la collezione è vuota, registriamo un utente di test valido
+        if (utentiCollection.isEmpty()) {
+            try {
+                UtenteDTO defaultUser = new UtenteDTO();
+                defaultUser.setEmail("test@unibo.it");
+                defaultUser.setPassword("Password123!");
+                defaultUser.setNome("Mario");
+                defaultUser.setCognome("Rossi");
+
+                registra(defaultUser);
+            } catch (Exception e) {
+                // Gestione silenziosa in fase di avvio
+            }
+        }
+    }
 
     /**
      * Registra un nuovo utente applicando l'hashing SHA-256 alla password.
@@ -34,25 +50,26 @@ public class UtenteDatabase {
             throw new IllegalArgumentException("Formato email non valido.");
         }
 
-        // 3. Controllo password 
+        // 3. Controllo password
         String regexPassword = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$";
 
         if (!utente.getPassword().matches(regexPassword)) {
-            throw new IllegalArgumentException("La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo speciale.");
+            throw new IllegalArgumentException(
+                    "La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo speciale.");
         }
 
-        // 4. Controllo email duplicata 
+        // 4. Controllo email duplicata
         if (utentiCollection.containsKey(email)) {
             return false; // Email già esistente, blocca il salvataggio
         }
 
-        // 5. Cifratura della password con SHA-256 
+        // 5. Cifratura della password con SHA-256
         String passwordCifrata = hashPassword(utente.getPassword());
         utente.setPassword(passwordCifrata);
 
         // 6. Salvataggio nel database MapDB e commit
         utentiCollection.put(email, utente);
-        DatabaseCore.commit(); 
+        DatabaseCore.commit();
 
         return true;
     }
@@ -67,7 +84,8 @@ public class UtenteDatabase {
             StringBuilder hexString = new StringBuilder();
             for (byte b : encodedhash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1)
+                    hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();
@@ -75,7 +93,6 @@ public class UtenteDatabase {
             throw new RuntimeException("Errore durante l'hashing della password", e);
         }
     }
-
 
     /**
      * Verifica le credenziali dell'utente per il login.
@@ -107,4 +124,5 @@ public class UtenteDatabase {
         // 5. Restituisce direttamente l'utente trovato!
         return utenteRegistrato;
     }
+
 }

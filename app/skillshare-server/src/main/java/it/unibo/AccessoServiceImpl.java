@@ -9,7 +9,11 @@ public class AccessoServiceImpl extends RemoteServiceServlet implements AccessoS
         try {
             return UtenteDatabase.verificaCredenziali(email, password);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException(e.getMessage());
+            // Invece di lanciare eccezioni (errore 500), restituiamo un DTO che porta il
+            // messaggio di errore nel campo "nome".
+            UtenteDTO erroreDto = new UtenteDTO();
+            erroreDto.setNome(e.getMessage());
+            return erroreDto;
         }
     }
 }

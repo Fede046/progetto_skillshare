@@ -85,27 +85,25 @@ public class LoginGui {
             accessoService.login(email, password, new AsyncCallback<UtenteDTO>() {
                 @Override
                 public void onFailure(Throwable caught) {
-                    // Mostra l'errore in rosso dentro la card invece dell'alert
-                    String errore = caught.getMessage();
-                    if ("User not found".equals(errore)) {
-                        errore = "Utente non trovato";
-                    } else if ("Wrong password".equals(errore)) {
-                        errore = "Password sbagliata";
-                    } else if (errore == null || errore.isEmpty()) {
-                        errore = "Errore durante il login. Riprova.";
-                    }
-                    messaggioErrore.setText(errore);
+                    // Questo ora scatta solo se cade la rete
+                    messaggioErrore.setText("Errore di connessione al server. Riprova più tardi.");
                 }
 
                 @Override
                 public void onSuccess(UtenteDTO utente) {
-                    // Login riuscito: reindirizza alla schermata del profilo
-                    RootPanel.get().clear();
-                    HTML profiloHTML = new HTML(
-                            "<h1 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Home / Profilo di "
-                                    + utente.getNome() + " " + utente.getCognome() + "</h1>" +
-                                    "<p style='text-align:center; color:#666;'>Email: " + utente.getEmail() + "</p>");
-                    RootPanel.get().add(profiloHTML);
+                    if ("User not found".equals(utente.getNome())) {
+                        messaggioErrore.setText("Utente non trovato");
+                    } else if ("Wrong password".equals(utente.getNome())) {
+                        messaggioErrore.setText("Password sbagliata");
+                    } else {
+                        RootPanel.get().clear();
+                        HTML profiloHTML = new HTML(
+                                "<h1 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Home / Profilo di "
+                                        + utente.getNome() + " " + utente.getCognome() + "</h1>" +
+                                        "<p style='text-align:center; color:#666;'>Email: " + utente.getEmail()
+                                        + "</p>");
+                        RootPanel.get().add(profiloHTML);
+                    }
                 }
             });
         });
