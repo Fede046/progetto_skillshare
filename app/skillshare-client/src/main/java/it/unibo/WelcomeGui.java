@@ -33,7 +33,7 @@ public class WelcomeGui {
         Button btnRegistrati = new Button("Registrati");
         stileBottone(btnRegistrati, "#4CAF50");
         btnRegistrati.addClickHandler(event -> {
-            // new RegistrazioneGui().mostra();
+            new RegistrazioneGui().mostra();
         });
 
         // Pulsante per il Login
