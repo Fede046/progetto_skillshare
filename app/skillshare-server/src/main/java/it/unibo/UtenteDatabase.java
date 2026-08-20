@@ -3,6 +3,7 @@ package it.unibo;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentMap;
 
 import org.mapdb.DB;
@@ -144,5 +145,37 @@ public class UtenteDatabase {
         }
 
         return utentiCollection.get(emailTrimmed);
+    }
+    /**
+     * Aggiorna bio, photoUrl e tagCompetenza di un utente preservandone credenziali e dati anagrafici.
+     * 
+     * @param utenteAggiornato UtenteDTO contenente le modifiche
+     * @return UtenteDTO aggiornato e salvato su MapDB
+     * @throws IllegalArgumentException se i dati sono null o l'utente non esiste
+     */
+    public static UtenteDTO aggiornaProfilo(UtenteDTO utenteAggiornato) throws IllegalArgumentException {
+        if (utenteAggiornato == null || utenteAggiornato.getEmail() == null || utenteAggiornato.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
+
+        String email = utenteAggiornato.getEmail().trim();
+
+        if (!utentiCollection.containsKey(email)) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        // Recupera l'utente esistente per preservare password, nome e cognome
+        UtenteDTO utenteEsistente = utentiCollection.get(email);
+
+        utenteEsistente.setBio(utenteAggiornato.getBio() != null ? utenteAggiornato.getBio() : "");
+        utenteEsistente.setPhotoUrl(utenteAggiornato.getPhotoUrl() != null ? utenteAggiornato.getPhotoUrl() : "");
+        utenteEsistente.setTagCompetenza(
+                utenteAggiornato.getTagCompetenza() != null ? new ArrayList<>(utenteAggiornato.getTagCompetenza()) : new ArrayList<>());
+
+        // Salvataggio e persistenza
+        utentiCollection.put(email, utenteEsistente);
+        DatabaseCore.commit();
+
+        return utenteEsistente;
     }
 }
