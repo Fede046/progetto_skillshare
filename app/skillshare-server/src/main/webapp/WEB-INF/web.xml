@@ -5,6 +5,14 @@
 
 	<!-- Servlets -->
    <servlet>
+    <servlet-name>accessoServlet</servlet-name>
+    <servlet-class>it.unibo.AccessoServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>accessoServlet</servlet-name>
+    <url-pattern>/app/accesso</url-pattern>
+  </servlet-mapping>
+   <servlet>
     <servlet-name>registrazioneServlet</servlet-name>
     <servlet-class>it.unibo.RegistrazioneServiceImpl</servlet-class>
   </servlet>

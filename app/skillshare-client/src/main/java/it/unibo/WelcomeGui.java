@@ -40,7 +40,7 @@ public class WelcomeGui {
         Button btnLogin = new Button("Login");
         stileBottone(btnLogin, "#008CBA");
         btnLogin.addClickHandler(event -> {
-            // new LoginGui().mostra();
+            new LoginGui().mostra();
         });
 
         // Add elementi alla card

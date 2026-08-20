@@ -17,6 +17,23 @@ public class UtenteDatabase {
             Serializer.STRING,
             Serializer.JAVA).createOrOpen();
 
+    static {
+        // Se la collezione è vuota, registriamo un utente di test valido
+        if (utentiCollection.isEmpty()) {
+            try {
+                UtenteDTO defaultUser = new UtenteDTO();
+                defaultUser.setEmail("test@unibo.it");
+                defaultUser.setPassword("Password123!");
+                defaultUser.setNome("Mario");
+                defaultUser.setCognome("Rossi");
+
+                registra(defaultUser);
+            } catch (Exception e) {
+                // Gestione silenziosa in fase di avvio
+            }
+        }
+    }
+
     /**
      * Registra un nuovo utente applicando l'hashing SHA-256 alla password.
      */
@@ -81,7 +98,7 @@ public class UtenteDatabase {
      * Verifica le credenziali dell'utente per il login.
      * Cifra la password inserita con SHA-256 e la confronta con quella salvata.
      */
-    public static boolean verificaCredenziali(String email, String password) throws IllegalArgumentException {
+    public static UtenteDTO verificaCredenziali(String email, String password) throws IllegalArgumentException {
         if (email == null || password == null) {
             throw new IllegalArgumentException("Dati non validi");
         }
@@ -90,7 +107,7 @@ public class UtenteDatabase {
 
         // 1. Controlla se l'utente esiste
         if (!utentiCollection.containsKey(emailTrimmed)) {
-            throw new IllegalArgumentException("Utente non trovato");
+            throw new IllegalArgumentException("User not found");
         }
 
         // 2. Recupera l'utente dal database
@@ -101,9 +118,11 @@ public class UtenteDatabase {
 
         // 4. Confronta l'hash calcolato con quello salvato
         if (!passwordCifrata.equals(utenteRegistrato.getPassword())) {
-            throw new IllegalArgumentException("Password errata");
+            throw new IllegalArgumentException("Wrong password");
         }
 
-        return true; // Credenziali corrette!
+        // 5. Restituisce direttamente l'utente trovato!
+        return utenteRegistrato;
     }
+
 }
