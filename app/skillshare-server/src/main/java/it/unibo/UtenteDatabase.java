@@ -1,11 +1,12 @@
 package it.unibo;
 
-import org.mapdb.DB;
-import org.mapdb.Serializer;
-import java.util.concurrent.ConcurrentMap;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ConcurrentMap;
+
+import org.mapdb.DB;
+import org.mapdb.Serializer;
 
 public class UtenteDatabase {
 
@@ -124,5 +125,24 @@ public class UtenteDatabase {
         // 5. Restituisce direttamente l'utente trovato!
         return utenteRegistrato;
     }
+    /**
+     * Recupera un utente dal database tramite email per la visualizzazione del profilo.
+     * 
+     * @param email L'indirizzo email dell'utente da recuperare
+     * @return L'oggetto UtenteDTO corrispondente
+     * @throws IllegalArgumentException Se l'email è nulla/vuota o se l'utente non esiste
+     */
+    public static UtenteDTO getProfilo(String email) throws IllegalArgumentException {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
 
+        String emailTrimmed = email.trim();
+
+        if (!utentiCollection.containsKey(emailTrimmed)) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        return utentiCollection.get(emailTrimmed);
+    }
 }
