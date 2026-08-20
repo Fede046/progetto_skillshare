@@ -34,9 +34,11 @@ public class UtenteDatabase {
             throw new IllegalArgumentException("Formato email non valido.");
         }
 
-        // 3. Controllo lunghezza password 
-        if (utente.getPassword().length() < 8) {
-            throw new IllegalArgumentException("La password deve essere di almeno 8 caratteri.");
+        // 3. Controllo password 
+        String regexPassword = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$";
+
+        if (!utente.getPassword().matches(regexPassword)) {
+            throw new IllegalArgumentException("La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo speciale.");
         }
 
         // 4. Controllo email duplicata 

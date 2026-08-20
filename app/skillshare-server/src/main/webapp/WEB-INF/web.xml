@@ -4,6 +4,14 @@
   version="5.0">
 
 	<!-- Servlets -->
+   <servlet>
+    <servlet-name>registrazioneServlet</servlet-name>
+    <servlet-class>it.unibo.RegistrazioneServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>registrazioneServlet</servlet-name>
+    <url-pattern>/app/registrazione</url-pattern>
+  </servlet-mapping>
   <servlet>
     <servlet-name>greetServlet</servlet-name>
     <servlet-class>it.unibo.GreetingServiceImpl</servlet-class>

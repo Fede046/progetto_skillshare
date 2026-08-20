@@ -7,12 +7,15 @@ public class UtenteDatabaseTest {
 
     @Test
     void testRegistrazioneEControlloDuplicati() {
+        // email unica usando il timestamp attuale per evitare conflitti nei test
+        String emailUnivoca = "mario.rossi_" + System.currentTimeMillis() + "@unibo.it";
+
         // 1. Creiamo un DTO con dati validi
         UtenteDTO utente = new UtenteDTO();
         utente.setNome("Mario");
         utente.setCognome("Rossi");
-        utente.setEmail("mario.rossi@unibo.it");
-        utente.setPassword("password123");
+        utente.setEmail(emailUnivoca);
+        utente.setPassword("@Password123");
 
         // 2. Registriamo l'utente
         boolean esito = UtenteDatabase.registra(utente);
@@ -22,8 +25,8 @@ public class UtenteDatabaseTest {
         UtenteDTO utenteDuplicato = new UtenteDTO();
         utenteDuplicato.setNome("Luigi");
         utenteDuplicato.setCognome("Verdi");
-        utenteDuplicato.setEmail("mario.rossi@unibo.it"); // Stessa email
-        utenteDuplicato.setPassword("altrapassword123");
+        utenteDuplicato.setEmail(emailUnivoca);
+        utenteDuplicato.setPassword("@Password123");
 
         boolean esitoDuplicato = UtenteDatabase.registra(utenteDuplicato);
         assertFalse(esitoDuplicato, "La registrazione con email già esistente deve fallire");
