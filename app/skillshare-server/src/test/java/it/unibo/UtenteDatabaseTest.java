@@ -47,19 +47,38 @@ public class UtenteDatabaseTest {
         UtenteDatabase.registra(utente);
 
         // --- TEST 1: Login riuscito con credenziali corrette ---
-        boolean loginOK = UtenteDatabase.verificaCredenziali(emailUnivoca, passwordValida);
-        assertTrue(loginOK, "Il login con credenziali corrette deve avere successo");
+        UtenteDTO loginOK = UtenteDatabase.verificaCredenziali(emailUnivoca, passwordValida);
+        assertNotNull(loginOK, "Il login con credenziali corrette deve avere successo");
 
         // --- TEST 2: Errore "User not found" con email inesistente ---
         Exception exceptionNotFound = assertThrows(IllegalArgumentException.class, () -> {
             UtenteDatabase.verificaCredenziali("email.inesistente@unibo.it", passwordValida);
         });
-        assertEquals("Utente non trovato", exceptionNotFound.getMessage());
+        assertEquals("User not found", exceptionNotFound.getMessage());
 
         // --- TEST 3: Errore "Wrong password" con password errata ---
         Exception exceptionWrongPwd = assertThrows(IllegalArgumentException.class, () -> {
             UtenteDatabase.verificaCredenziali(emailUnivoca, "PasswordErrata123!");
         });
-        assertEquals("Password errata", exceptionWrongPwd.getMessage());
+        assertEquals("Wrong password", exceptionWrongPwd.getMessage());
+    }
+    @Test
+    void testVerificaCredenzialiRestituisceUtente() {
+        String emailUnivoca = "test.login_" + System.currentTimeMillis() + "@unibo.it";
+        
+        // 1. Registriamo un utente
+        UtenteDTO utente = new UtenteDTO();
+        utente.setNome("Giulia");
+        utente.setCognome("Bianchi");
+        utente.setEmail(emailUnivoca);
+        utente.setPassword("@Password123");
+        UtenteDatabase.registra(utente);
+
+        // 2. Verifichiamo che il login restituisca l'UtenteDTO corretto
+        UtenteDTO utenteLoggato = UtenteDatabase.verificaCredenziali(emailUnivoca, "@Password123");
+        
+        assertNotNull(utenteLoggato, "L'utente loggato non deve essere null");
+        assertEquals("Giulia", utenteLoggato.getNome(), "Il nome dell'utente deve corrispondere");
+        assertEquals(emailUnivoca, utenteLoggato.getEmail(), "L'email deve corrispondere");
     }
 }

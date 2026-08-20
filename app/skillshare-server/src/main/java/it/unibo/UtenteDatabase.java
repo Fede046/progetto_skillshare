@@ -10,12 +10,13 @@ import java.nio.charset.StandardCharsets;
 public class UtenteDatabase {
 
     private static final DB db = DatabaseCore.getDB();
-
+    
     // Mappa per memorizzare gli utenti: Chiave = Email (String), Valore = UtenteDTO
     private static final ConcurrentMap<String, UtenteDTO> utentiCollection = db.hashMap(
             "utenti",
             Serializer.STRING,
-            Serializer.JAVA).createOrOpen();
+            Serializer.JAVA
+    ).createOrOpen();
 
     /**
      * Registra un nuovo utente applicando l'hashing SHA-256 alla password.
@@ -33,26 +34,25 @@ public class UtenteDatabase {
             throw new IllegalArgumentException("Formato email non valido.");
         }
 
-        // 3. Controllo password
+        // 3. Controllo password 
         String regexPassword = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$";
 
         if (!utente.getPassword().matches(regexPassword)) {
-            throw new IllegalArgumentException(
-                    "La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo speciale.");
+            throw new IllegalArgumentException("La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo speciale.");
         }
 
-        // 4. Controllo email duplicata
+        // 4. Controllo email duplicata 
         if (utentiCollection.containsKey(email)) {
             return false; // Email già esistente, blocca il salvataggio
         }
 
-        // 5. Cifratura della password con SHA-256
+        // 5. Cifratura della password con SHA-256 
         String passwordCifrata = hashPassword(utente.getPassword());
         utente.setPassword(passwordCifrata);
 
         // 6. Salvataggio nel database MapDB e commit
         utentiCollection.put(email, utente);
-        DatabaseCore.commit();
+        DatabaseCore.commit(); 
 
         return true;
     }
@@ -67,8 +67,7 @@ public class UtenteDatabase {
             StringBuilder hexString = new StringBuilder();
             for (byte b : encodedhash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1)
-                    hexString.append('0');
+                if (hex.length() == 1) hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();
@@ -77,11 +76,12 @@ public class UtenteDatabase {
         }
     }
 
+
     /**
      * Verifica le credenziali dell'utente per il login.
      * Cifra la password inserita con SHA-256 e la confronta con quella salvata.
      */
-    public static boolean verificaCredenziali(String email, String password) throws IllegalArgumentException {
+    public static UtenteDTO verificaCredenziali(String email, String password) throws IllegalArgumentException {
         if (email == null || password == null) {
             throw new IllegalArgumentException("Dati non validi");
         }
@@ -90,7 +90,7 @@ public class UtenteDatabase {
 
         // 1. Controlla se l'utente esiste
         if (!utentiCollection.containsKey(emailTrimmed)) {
-            throw new IllegalArgumentException("Utente non trovato");
+            throw new IllegalArgumentException("User not found");
         }
 
         // 2. Recupera l'utente dal database
@@ -101,9 +101,10 @@ public class UtenteDatabase {
 
         // 4. Confronta l'hash calcolato con quello salvato
         if (!passwordCifrata.equals(utenteRegistrato.getPassword())) {
-            throw new IllegalArgumentException("Password errata");
+            throw new IllegalArgumentException("Wrong password");
         }
 
-        return true; // Credenziali corrette!
+        // 5. Restituisce direttamente l'utente trovato!
+        return utenteRegistrato;
     }
 }
