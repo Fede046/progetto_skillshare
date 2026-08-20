@@ -10,4 +10,13 @@ public class ProfileServiceImpl extends RemoteServiceServlet implements ProfileS
     public UtenteDTO getProfilo(String email) throws IllegalArgumentException {
         return UtenteDatabase.getProfilo(email);
     }
+
+    @Override
+    public UtenteDTO updateProfile(UtenteDTO utente) throws IllegalArgumentException {
+        if (utente == null) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
+        // Delega la persistenza e l'aggiornamento a UtenteDatabase
+        return UtenteDatabase.aggiornaProfilo(utente);
+    }
 }
