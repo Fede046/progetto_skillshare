@@ -82,8 +82,7 @@ public class ProfiloGui {
 
         Button btnModifica = new Button("Modifica Profilo");
         btnModifica.addClickHandler(event -> {
-            // Predisposto per la US-5 (Modifica Profilo)
-            // new ModificaProfiloGui(utente).mostra();
+            new ModificaProfiloGui(utente).mostra();
         });
         btnModifica.addStyleName("btn-primary");
         buttonPanel.add(btnModifica);
