@@ -96,13 +96,8 @@ public class LoginGui {
                     } else if ("Wrong password".equals(utente.getNome())) {
                         messaggioErrore.setText("Password sbagliata");
                     } else {
-                        RootPanel.get().clear();
-                        HTML profiloHTML = new HTML(
-                                "<h1 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Home / Profilo di "
-                                        + utente.getNome() + " " + utente.getCognome() + "</h1>" +
-                                        "<p style='text-align:center; color:#666;'>Email: " + utente.getEmail()
-                                        + "</p>");
-                        RootPanel.get().add(profiloHTML);
+                        // Login riuscito: mostra la pagina del profilo dell'utente
+                        new ProfiloGui(utente).mostra();
                     }
                 }
             });

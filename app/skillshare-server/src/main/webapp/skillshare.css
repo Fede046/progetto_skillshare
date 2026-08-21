@@ -32,3 +32,145 @@ h1 {
 #closeButton {
   margin: 15px 6px 6px;
 }
+
+/* ============================================================
+   Profilo utente (ProfileGui / ModificaProfiloGui)
+   ============================================================ */
+
+/* Contenitore del form di modifica profilo */
+.profile-container {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  margin: 80px auto 40px auto;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.profile-container h2 {
+  color: #333333;
+  font-size: 24px;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+/* VerticalPanel di GWT genera una <table>: le celle occupano tutta la larghezza */
+.profile-container > tbody > tr > td {
+  width: 100%;
+}
+
+/* Etichette dei campi del form */
+.form-label {
+  display: block;
+  color: #333333;
+  font-size: 14px;
+  font-weight: bold;
+  margin: 15px 0 6px 0;
+}
+
+/* Campi di input del form profilo */
+.profile-container input[type="text"],
+.profile-container textarea {
+  padding: 10px;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: sans-serif;
+}
+
+/* Testo della biografia / messaggi segnaposto */
+.profile-bio {
+  color: #888888;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Foto profilo e placeholder con le iniziali */
+.profile-avatar-wrapper {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.profile-avatar {
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Cerchio con le iniziali mostrato quando la foto non è caricata */
+.profile-avatar-placeholder {
+  background-color: #008CBA;
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: bold;
+  line-height: 100px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Contenitore dei badge delle competenze */
+.tag-badges-container {
+  margin-top: 8px;
+  min-height: 30px;
+}
+
+/* Singolo badge competenza */
+.skill-badge {
+  display: inline-block;
+  background-color: #e3f2fd;
+  color: #0d47a1;
+  border: 1px solid #90caf9;
+  border-radius: 15px;
+  padding: 5px 12px;
+  margin: 0 6px 6px 0;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+/* Pulsante 'x' per rimuovere un tag nel form di modifica */
+.badge-remove-btn {
+  background: none;
+  background-image: none;
+  border: none;
+  color: #0d47a1;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1;
+  margin-left: 6px;
+  padding: 0;
+}
+
+.badge-remove-btn:hover {
+  color: #f44336;
+}
+
+/* Pulsanti azione del form */
+.btn-primary,
+.btn-secondary {
+  background-image: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 10px 20px;
+}
+
+.btn-primary {
+  background-color: #4CAF50;
+  border: none;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  border: 1px solid #cccccc;
+  color: #333333;
+}

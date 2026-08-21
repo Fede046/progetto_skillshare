@@ -104,7 +104,7 @@ public class ModificaProfiloGui {
         btnAnnulla.addStyleName("btn-secondary");
         btnAnnulla.addClickHandler(event -> {
             // Ritorna alla schermata profilo scartando le modifiche
-            new ProfiloGui(utente).mostra();
+            tornaAlProfilo(utente);
         });
 
         buttonPanel.add(btnSalva);
@@ -161,15 +161,34 @@ public class ModificaProfiloGui {
         profileService.updateProfile(utenteModificato, new AsyncCallback<UtenteDTO>() {
             @Override
             public void onFailure(Throwable caught) {
+                // Il salvataggio e' fallito: restiamo sul form per non perdere
+                // le modifiche gia' inserite dall'utente.
                 Window.alert("Errore durante il salvataggio: " + caught.getMessage());
             }
 
             @Override
             public void onSuccess(UtenteDTO result) {
                 Window.alert("Profilo aggiornato con successo!");
-                // Ritorna alla schermata del profilo visualizzando i nuovi dati
-                new ProfiloGui(result).mostra();
+                // Ritorna alla schermata del profilo visualizzando i nuovi dati.
+                // Se il server non restituisce l'utente, usiamo i dati locali
+                // appena inviati: cosi' la pagina non resta mai vuota.
+                tornaAlProfilo(result != null ? result : utenteModificato);
             }
         });
+    }
+
+    /**
+     * Unico punto di uscita verso la schermata del profilo, usato sia da
+     * "Annulla" sia dal salvataggio.
+     *
+     * <p>Se il profilo da mostrare fosse nullo si ricade sull'utente ricevuto
+     * nel costruttore: {@link ProfiloGui} viene sempre costruita con dati
+     * validi e la pagina non puo' quindi rimanere bianca.</p>
+     *
+     * @param daMostrare il profilo da visualizzare, eventualmente nullo
+     */
+    private void tornaAlProfilo(UtenteDTO daMostrare) {
+        UtenteDTO profilo = (daMostrare != null) ? daMostrare : utente;
+        new ProfiloGui(profilo).mostra();
     }
 }
