@@ -114,11 +114,7 @@ public class RegistrazioneGui {
                 public void onSuccess(Boolean success) {
                     if (success) {
                         // Reindirizzamento al profilo in caso di successo
-                        RootPanel.get().clear();
-                        HTML profiloHTML = new HTML(
-                                "<h1 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Benvenuto nel tuo Profilo, "
-                                        + nuovoUtente.getEmail() + "!</h1>");
-                        RootPanel.get().add(profiloHTML);
+                        new LoginGui().mostra();
 
                     } else {
                         // Errore in rosso se l'email risulta già registrata
