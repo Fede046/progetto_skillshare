@@ -1,5 +1,20 @@
 /** Add css rules here for your application. */
 
+/* ============================================================
+   Palette Skillshare
+   Bordeaux = colore primario, grigi = testo/bordi/sfondi
+   ============================================================ */
+:root {
+  --bordeaux: #6E1E2B;
+  --bordeaux-scuro: #57161F;
+  --bordeaux-chiaro: #8B2B3A;
+  --grigio-testo: #4A4A4A;
+  --grigio-neutro: #E8E8E8;
+  --bordeaux-velo: #F5EDEE;
+  --grigio-bordo: #d5d5d5;
+  --grigio-chiaro: #f7f7f7;
+  --bianco: #ffffff;
+}
 
 /** Example rules used by the template application (remove for your app) */
 h1 {
@@ -34,26 +49,179 @@ h1 {
 }
 
 /* ============================================================
-   Profilo utente (ProfileGui / ModificaProfiloGui)
+   Barra di navigazione orizzontale (schermate post-login)
    ============================================================ */
+
+.app-navbar {
+  display: flex;
+  align-items: stretch;
+  background-color: var(--bordeaux);
+  padding: 0 24px;
+  min-height: 58px;
+  font-family: sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.app-navbar-brand {
+  display: flex;
+  align-items: center;
+  color: var(--bianco);
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  margin-right: 36px;
+  white-space: nowrap;
+}
+
+/* Contenitore delle voci di menu: per aggiungerne una in futuro
+   basta inserire un altro widget qui dentro, il layout non cambia */
+.app-navbar-sezioni {
+  display: flex;
+  align-items: stretch;
+  flex-grow: 1;
+}
+
+.app-nav-item {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  padding: 0 18px;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.app-nav-item-attivo {
+  color: var(--bianco);
+  font-weight: bold;
+  border-bottom-color: var(--bianco);
+}
+
+/* Nome utente e logout, allineati a destra */
+.app-navbar-utente {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.btn-navbar {
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  color: var(--bianco);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 7px 14px;
+}
+
+.btn-navbar:hover {
+  background-color: var(--bordeaux-chiaro);
+}
+
+/* Contenitore del contenuto sotto la barra */
+.app-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 24px 48px 24px;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+/* ============================================================
+   Profilo utente (ProfiloGui / ModificaProfiloGui)
+   ============================================================ */
+
+/* Card bianca generica */
+.profile-card {
+  background-color: var(--bianco);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-sizing: border-box;
+}
+
+/* Intestazione: avatar e dati anagrafici affiancati */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.profile-header-dati {
+  flex: 1 1 280px;
+}
+
+.profile-nome {
+  color: var(--bordeaux);
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.profile-email {
+  color: var(--grigio-testo);
+  font-size: 14px;
+}
+
+/* Nell'intestazione i dati sono allineati in basso, accanto all'avatar */
+.profile-hero-riga .profile-header-dati {
+  padding-bottom: 6px;
+}
+
+/* Bio e competenze affiancate su due colonne */
+.profile-colonne {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.profile-colonna {
+  flex: 1 1 300px;
+}
+
+.profile-sezione-titolo {
+  color: var(--bordeaux);
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--grigio-neutro);
+}
+
+.profile-testo {
+  color: var(--grigio-testo);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
 
 /* Contenitore del form di modifica profilo */
 .profile-container {
-  background-color: #ffffff;
+  background-color: var(--bianco);
   padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  width: 400px;
-  margin: 80px auto 40px auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  width: 520px;
+  max-width: 100%;
+  margin: 0 auto;
   box-sizing: border-box;
   font-family: sans-serif;
 }
 
 .profile-container h2 {
-  color: #333333;
-  font-size: 24px;
+  color: var(--bordeaux);
+  font-size: 22px;
   margin: 0 0 20px 0;
-  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--grigio-neutro);
 }
 
 /* VerticalPanel di GWT genera una <table>: le celle occupano tutta la larghezza */
@@ -64,7 +232,7 @@ h1 {
 /* Etichette dei campi del form */
 .form-label {
   display: block;
-  color: #333333;
+  color: var(--grigio-testo);
   font-size: 14px;
   font-weight: bold;
   margin: 15px 0 6px 0;
@@ -74,16 +242,24 @@ h1 {
 .profile-container input[type="text"],
 .profile-container textarea {
   padding: 10px;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--grigio-bordo);
   border-radius: 5px;
   box-sizing: border-box;
   font-size: 14px;
   font-family: sans-serif;
+  color: var(--grigio-testo);
+}
+
+.profile-container input[type="text"]:focus,
+.profile-container textarea:focus {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3px rgba(110, 30, 43, 0.12);
+  outline: none;
 }
 
 /* Testo della biografia / messaggi segnaposto */
 .profile-bio {
-  color: #888888;
+  color: #8a8a8a;
   font-size: 14px;
   font-style: italic;
 }
@@ -91,26 +267,25 @@ h1 {
 /* Foto profilo e placeholder con le iniziali */
 .profile-avatar-wrapper {
   text-align: center;
-  margin-bottom: 10px;
 }
 
 .profile-avatar {
   display: inline-block;
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #ffffff;
+  border: 3px solid var(--bianco);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Cerchio con le iniziali mostrato quando la foto non è caricata */
+/* Cerchio con le iniziali mostrato quando la foto non e' caricata */
 .profile-avatar-placeholder {
-  background-color: #008CBA;
-  color: #ffffff;
-  font-size: 36px;
+  background-color: var(--bordeaux);
+  color: var(--bianco);
+  font-size: 38px;
   font-weight: bold;
-  line-height: 100px;
+  line-height: 110px;
   text-align: center;
   box-sizing: border-box;
 }
@@ -124,53 +299,212 @@ h1 {
 /* Singolo badge competenza */
 .skill-badge {
   display: inline-block;
-  background-color: #e3f2fd;
-  color: #0d47a1;
-  border: 1px solid #90caf9;
-  border-radius: 15px;
-  padding: 5px 12px;
-  margin: 0 6px 6px 0;
+  background-color: var(--bordeaux-velo);
+  color: var(--bordeaux);
+  border: 1px solid #e2cfd2;
+  border-radius: 999px;
+  padding: 6px 14px;
+  margin: 0 8px 8px 0;
   font-size: 13px;
+  font-weight: 500;
   vertical-align: middle;
 }
 
+/* ============================================================
+   Pulsanti: una base comune, tre varianti
+   Il selettore include il tag button per vincere sul tema Clean di GWT
+   ============================================================ */
+
+button.btn-primary,
+button.btn-secondary,
+button.btn-navbar {
+  background-image: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 11px 20px;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+button.btn-primary:active,
+button.btn-secondary:active,
+button.btn-navbar:active {
+  transform: translateY(1px);
+}
+
+/* Azione principale */
+button.btn-primary {
+  background-color: var(--bordeaux);
+  border: 1px solid var(--bordeaux);
+  color: var(--bianco);
+  box-shadow: 0 1px 2px rgba(110, 30, 43, 0.25);
+}
+
+button.btn-primary:hover {
+  background-color: var(--bordeaux-scuro);
+  border-color: var(--bordeaux-scuro);
+  box-shadow: 0 3px 8px rgba(110, 30, 43, 0.3);
+}
+
+button.btn-primary:focus-visible {
+  outline: 2px solid var(--bordeaux);
+  outline-offset: 2px;
+}
+
+/* Azione secondaria: neutra a riposo, bordeaux al passaggio del mouse */
+button.btn-secondary {
+  background-color: var(--bianco);
+  border: 1px solid var(--grigio-bordo);
+  color: var(--grigio-testo);
+}
+
+button.btn-secondary:hover {
+  background-color: var(--bordeaux-velo);
+  border-color: var(--bordeaux);
+  color: var(--bordeaux);
+}
+
+button.btn-secondary:focus-visible {
+  outline: 2px solid var(--bordeaux);
+  outline-offset: 2px;
+}
+
+/* Variante compatta, per le azioni dentro un campo */
+button.btn-sm {
+  font-size: 13px;
+  padding: 8px 14px;
+}
+
+/* Pulsante sulla barra bordeaux */
+button.btn-navbar {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: var(--bianco);
+  font-size: 13px;
+  padding: 8px 16px;
+}
+
+button.btn-navbar:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: var(--bianco);
+}
+
+button.btn-navbar:focus-visible {
+  outline: 2px solid var(--bianco);
+  outline-offset: 2px;
+}
+
 /* Pulsante 'x' per rimuovere un tag nel form di modifica */
-.badge-remove-btn {
+button.badge-remove-btn {
   background: none;
   background-image: none;
   border: none;
-  color: #0d47a1;
+  border-radius: 50%;
+  color: var(--bordeaux);
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
+  height: 18px;
   line-height: 1;
-  margin-left: 6px;
+  margin-left: 8px;
+  opacity: 0.55;
   padding: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  vertical-align: middle;
+  width: 18px;
 }
 
-.badge-remove-btn:hover {
-  color: #f44336;
+button.badge-remove-btn:hover {
+  background-color: var(--bordeaux);
+  color: var(--bianco);
+  opacity: 1;
 }
 
-/* Pulsanti azione del form */
-.btn-primary,
-.btn-secondary {
-  background-image: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: bold;
-  padding: 10px 20px;
+button.badge-remove-btn:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--bordeaux);
+  outline-offset: 1px;
 }
 
-.btn-primary {
-  background-color: #4CAF50;
-  border: none;
-  color: #ffffff;
+/* Chi preferisce meno animazioni non ne vede nessuna */
+@media (prefers-reduced-motion: reduce) {
+  button.btn-primary,
+  button.btn-secondary,
+  button.btn-navbar,
+  button.badge-remove-btn {
+    transition: none;
+  }
+  button.btn-primary:active,
+  button.btn-secondary:active,
+  button.btn-navbar:active {
+    transform: none;
+  }
 }
 
-.btn-secondary {
-  background-color: #f0f0f0;
-  border: 1px solid #cccccc;
-  color: #333333;
+/* ============================================================
+   Intestazione del profilo: fascia bordeaux e avatar sovrapposto
+   ============================================================ */
+
+.profile-hero {
+  background-color: var(--bianco);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.profile-hero-banda {
+  background: linear-gradient(135deg, var(--bordeaux) 0%, var(--bordeaux-chiaro) 100%);
+  height: 92px;
+}
+
+.profile-hero-corpo {
+  padding: 0 28px 26px 28px;
+}
+
+.profile-hero-riga {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Fa scavalcare la fascia all'avatar */
+.profile-hero-avatar {
+  margin-top: -52px;
+}
+
+.profile-hero-azioni {
+  padding-bottom: 4px;
+}
+
+/* ============================================================
+   Righe del form di modifica
+   ============================================================ */
+
+/* Campo + pulsante affiancati */
+.profile-form-riga {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.profile-form-riga input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Azioni in fondo al form, separate dal contenuto */
+.profile-form-azioni {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--grigio-neutro);
 }
