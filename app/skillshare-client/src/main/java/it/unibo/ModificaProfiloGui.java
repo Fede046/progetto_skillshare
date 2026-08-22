@@ -1,12 +1,12 @@
 package it.unibo;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextArea;
@@ -36,6 +36,14 @@ public class ModificaProfiloGui {
 
     public void mostra() {
         RootPanel.get().clear();
+
+        FlowPanel pagina = new FlowPanel();
+
+        // Stessa barra di ProfiloGui: Modifica Profilo e' una sotto-schermata di Profilo
+        pagina.add(new NavBar(utente, NavBar.SEZIONE_PROFILO).getWidget());
+
+        FlowPanel contenuto = new FlowPanel();
+        contenuto.addStyleName("app-page");
 
         VerticalPanel formContainer = new VerticalPanel();
         formContainer.addStyleName("profile-container");
@@ -69,11 +77,13 @@ public class ModificaProfiloGui {
         formContainer.add(lblTags);
 
         // Form per aggiungere un nuovo Tag
-        HorizontalPanel addTagPanel = new HorizontalPanel();
-        addTagPanel.setSpacing(5);
+        FlowPanel addTagPanel = new FlowPanel();
+        addTagPanel.addStyleName("profile-form-riga");
 
         newTagBox.getElement().setAttribute("placeholder", "Es. Java, GWT, SQL");
         Button btnAddTag = new Button("Aggiungi Tag");
+        btnAddTag.addStyleName("btn-secondary");
+        btnAddTag.addStyleName("btn-sm");
         btnAddTag.addClickHandler(event -> {
             String tag = newTagBox.getText().trim();
             if (!tag.isEmpty() && !tagList.contains(tag)) {
@@ -93,8 +103,8 @@ public class ModificaProfiloGui {
         renderTags();
 
         // Pulsanti Azione (Salva / Annulla)
-        HorizontalPanel buttonPanel = new HorizontalPanel();
-        buttonPanel.setSpacing(10);
+        FlowPanel buttonPanel = new FlowPanel();
+        buttonPanel.addStyleName("profile-form-azioni");
 
         Button btnSalva = new Button("Salva Modifiche");
         btnSalva.addStyleName("btn-primary");
@@ -107,11 +117,18 @@ public class ModificaProfiloGui {
             tornaAlProfilo(utente);
         });
 
-        buttonPanel.add(btnSalva);
         buttonPanel.add(btnAnnulla);
+        buttonPanel.add(btnSalva);
         formContainer.add(buttonPanel);
 
-        RootPanel.get().add(formContainer);
+        contenuto.add(formContainer);
+        pagina.add(contenuto);
+        RootPanel.get().add(pagina);
+
+        // Stessa base grafica di ProfiloGui
+        Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
+        Document.get().getBody().getStyle().setProperty("margin", "0");
+        Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
     }
 
     /**

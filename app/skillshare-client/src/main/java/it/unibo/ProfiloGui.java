@@ -1,12 +1,11 @@
 package it.unibo;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class ProfiloGui {
@@ -19,97 +18,142 @@ public class ProfiloGui {
     }
 
     public void mostra() {
-        // Pannello principale (Card centrale)
-        VerticalPanel card = new VerticalPanel();
-        card.setSpacing(20);
+        FlowPanel pagina = new FlowPanel();
 
-        // CSS per centrare la card (identico a WelcomeGui)
-        card.getElement().getStyle().setProperty("backgroundColor", "#ffffff");
-        card.getElement().getStyle().setProperty("padding", "40px");
-        card.getElement().getStyle().setProperty("borderRadius", "10px");
-        card.getElement().getStyle().setProperty("boxShadow", "0 4px 15px rgba(0, 0, 0, 0.1)");
-        card.getElement().getStyle().setProperty("width", "350px");
-        card.getElement().getStyle().setProperty("marginLeft", "auto");
-        card.getElement().getStyle().setProperty("marginRight", "auto");
-        card.getElement().getStyle().setProperty("marginTop", "100px");
-        card.getElement().getStyle().setProperty("textAlign", "center");
+        // Barra di navigazione orizzontale: questa e' la home dopo il login
+        pagina.add(new NavBar(utente, NavBar.SEZIONE_PROFILO).getWidget());
 
-        // Titolo
-        HTML titolo = new HTML(
-                "<h1 style='color: #333333; font-size: 28px; margin: 0 0 10px 0; font-family: sans-serif;'>Il tuo Profilo</h1>"
-        );
-
-        // SPAZIO APPOSITO PER I MESSAGGI (sostituisce gli alert)
-        HTML messaggioSpazio = new HTML();
-        messaggioSpazio.getElement().getStyle().setProperty("fontSize", "14px");
-        messaggioSpazio.getElement().getStyle().setProperty("textAlign", "center");
-        messaggioSpazio.getElement().getStyle().setProperty("minHeight", "20px"); // Mantiene lo spazio anche se vuoto
-        messaggioSpazio.getElement().getStyle().setProperty("marginBottom", "15px");
-
-        // Foto profilo (o placeholder con le iniziali se non caricata)
-        Widget avatar = creaAvatar();
-
-        // Riepilogo dati utente
-        HTML datiUtente = new HTML(
-                "<div style='color: #666666; font-size: 15px; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;'>" +
-                "<b>Nome:</b> " + utente.getNome() + "<br><br>" +
-                "<b>Cognome:</b> " + utente.getCognome() + "<br><br>" +
-                "<b>Email:</b> " + utente.getEmail() +
-                "</div>"
-        );
-
-        // Biografia: se assente mostra un testo segnaposto
-        String bio = utente.getBio();
-        boolean bioPresente = bio != null && !bio.trim().isEmpty();
-        HTML sezioneBio = new HTML(
-                "<div style='text-align: left; margin-bottom: 20px;'>" +
-                "<b style='color: #333333; font-size: 14px;'>Biografia</b>" +
-                "<p style='color: " + (bioPresente ? "#666666" : "#aaaaaa") + "; font-size: 14px; " +
-                "font-style: " + (bioPresente ? "normal" : "italic") + "; margin: 8px 0 0 0; white-space: pre-wrap;'>" +
-                (bioPresente ? bio : "Nessuna biografia inserita.") + "</p>" +
-                "</div>"
-        );
-
-        // Elenco delle competenze dell'utente
-        Widget sezioneTag = creaSezioneTag();
-
-        // Pulsante per aprire il form di modifica del profilo
-        Button btnModifica = new Button("Modifica Profilo");
-        stileBottone(btnModifica, "#4CAF50"); // Verde
-        btnModifica.addClickHandler(event -> {
-            new ModificaProfiloGui(utente).mostra();
-        });
-
-        // Pulsante per il Logout
-        Button btnLogout = new Button("Logout");
-        stileBottone(btnLogout, "#f44336"); // Rosso per indicare l'uscita
-        btnLogout.addClickHandler(event -> {
-            // Torna alla WelcomeGui
-            new WelcomeGui().mostra();
-        });
-
-        // Aggiunta degli elementi alla card
-        card.add(titolo);
-        card.add(messaggioSpazio);
-        card.add(avatar);
-        card.add(datiUtente);
-        card.add(sezioneBio);
-        card.add(sezioneTag);
-        card.add(btnModifica);
-        card.add(btnLogout);
+        FlowPanel contenuto = new FlowPanel();
+        contenuto.addStyleName("app-page");
+        contenuto.add(creaIntestazione());
+        contenuto.add(creaColonne());
+        pagina.add(contenuto);
 
         // Pulizia e rendering
         RootPanel.get().clear();
-        RootPanel.get().add(card);
+        RootPanel.get().add(pagina);
 
         // Stile base della pagina
-        com.google.gwt.dom.client.Document.get().getBody().getStyle().setBackgroundColor("#f4f7f6");
-        com.google.gwt.dom.client.Document.get().getBody().getStyle().setProperty("margin", "0");
-        com.google.gwt.dom.client.Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
+        Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
+        Document.get().getBody().getStyle().setProperty("margin", "0");
+        Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
     }
 
     /**
-     * Costruisce la foto profilo. Se l'URL non è stato impostato - oppure se
+     * Intestazione: fascia bordeaux, avatar che la scavalca, dati e azione a fianco.
+     */
+    private Widget creaIntestazione() {
+        FlowPanel hero = new FlowPanel();
+        hero.addStyleName("profile-hero");
+
+        FlowPanel banda = new FlowPanel();
+        banda.addStyleName("profile-hero-banda");
+        hero.add(banda);
+
+        FlowPanel corpo = new FlowPanel();
+        corpo.addStyleName("profile-hero-corpo");
+
+        FlowPanel riga = new FlowPanel();
+        riga.addStyleName("profile-hero-riga");
+
+        FlowPanel avatar = new FlowPanel();
+        avatar.addStyleName("profile-hero-avatar");
+        avatar.add(creaAvatar());
+        riga.add(avatar);
+
+        FlowPanel dati = new FlowPanel();
+        dati.addStyleName("profile-header-dati");
+
+        Label nome = new Label(testoOppure(utente.getNome(), "") + " " + testoOppure(utente.getCognome(), ""));
+        nome.addStyleName("profile-nome");
+        dati.add(nome);
+
+        Label email = new Label(testoOppure(utente.getEmail(), ""));
+        email.addStyleName("profile-email");
+        dati.add(email);
+
+        riga.add(dati);
+
+        FlowPanel azioni = new FlowPanel();
+        azioni.addStyleName("profile-hero-azioni");
+
+        Button btnModifica = new Button("Modifica Profilo");
+        btnModifica.addStyleName("btn-primary");
+        btnModifica.addClickHandler(event -> new ModificaProfiloGui(utente).mostra());
+        azioni.add(btnModifica);
+
+        riga.add(azioni);
+        corpo.add(riga);
+        hero.add(corpo);
+        return hero;
+    }
+
+    /**
+     * Biografia e competenze affiancate su due colonne.
+     */
+    private Widget creaColonne() {
+        FlowPanel colonne = new FlowPanel();
+        colonne.addStyleName("profile-colonne");
+        colonne.add(creaColonnaBio());
+        colonne.add(creaColonnaCompetenze());
+        return colonne;
+    }
+
+    private Widget creaColonnaBio() {
+        FlowPanel colonna = new FlowPanel();
+        colonna.addStyleName("profile-colonna");
+
+        FlowPanel card = new FlowPanel();
+        card.addStyleName("profile-card");
+        card.add(creaTitoloSezione("Biografia"));
+
+        String bio = utente.getBio();
+        boolean bioPresente = bio != null && !bio.trim().isEmpty();
+
+        Label testo = new Label(bioPresente ? bio : "Nessuna biografia inserita.");
+        testo.addStyleName(bioPresente ? "profile-testo" : "profile-bio");
+        card.add(testo);
+
+        colonna.add(card);
+        return colonna;
+    }
+
+    private Widget creaColonnaCompetenze() {
+        FlowPanel colonna = new FlowPanel();
+        colonna.addStyleName("profile-colonna");
+
+        FlowPanel card = new FlowPanel();
+        card.addStyleName("profile-card");
+        card.add(creaTitoloSezione("Competenze"));
+
+        FlowPanel badges = new FlowPanel();
+        badges.addStyleName("tag-badges-container");
+
+        if (utente.getTagCompetenza() == null || utente.getTagCompetenza().isEmpty()) {
+            Label vuoto = new Label("Nessuna competenza aggiunta.");
+            vuoto.addStyleName("profile-bio");
+            badges.add(vuoto);
+        } else {
+            for (String tag : utente.getTagCompetenza()) {
+                Label badge = new Label(tag);
+                badge.addStyleName("skill-badge");
+                badges.add(badge);
+            }
+        }
+
+        card.add(badges);
+        colonna.add(card);
+        return colonna;
+    }
+
+    private Widget creaTitoloSezione(String testo) {
+        Label titolo = new Label(testo);
+        titolo.addStyleName("profile-sezione-titolo");
+        return titolo;
+    }
+
+    /**
+     * Costruisce la foto profilo. Se l'URL non e' stato impostato - oppure se
      * l'immagine non riesce a caricarsi - viene mostrato un placeholder circolare
      * con le iniziali dell'utente.
      */
@@ -156,52 +200,7 @@ public class ProfiloGui {
         return placeholder;
     }
 
-    /**
-     * Costruisce l'elenco dei tag competenza sotto forma di badge.
-     */
-    private Widget creaSezioneTag() {
-        FlowPanel sezione = new FlowPanel();
-        sezione.getElement().getStyle().setProperty("textAlign", "left");
-        sezione.getElement().getStyle().setProperty("marginBottom", "20px");
-
-        HTML etichetta = new HTML(
-                "<b style='color: #333333; font-size: 14px;'>Competenze</b>"
-        );
-        sezione.add(etichetta);
-
-        FlowPanel badges = new FlowPanel();
-        badges.addStyleName("tag-badges-container");
-
-        if (utente.getTagCompetenza() == null || utente.getTagCompetenza().isEmpty()) {
-            Label vuoto = new Label("Nessuna competenza aggiunta.");
-            vuoto.getElement().getStyle().setProperty("color", "#aaaaaa");
-            vuoto.getElement().getStyle().setProperty("fontSize", "14px");
-            vuoto.getElement().getStyle().setProperty("fontStyle", "italic");
-            badges.add(vuoto);
-        } else {
-            for (String tag : utente.getTagCompetenza()) {
-                Label badge = new Label(tag);
-                badge.addStyleName("skill-badge");
-                badges.add(badge);
-            }
-        }
-
-        sezione.add(badges);
-        return sezione;
-    }
-
-    // Metodo di supporto per forzare i colori corretti sui bottoni
-    private void stileBottone(Button button, String coloreSfondo) {
-        button.getElement().getStyle().setProperty("backgroundImage", "none");
-        button.getElement().getStyle().setProperty("backgroundColor", coloreSfondo);
-        button.getElement().getStyle().setProperty("color", "white");
-        button.getElement().getStyle().setProperty("border", "none");
-        button.getElement().getStyle().setProperty("padding", "12px");
-        button.getElement().getStyle().setProperty("borderRadius", "5px");
-        button.getElement().getStyle().setProperty("width", "100%");
-        button.getElement().getStyle().setProperty("cursor", "pointer");
-        button.getElement().getStyle().setProperty("fontSize", "16px");
-        button.getElement().getStyle().setProperty("fontWeight", "bold");
-        button.getElement().getStyle().setProperty("marginBottom", "10px");
+    private String testoOppure(String valore, String fallback) {
+        return valore != null ? valore : fallback;
     }
 }
