@@ -1,4 +1,4 @@
-package it.unibo.model;
+package it.unibo;
 
 import java.io.Serializable;
 

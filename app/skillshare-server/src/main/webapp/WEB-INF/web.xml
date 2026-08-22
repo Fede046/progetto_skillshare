@@ -46,6 +46,15 @@
     <url-pattern>/app/ingredienti</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>annuncioServlet</servlet-name>
+    <servlet-class>it.unibo.AnnuncioServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>annuncioServlet</servlet-name>
+    <url-pattern>/app/annuncio</url-pattern>
+  </servlet-mapping>
+
 	<!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>

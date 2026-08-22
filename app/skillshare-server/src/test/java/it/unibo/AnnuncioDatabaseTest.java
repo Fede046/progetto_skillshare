@@ -1,4 +1,4 @@
-package it.unibo.repository;
+package it.unibo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -10,8 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-
-import it.unibo.model.AnnuncioDTO;
 
 public class AnnuncioDatabaseTest {
 
