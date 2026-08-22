@@ -97,6 +97,17 @@ h1 {
   border-bottom-color: var(--bianco);
 }
 
+/* Voce che porta a un'altra schermata */
+.app-nav-item-link {
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.app-nav-item-link:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--bianco);
+}
+
 /* Nome utente e logout, allineati a destra */
 .app-navbar-utente {
   display: flex;
@@ -432,6 +443,7 @@ button.badge-remove-btn:focus-visible {
 
 /* Chi preferisce meno animazioni non ne vede nessuna */
 @media (prefers-reduced-motion: reduce) {
+  .app-nav-item-link,
   button.btn-primary,
   button.btn-secondary,
   button.btn-navbar,

@@ -37,7 +37,7 @@ public class NuovoAnnuncioGui {
         RootPanel.get().clear();
 
         FlowPanel pagina = new FlowPanel();
-        pagina.add(new NavBar(utente, NavBar.SEZIONE_PROFILO).getWidget());
+        pagina.add(new NavBar(utente, NavBar.SEZIONE_ANNUNCI).getWidget());
 
         FlowPanel contenuto = new FlowPanel();
         contenuto.addStyleName("app-page");
@@ -77,7 +77,7 @@ public class NuovoAnnuncioGui {
 
         Button btnAnnulla = new Button("Annulla");
         btnAnnulla.addStyleName("btn-secondary");
-        btnAnnulla.addClickHandler(event -> tornaAlProfilo());
+        btnAnnulla.addClickHandler(event -> tornaAllaLista());
 
         Button btnPubblica = new Button("Pubblica Annuncio");
         btnPubblica.addStyleName("btn-primary");
@@ -125,13 +125,13 @@ public class NuovoAnnuncioGui {
 
             @Override
             public void onSuccess(AnnuncioDTO result) {
-                // Il profilo ricarica la lista e mostra il nuovo annuncio
-                tornaAlProfilo();
+                // La lista ricarica e mostra il nuovo annuncio
+                tornaAllaLista();
             }
         });
     }
 
-    private void tornaAlProfilo() {
-        new ProfiloGui(utente).mostra();
+    private void tornaAllaLista() {
+        new MieiAnnunciGui(utente).mostra();
     }
 }
