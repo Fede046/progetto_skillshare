@@ -1,5 +1,7 @@
 package it.unibo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -60,6 +62,30 @@ public class AnnuncioDatabase {
         DatabaseCore.commit();
 
         return annuncio;
+    }
+
+    /**
+     * Annunci pubblicati da un utente, dal piu' recente al piu' vecchio.
+     * Restituisce lista vuota se l'utente non ne ha o se l'id non e' valorizzato.
+     */
+    public List<AnnuncioDTO> annunciDiUtente(String idUtente) {
+        List<AnnuncioDTO> risultato = new ArrayList<>();
+
+        if (idUtente == null || idUtente.trim().isEmpty()) {
+            return risultato;
+        }
+
+        String id = idUtente.trim();
+        for (AnnuncioDTO annuncio : annunciCollection.values()) {
+            if (id.equals(annuncio.getIdUtente())) {
+                risultato.add(annuncio);
+            }
+        }
+
+        // Ordine decrescente: il piu' recente in cima
+        risultato.sort((a, b) -> Long.compare(b.getDataCreazione(), a.getDataCreazione()));
+
+        return risultato;
     }
 
     // Lancia eccezione se il campo è null o vuoto dopo il trim

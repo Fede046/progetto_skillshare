@@ -1,5 +1,7 @@
 package it.unibo;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -105,5 +107,47 @@ public class AnnuncioDatabaseTest {
         });
         assertEquals("Il campo 'controprestazione' è obbligatorio", ex.getMessage());
         assertTrue(annuncioDatabase.getAnnunciCollection().isEmpty(), "Non deve salvare nulla");
+    }
+
+    @Test
+    void testAnnunciDiUtenteSoloSuoiEOrdinatiPerDataDecrescente() {
+        // Due annunci di Mario e uno di Luigi, pubblicati in sequenza
+        AnnuncioDTO primoMario = creaAnnuncioValido();
+        primoMario.setIdUtente("mario.rossi@unibo.it");
+        primoMario.setTitolo("Ripetizioni di Java");
+        annuncioDatabase.pubblica(primoMario);
+
+        AnnuncioDTO diLuigi = creaAnnuncioValido();
+        diLuigi.setIdUtente("luigi.verdi@unibo.it");
+        diLuigi.setTitolo("Lezioni di chitarra");
+        annuncioDatabase.pubblica(diLuigi);
+
+        AnnuncioDTO secondoMario = creaAnnuncioValido();
+        secondoMario.setIdUtente("mario.rossi@unibo.it");
+        secondoMario.setTitolo("Ripetizioni di SQL");
+        // pubblica() usa System.currentTimeMillis(): forziamo una data piu' recente
+        // per rendere l'ordinamento verificabile a prescindere dalla velocita' del test
+        annuncioDatabase.pubblica(secondoMario);
+        secondoMario.setDataCreazione(primoMario.getDataCreazione() + 1000);
+        annuncioDatabase.getAnnunciCollection().put(secondoMario.getId(), secondoMario);
+
+        List<AnnuncioDTO> risultato = annuncioDatabase.annunciDiUtente("mario.rossi@unibo.it");
+
+        // Solo i suoi due annunci, quello di Luigi resta fuori
+        assertEquals(2, risultato.size(), "Deve restituire solo gli annunci di Mario");
+        assertEquals("Ripetizioni di SQL", risultato.get(0).getTitolo(), "Il piu' recente va per primo");
+        assertEquals("Ripetizioni di Java", risultato.get(1).getTitolo());
+    }
+
+    @Test
+    void testAnnunciDiUtenteSenzaAnnunciRestituisceListaVuota() {
+        AnnuncioDTO annuncio = creaAnnuncioValido();
+        annuncio.setIdUtente("mario.rossi@unibo.it");
+        annuncioDatabase.pubblica(annuncio);
+
+        List<AnnuncioDTO> risultato = annuncioDatabase.annunciDiUtente("nessuno@unibo.it");
+
+        assertNotNull(risultato, "Deve restituire una lista, non null");
+        assertTrue(risultato.isEmpty(), "Un utente senza annunci ha lista vuota");
     }
 }

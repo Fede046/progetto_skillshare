@@ -508,3 +508,91 @@ button.badge-remove-btn:focus-visible {
   padding-top: 20px;
   border-top: 1px solid var(--grigio-neutro);
 }
+
+/* ============================================================
+   Sezione "I miei annunci"
+   ============================================================ */
+
+/* Titolo della sezione e azione principale sulla stessa riga */
+.annunci-intestazione {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--grigio-neutro);
+}
+
+.annunci-intestazione .profile-sezione-titolo {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Riquadro del singolo annuncio */
+.annuncio-item {
+  border: 1px solid var(--grigio-neutro);
+  border-left: 4px solid var(--bordeaux);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  background-color: var(--grigio-chiaro);
+}
+
+.annuncio-item:last-child {
+  margin-bottom: 0;
+}
+
+.annuncio-titolo {
+  color: var(--bordeaux);
+  font-size: 17px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+/* Le tre voci descrittive, affiancate finche' c'e' spazio */
+.annuncio-campi {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.annuncio-campo {
+  flex: 1 1 180px;
+}
+
+.annuncio-campo-etichetta {
+  color: var(--grigio-testo);
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.75;
+  margin-bottom: 3px;
+}
+
+.annuncio-campo-valore {
+  color: var(--grigio-testo);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.annuncio-azioni {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--grigio-neutro);
+}
+
+/* Messaggio mostrato quando non ci sono ancora annunci */
+.annunci-vuoto {
+  color: #8a8a8a;
+  font-size: 14px;
+  font-style: italic;
+  padding: 22px 0;
+  text-align: center;
+}
