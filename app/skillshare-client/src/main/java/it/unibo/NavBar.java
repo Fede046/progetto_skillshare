@@ -7,12 +7,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Barra di navigazione orizzontale condivisa dalle schermate dopo il login.
- * Per ora contiene la sola voce "Profilo": le sezioni future si aggiungono
- * con una chiamata a aggiungiSezione(), senza toccare il layout.
+ * Le sezioni future si aggiungono con una chiamata a aggiungiSezione(),
+ * senza toccare il layout.
  */
 public class NavBar {
 
     public static final String SEZIONE_PROFILO = "Profilo";
+    public static final String SEZIONE_ANNUNCI = "I miei annunci";
 
     private final FlowPanel barra = new FlowPanel();
     private final FlowPanel sezioni = new FlowPanel();
@@ -29,22 +30,36 @@ public class NavBar {
         sezioni.addStyleName("app-navbar-sezioni");
         barra.add(sezioni);
 
-        // Le sezioni future (es. Marketplace) si aggiungono qui sotto
-        aggiungiSezione(SEZIONE_PROFILO);
+        // Le sezioni future si aggiungono qui sotto
+        aggiungiSezione(SEZIONE_PROFILO, () -> new ProfiloGui(utente).mostra());
+        aggiungiSezione(SEZIONE_ANNUNCI, () -> new MieiAnnunciGui(utente).mostra());
 
         barra.add(creaAreaUtente(utente));
     }
 
     /**
      * Aggiunge una voce alla barra, evidenziandola se e' la sezione corrente.
+     * La voce attiva non e' cliccabile: siamo gia' su quella schermata.
      */
-    public void aggiungiSezione(String nome) {
+    public void aggiungiSezione(String nome, Comando apri) {
         Label voce = new Label(nome);
         voce.addStyleName("app-nav-item");
+
         if (nome.equals(sezioneAttiva)) {
             voce.addStyleName("app-nav-item-attivo");
+        } else {
+            voce.addStyleName("app-nav-item-link");
+            voce.addClickHandler(event -> apri.esegui());
         }
+
         sezioni.add(voce);
+    }
+
+    /**
+     * Azione da eseguire al click su una voce della barra.
+     */
+    public interface Comando {
+        void esegui();
     }
 
     // Nome dell'utente loggato e pulsante di logout, allineati a destra
