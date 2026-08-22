@@ -1,13 +1,10 @@
-package it.unibo.repository;
+package it.unibo;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
 import org.mapdb.DB;
 import org.mapdb.Serializer;
-
-import it.unibo.DatabaseCore;
-import it.unibo.model.AnnuncioDTO;
 
 /**
  * Gestisce la collection MapDB "annunci".
