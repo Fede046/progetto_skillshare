@@ -168,6 +168,19 @@ public class AnnuncioDatabase {
         return risultato;
     }
 
+    /**
+     * Tutti gli annunci pubblicati, dal piu' recente al piu' vecchio.
+     * Restituisce lista vuota se non ci sono annunci.
+     */
+    public List<AnnuncioDTO> tuttiGliAnnunci() {
+        List<AnnuncioDTO> risultato = new ArrayList<>(annunciCollection.values());
+
+        // Ordine decrescente: il piu' recente in cima
+        risultato.sort((a, b) -> Long.compare(b.getDataCreazione(), a.getDataCreazione()));
+
+        return risultato;
+    }
+
     // Lancia eccezione se il campo è null o vuoto dopo il trim
     private void validaCampoObbligatorio(String valore, String nomeCampo) throws IllegalArgumentException {
         if (valore == null || valore.trim().isEmpty()) {

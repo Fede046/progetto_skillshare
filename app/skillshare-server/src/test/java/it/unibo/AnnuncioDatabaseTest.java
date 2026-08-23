@@ -150,4 +150,41 @@ public class AnnuncioDatabaseTest {
         assertNotNull(risultato, "Deve restituire una lista, non null");
         assertTrue(risultato.isEmpty(), "Un utente senza annunci ha lista vuota");
     }
+
+    @Test
+    void testTuttiGliAnnunciOrdinatiPerDataDecrescente() {
+        // Tre annunci pubblicati in sequenza
+        AnnuncioDTO primo = creaAnnuncioValido();
+        primo.setTitolo("Ripetizioni di Java");
+        annuncioDatabase.pubblica(primo);
+
+        AnnuncioDTO secondo = creaAnnuncioValido();
+        secondo.setTitolo("Lezioni di chitarra");
+        annuncioDatabase.pubblica(secondo);
+
+        AnnuncioDTO terzo = creaAnnuncioValido();
+        terzo.setTitolo("Ripetizioni di SQL");
+        // pubblica() usa System.currentTimeMillis(): forziamo date distinte
+        // per rendere l'ordinamento verificabile a prescindere dalla velocita' del test
+        annuncioDatabase.pubblica(terzo);
+        secondo.setDataCreazione(primo.getDataCreazione() + 1000);
+        annuncioDatabase.getAnnunciCollection().put(secondo.getId(), secondo);
+        terzo.setDataCreazione(primo.getDataCreazione() + 2000);
+        annuncioDatabase.getAnnunciCollection().put(terzo.getId(), terzo);
+
+        List<AnnuncioDTO> risultato = annuncioDatabase.tuttiGliAnnunci();
+
+        assertEquals(3, risultato.size(), "Deve restituire tutti gli annunci");
+        assertEquals("Ripetizioni di SQL", risultato.get(0).getTitolo(), "Il piu' recente va per primo");
+        assertEquals("Lezioni di chitarra", risultato.get(1).getTitolo());
+        assertEquals("Ripetizioni di Java", risultato.get(2).getTitolo(), "Il piu' vecchio va per ultimo");
+    }
+
+    @Test
+    void testTuttiGliAnnunciSenzaAnnunciRestituisceListaVuota() {
+        List<AnnuncioDTO> risultato = annuncioDatabase.tuttiGliAnnunci();
+
+        assertNotNull(risultato, "Deve restituire una lista, non null");
+        assertTrue(risultato.isEmpty(), "Senza annunci la lista deve essere vuota");
+    }
 }
