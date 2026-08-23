@@ -55,6 +55,15 @@
     <url-pattern>/app/annuncio</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>marketplaceServlet</servlet-name>
+    <servlet-class>it.unibo.MarketplaceServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>marketplaceServlet</servlet-name>
+    <url-pattern>/app/marketplace</url-pattern>
+  </servlet-mapping>
+
 	<!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>

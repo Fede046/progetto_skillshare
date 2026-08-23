@@ -17,6 +17,7 @@ public class AnnuncioDTO implements Serializable {
     private String disponibilita;
     private String controprestazione;
     private long dataCreazione;
+    private String nomeAutore;
 
     // Costruttore vuoto OBBLIGATORIO per GWT
     public AnnuncioDTO() {
@@ -85,5 +86,13 @@ public class AnnuncioDTO implements Serializable {
 
     public void setDataCreazione(long dataCreazione) {
         this.dataCreazione = dataCreazione;
+    }
+
+    public String getNomeAutore() {
+        return nomeAutore;
+    }
+
+    public void setNomeAutore(String nomeAutore) {
+        this.nomeAutore = nomeAutore;
     }
 }
