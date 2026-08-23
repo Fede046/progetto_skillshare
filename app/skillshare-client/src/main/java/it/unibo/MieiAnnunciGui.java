@@ -1,18 +1,22 @@
 package it.unibo;
 
 import java.util.List;
-
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- * Schermata "I miei annunci": elenco degli annunci pubblicati dall'utente.
+ * Schermata "I miei annunci": elenco degli annunci pubblicati dall'utente
+ * con le azioni di modifica e rimozione.
  */
 public class MieiAnnunciGui {
 
@@ -103,48 +107,132 @@ public class MieiAnnunciGui {
         }
 
         for (AnnuncioDTO annuncio : annunci) {
-            listaAnnunci.add(creaRigaAnnuncio(annuncio));
+            listaAnnunci.add(new RigaAnnuncio(annuncio).widget());
         }
     }
 
     /**
-     * Riquadro di un singolo annuncio.
-     * I pulsanti Modifica ed Elimina sono segnaposto per la Story "Gestione
-     * Annuncio": volutamente senza listener, non fanno nulla al click.
+     * Apre il form di modifica inline nella riga dell'annuncio,
+     * pre-compilato con i dati correnti.
      */
-    private Widget creaRigaAnnuncio(AnnuncioDTO annuncio) {
-        FlowPanel item = new FlowPanel();
-        item.addStyleName("annuncio-item");
+    private void apriFormModifica(AnnuncioDTO annuncio, RigaAnnuncio riga) {
+        if (riga.formAperto) {
+            return;
+        }
+        riga.formAperto = true;
 
-        Label titolo = new Label(testoOppure(annuncio.getTitolo(), ""));
-        titolo.addStyleName("annuncio-titolo");
-        item.add(titolo);
+        FlowPanel form = new FlowPanel();
+        form.addStyleName("annuncio-modifica-form");
 
-        FlowPanel campi = new FlowPanel();
-        campi.addStyleName("annuncio-campi");
-        campi.add(creaCampo("Competenza offerta", annuncio.getCompetenzaOfferta()));
-        campi.add(creaCampo("Disponibilità", annuncio.getDisponibilita()));
-        campi.add(creaCampo("Controprestazione", annuncio.getControprestazione()));
-        item.add(campi);
+        TextBox titoloBox = new TextBox();
+        titoloBox.setWidth("100%");
+        titoloBox.setText(testoOppure(annuncio.getTitolo(), ""));
 
-        FlowPanel azioni = new FlowPanel();
-        azioni.addStyleName("annuncio-azioni");
+        TextArea descrizioneArea = new TextArea();
+        descrizioneArea.setVisibleLines(3);
+        descrizioneArea.setWidth("100%");
+        descrizioneArea.setText(testoOppure(annuncio.getDescrizione(), ""));
 
-        Button btnModifica = new Button("Modifica");
-        btnModifica.addStyleName("btn-secondary");
-        btnModifica.addStyleName("btn-sm");
-        azioni.add(btnModifica);
+        TextBox competenzaBox = new TextBox();
+        competenzaBox.setWidth("100%");
+        competenzaBox.setText(testoOppure(annuncio.getCompetenzaOfferta(), ""));
 
-        Button btnElimina = new Button("Elimina");
-        btnElimina.addStyleName("btn-secondary");
-        btnElimina.addStyleName("btn-sm");
-        azioni.add(btnElimina);
+        TextBox disponibilitaBox = new TextBox();
+        disponibilitaBox.setWidth("100%");
+        disponibilitaBox.setText(testoOppure(annuncio.getDisponibilita(), ""));
 
-        item.add(azioni);
-        return item;
+        TextBox controprestazioneBox = new TextBox();
+        controprestazioneBox.setWidth("100%");
+        controprestazioneBox.setText(testoOppure(annuncio.getControprestazione(), ""));
+
+        Button btnSalva = new Button("Salva");
+        btnSalva.addStyleName("btn-primary");
+        btnSalva.addStyleName("btn-sm");
+
+        Button btnAnnulla = new Button("Annulla");
+        btnAnnulla.addStyleName("btn-secondary");
+        btnAnnulla.addStyleName("btn-sm");
+
+        btnAnnulla.addClickHandler(event -> {
+            riga.formAperto = false;
+            form.removeFromParent();
+        });
+
+        btnSalva.addClickHandler(event -> {
+            AnnuncioDTO aggiornato = new AnnuncioDTO();
+            aggiornato.setTitolo(titoloBox.getText().trim());
+            aggiornato.setDescrizione(descrizioneArea.getText().trim());
+            aggiornato.setCompetenzaOfferta(competenzaBox.getText().trim());
+            aggiornato.setDisponibilita(disponibilitaBox.getText().trim());
+            aggiornato.setControprestazione(controprestazioneBox.getText().trim());
+
+            annuncioService.modifica(annuncio.getId(), utente.getEmail(), aggiornato,
+                    new AsyncCallback<AnnuncioDTO>() {
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            // Se il server rifiuta, mostriamo il messaggio di errore
+                            Window.alert(caught.getMessage());
+                        }
+
+                        @Override
+                        public void onSuccess(AnnuncioDTO result) {
+                            // Aggiorna la riga visibile con i nuovi dati e chiude il form
+                            riga.aggiorna(result);
+                            riga.formAperto = false;
+                            form.removeFromParent();
+                        }
+                    });
+        });
+
+        form.add(creaEtichetta("Titolo:"));
+        form.add(titoloBox);
+        form.add(creaEtichetta("Descrizione:"));
+        form.add(descrizioneArea);
+        form.add(creaEtichetta("Competenza offerta:"));
+        form.add(competenzaBox);
+        form.add(creaEtichetta("Disponibilità:"));
+        form.add(disponibilitaBox);
+        form.add(creaEtichetta("Controprestazione:"));
+        form.add(controprestazioneBox);
+
+        FlowPanel azioniForm = new FlowPanel();
+        azioniForm.addStyleName("profile-form-azioni");
+        azioniForm.add(btnSalva);
+        azioniForm.add(btnAnnulla);
+        form.add(azioniForm);
+
+        // Il form appare in cima alla riga dell'annuncio
+        riga.widget().insert(form, 0);
     }
 
-    private Widget creaCampo(String etichetta, String valore) {
+    /**
+     * Chiede al server la rimozione dell'annuncio e, in caso di successo,
+     * lo elimina dalla lista visibile senza ricaricare la pagina.
+     */
+private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
+    annuncioService.rimuovi(annuncio.getId(), utente.getEmail(), new AsyncCallback<Void>() {
+        @Override
+        public void onFailure(Throwable caught) {
+            Window.alert(caught.getMessage());
+        }
+
+        @Override
+        public void onSuccess(Void result) {
+            riga.widget().removeFromParent();
+            if (listaAnnunci.getWidgetCount() == 0) {
+                listaAnnunci.add(creaMessaggioVuoto("Non hai ancora pubblicato annunci"));
+            }
+        }
+    });
+}
+
+    private Label creaEtichetta(String testo) {
+        Label etichetta = new Label(testo);
+        etichetta.addStyleName("form-label");
+        return etichetta;
+    }
+
+    private Widget creaCampo(String etichetta, Label valore) {
         FlowPanel campo = new FlowPanel();
         campo.addStyleName("annuncio-campo");
 
@@ -152,9 +240,8 @@ public class MieiAnnunciGui {
         lbl.addStyleName("annuncio-campo-etichetta");
         campo.add(lbl);
 
-        Label val = new Label(testoOppure(valore, "-"));
-        val.addStyleName("annuncio-campo-valore");
-        campo.add(val);
+        valore.addStyleName("annuncio-campo-valore");
+        campo.add(valore);
 
         return campo;
     }
@@ -167,5 +254,109 @@ public class MieiAnnunciGui {
 
     private String testoOppure(String valore, String fallback) {
         return valore != null ? valore : fallback;
+    }
+
+    /**
+     * Riquadro di un singolo annuncio con i pulsanti Modifica ed Elimina.
+     * Conserva i riferimenti ai valori mostrati per aggiornarli inline
+     * dopo una modifica e per rimuovere la riga dopo l'eliminazione.
+     */
+    private class RigaAnnuncio {
+
+        private final FlowPanel item = new FlowPanel();
+        private final FlowPanel campi = new FlowPanel();
+        private final Label titolo = new Label();
+        private final Label competenza = new Label();
+        private final Label disponibilita = new Label();
+        private final Label controprestazione = new Label();
+        private AnnuncioDTO annuncio;
+        private boolean formAperto;
+
+        RigaAnnuncio(AnnuncioDTO annuncio) {
+            this.annuncio = annuncio;
+
+            item.addStyleName("annuncio-item");
+
+            titolo.addStyleName("annuncio-titolo");
+            item.add(titolo);
+
+            campi.addStyleName("annuncio-campi");
+            campi.add(creaCampo("Competenza offerta", competenza));
+            campi.add(creaCampo("Disponibilità", disponibilita));
+            campi.add(creaCampo("Controprestazione", controprestazione));
+            item.add(campi);
+
+            FlowPanel azioni = new FlowPanel();
+            azioni.addStyleName("annuncio-azioni");
+
+            Button btnModifica = new Button("Modifica");
+            btnModifica.addStyleName("btn-secondary");
+            btnModifica.addStyleName("btn-sm");
+            btnModifica.addClickHandler(event -> apriFormModifica(this.annuncio, this));
+            azioni.add(btnModifica);
+
+            Button btnElimina = new Button("Elimina");
+            btnElimina.addStyleName("btn-secondary");
+            btnElimina.addStyleName("btn-sm");
+            btnElimina.addClickHandler(event -> mostraConfermaRimozione());
+            azioni.add(btnElimina);
+
+            item.add(azioni);
+
+            aggiorna(annuncio);
+        }
+
+        FlowPanel widget() {
+            return item;
+        }
+
+        // Aggiorna i valori mostrati nella riga con i dati dell'annuncio (post-modifica)
+        void aggiorna(AnnuncioDTO annuncio) {
+            this.annuncio = annuncio;
+
+            titolo.setText(testoOppure(annuncio.getTitolo(), ""));
+            competenza.setText(testoOppure(annuncio.getCompetenzaOfferta(), "-"));
+            disponibilita.setText(testoOppure(annuncio.getDisponibilita(), "-"));
+            controprestazione.setText(testoOppure(annuncio.getControprestazione(), "-"));
+        }
+        private void mostraConfermaRimozione() {
+    DialogBox dialog = new DialogBox();
+    dialog.setText("Conferma rimozione");
+    dialog.setGlassEnabled(true);      // sfondo scurito dietro al popup
+    dialog.setAnimationEnabled(true);
+    dialog.addStyleName("conferma-rimozione-dialog");
+
+    FlowPanel contenuto = new FlowPanel();
+    contenuto.addStyleName("conferma-rimozione-contenuto");
+
+    Label messaggio = new Label(
+            "Vuoi davvero rimuovere l'annuncio \"" + testoOppure(annuncio.getTitolo(), "") + "\"?");
+    messaggio.addStyleName("conferma-messaggio");
+    contenuto.add(messaggio);
+
+    FlowPanel azioni = new FlowPanel();
+    azioni.addStyleName("profile-form-azioni");
+
+    Button btnConfermaElimina = new Button("Elimina");
+    btnConfermaElimina.addStyleName("btn-danger");
+    btnConfermaElimina.addStyleName("btn-sm");
+    btnConfermaElimina.addClickHandler(e -> {
+        dialog.hide();
+        rimuoviAnnuncio(this.annuncio, this);
+    });
+
+    Button btnAnnulla = new Button("Annulla");
+    btnAnnulla.addStyleName("btn-secondary");
+    btnAnnulla.addStyleName("btn-sm");
+    btnAnnulla.addClickHandler(e -> dialog.hide());
+
+    azioni.add(btnConfermaElimina);
+    azioni.add(btnAnnulla);
+    contenuto.add(azioni);
+
+    dialog.setWidget(contenuto);
+    dialog.center();   // centra il popup nella viewport
+    dialog.show();
+}
     }
 }

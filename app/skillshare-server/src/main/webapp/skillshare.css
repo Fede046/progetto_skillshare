@@ -327,6 +327,7 @@ h1 {
    ============================================================ */
 
 button.btn-primary,
+button.btn-danger,
 button.btn-secondary,
 button.btn-navbar {
   background-image: none;
@@ -342,6 +343,7 @@ button.btn-navbar {
 }
 
 button.btn-primary:active,
+button.btn-danger:active,
 button.btn-secondary:active,
 button.btn-navbar:active {
   transform: translateY(1px);
@@ -600,6 +602,15 @@ button.badge-remove-btn:focus-visible {
   border-top: 1px solid var(--grigio-neutro);
 }
 
+/* Form inline di modifica mostrato in cima alla riga dell'annuncio */
+.annuncio-modifica-form {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--grigio-neutro);
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
 /* Messaggio mostrato quando non ci sono ancora annunci */
 .annunci-vuoto {
   color: #8a8a8a;
@@ -607,4 +618,38 @@ button.badge-remove-btn:focus-visible {
   font-style: italic;
   padding: 22px 0;
   text-align: center;
+}
+.conferma-rimozione-dialog .gwt-DialogBox {
+    border-radius: 8px;
+}
+.conferma-rimozione-contenuto {
+    padding: 16px 20px;
+    min-width: 280px;
+}
+.conferma-messaggio {
+    color:#8a8a8a;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+.btn-danger {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+}
+button.btn-danger {
+  background-color: #d9534f;
+  border: 1px solid #d9534f;   /* border: 1px invece di none, per allinearsi in altezza a btn-secondary */
+  color: var(--bianco);
+  box-shadow: 0 1px 2px rgba(217, 83, 79, 0.25);
+}
+
+button.btn-danger:hover {
+  background-color: #c9302c;
+  border-color: #c9302c;
+  box-shadow: 0 3px 8px rgba(217, 83, 79, 0.3);
+}
+
+button.btn-danger:focus-visible {
+  outline: 2px solid #d9534f;
+  outline-offset: 2px;
 }
