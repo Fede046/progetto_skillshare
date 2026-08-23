@@ -600,6 +600,15 @@ button.badge-remove-btn:focus-visible {
   border-top: 1px solid var(--grigio-neutro);
 }
 
+/* Form inline di modifica mostrato in cima alla riga dell'annuncio */
+.annuncio-modifica-form {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--grigio-neutro);
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
 /* Messaggio mostrato quando non ci sono ancora annunci */
 .annunci-vuoto {
   color: #8a8a8a;
