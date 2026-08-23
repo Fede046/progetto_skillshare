@@ -1,7 +1,7 @@
 package it.unibo;
 
 import java.util.List;
-
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Window;
@@ -209,30 +209,22 @@ public class MieiAnnunciGui {
      * Chiede al server la rimozione dell'annuncio e, in caso di successo,
      * lo elimina dalla lista visibile senza ricaricare la pagina.
      */
-    private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
-        // Richiesta di conferma prima di eliminare l'annuncio
-        if (!Window.confirm("Vuoi davvero rimuovere l'annuncio \"" + testoOppure(annuncio.getTitolo(), "") + "\"?")) {
-            return;
+private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
+    annuncioService.rimuovi(annuncio.getId(), utente.getEmail(), new AsyncCallback<Void>() {
+        @Override
+        public void onFailure(Throwable caught) {
+            Window.alert(caught.getMessage());
         }
 
-        annuncioService.rimuovi(annuncio.getId(), utente.getEmail(), new AsyncCallback<Void>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                // Se il server rifiuta, mostriamo il messaggio di errore
-                Window.alert(caught.getMessage());
+        @Override
+        public void onSuccess(Void result) {
+            riga.widget().removeFromParent();
+            if (listaAnnunci.getWidgetCount() == 0) {
+                listaAnnunci.add(creaMessaggioVuoto("Non hai ancora pubblicato annunci"));
             }
-
-            @Override
-            public void onSuccess(Void result) {
-                // Rimozione immediata dalla lista visibile, senza reload
-                riga.widget().removeFromParent();
-
-                if (listaAnnunci.getWidgetCount() == 0) {
-                    listaAnnunci.add(creaMessaggioVuoto("Non hai ancora pubblicato annunci"));
-                }
-            }
-        });
-    }
+        }
+    });
+}
 
     private Label creaEtichetta(String testo) {
         Label etichetta = new Label(testo);
@@ -306,7 +298,7 @@ public class MieiAnnunciGui {
             Button btnElimina = new Button("Elimina");
             btnElimina.addStyleName("btn-secondary");
             btnElimina.addStyleName("btn-sm");
-            btnElimina.addClickHandler(event -> rimuoviAnnuncio(this.annuncio, this));
+            btnElimina.addClickHandler(event -> mostraConfermaRimozione());
             azioni.add(btnElimina);
 
             item.add(azioni);
@@ -327,5 +319,44 @@ public class MieiAnnunciGui {
             disponibilita.setText(testoOppure(annuncio.getDisponibilita(), "-"));
             controprestazione.setText(testoOppure(annuncio.getControprestazione(), "-"));
         }
+        private void mostraConfermaRimozione() {
+    DialogBox dialog = new DialogBox();
+    dialog.setText("Conferma rimozione");
+    dialog.setGlassEnabled(true);      // sfondo scurito dietro al popup
+    dialog.setAnimationEnabled(true);
+    dialog.addStyleName("conferma-rimozione-dialog");
+
+    FlowPanel contenuto = new FlowPanel();
+    contenuto.addStyleName("conferma-rimozione-contenuto");
+
+    Label messaggio = new Label(
+            "Vuoi davvero rimuovere l'annuncio \"" + testoOppure(annuncio.getTitolo(), "") + "\"?");
+    messaggio.addStyleName("conferma-messaggio");
+    contenuto.add(messaggio);
+
+    FlowPanel azioni = new FlowPanel();
+    azioni.addStyleName("profile-form-azioni");
+
+    Button btnConfermaElimina = new Button("Elimina");
+    btnConfermaElimina.addStyleName("btn-danger");
+    btnConfermaElimina.addStyleName("btn-sm");
+    btnConfermaElimina.addClickHandler(e -> {
+        dialog.hide();
+        rimuoviAnnuncio(this.annuncio, this);
+    });
+
+    Button btnAnnulla = new Button("Annulla");
+    btnAnnulla.addStyleName("btn-secondary");
+    btnAnnulla.addStyleName("btn-sm");
+    btnAnnulla.addClickHandler(e -> dialog.hide());
+
+    azioni.add(btnConfermaElimina);
+    azioni.add(btnAnnulla);
+    contenuto.add(azioni);
+
+    dialog.setWidget(contenuto);
+    dialog.center();   // centra il popup nella viewport
+    dialog.show();
+}
     }
 }
