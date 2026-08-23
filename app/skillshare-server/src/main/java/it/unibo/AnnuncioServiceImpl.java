@@ -18,4 +18,16 @@ public class AnnuncioServiceImpl extends RemoteServiceServlet implements Annunci
     public List<AnnuncioDTO> annunciDiUtente(String idUtente) {
         return new AnnuncioDatabase().annunciDiUtente(idUtente);
     }
+
+    @Override
+    public AnnuncioDTO modifica(String idAnnuncio, String idUtenteRichiedente, AnnuncioDTO annuncioAggiornato) throws IllegalArgumentException {
+        // Delega la gestione e il controllo del proprietario a AnnuncioDatabase
+        return new AnnuncioDatabase().modifica(idAnnuncio, idUtenteRichiedente, annuncioAggiornato);
+    }
+
+    @Override
+    public void rimuovi(String idAnnuncio, String idUtenteRichiedente) throws IllegalArgumentException {
+        // Delega la gestione e il controllo del proprietario a AnnuncioDatabase
+        new AnnuncioDatabase().rimuovi(idAnnuncio, idUtenteRichiedente);
+    }
 }
