@@ -1,0 +1,182 @@
+package it.unibo;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+
+public class AnnuncioDatabaseModificaRimuoviTest {
+
+    private static final String PROPRIETARIO = "mario.rossi@unibo.it";
+    private static final String NON_PROPRIETARIO = "luigi.verdi@unibo.it";
+
+    private DB dbTest;
+    private AnnuncioDatabase annuncioDatabase;
+
+    // DB in memoria per non sporcare il database reale
+    @BeforeEach
+    void setUp() {
+        dbTest = DBMaker.memoryDB().make();
+        annuncioDatabase = new AnnuncioDatabase(dbTest);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (dbTest != null && !dbTest.isClosed()) {
+            dbTest.close();
+        }
+    }
+
+    // Annuncio con tutti i campi validi, da modificare nei singoli test
+    private AnnuncioDTO creaAnnuncioValido() {
+        AnnuncioDTO annuncio = new AnnuncioDTO();
+        annuncio.setIdUtente(PROPRIETARIO);
+        annuncio.setTitolo("Ripetizioni di Java");
+        annuncio.setDescrizione("Lezioni base e avanzate su Java e GWT");
+        annuncio.setCompetenzaOfferta("Programmazione Java");
+        annuncio.setDisponibilita("Lunedì e mercoledì pomeriggio");
+        annuncio.setControprestazione("Lezioni di inglese");
+        return annuncio;
+    }
+
+    // Pubblica un annuncio valido e ne restituisce il DTO con id valorizzato
+    private AnnuncioDTO pubblicaAnnuncio() {
+        return annuncioDatabase.pubblica(creaAnnuncioValido());
+    }
+
+    @Test
+    void testModificaDaProprietarioAggiornaAnnuncio() {
+        AnnuncioDTO pubblicato = pubblicaAnnuncio();
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Ripetizioni di Java Avanzato");
+        aggiornato.setCompetenzaOfferta("Programmazione Java Avanzata");
+        aggiornato.setDisponibilita("Venerdì pomeriggio");
+        aggiornato.setControprestazione("Lezioni di tedesco");
+
+        AnnuncioDTO risultato = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+
+        assertNotNull(risultato, "La modifica deve restituire l'annuncio aggiornato");
+        assertEquals(pubblicato.getId(), risultato.getId(), "L'id deve restare invariato");
+        assertEquals(pubblicato.getDataCreazione(), risultato.getDataCreazione(),
+                "La dataCreazione deve restare invariata");
+
+        // L'annuncio modificato deve essere rileggibile dal database
+        AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
+        assertNotNull(ricaricato, "L'annuncio deve essere ancora presente dopo la modifica");
+        assertEquals("Ripetizioni di Java Avanzato", ricaricato.getTitolo());
+        assertEquals("Programmazione Java Avanzata", ricaricato.getCompetenzaOfferta());
+        assertEquals("Venerdì pomeriggio", ricaricato.getDisponibilita());
+        assertEquals("Lezioni di tedesco", ricaricato.getControprestazione());
+        assertEquals(PROPRIETARIO, ricaricato.getIdUtente(), "Il proprietario deve restare invariato");
+    }
+
+    @Test
+    void testModificaDaNonProprietarioVieneRifiutata() {
+        AnnuncioDTO pubblicato = pubblicaAnnuncio();
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo Cambiato da Intruso");
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.modifica(pubblicato.getId(), NON_PROPRIETARIO, aggiornato);
+        });
+        assertEquals("Non autorizzato: l'annuncio appartiene a un altro utente", ex.getMessage());
+
+        // L'annuncio originale deve restare invariato
+        AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
+        assertNotNull(ricaricato, "L'annuncio deve restare presente");
+        assertEquals("Ripetizioni di Java", ricaricato.getTitolo(), "Il titolo non deve cambiare");
+        assertEquals(PROPRIETARIO, ricaricato.getIdUtente());
+    }
+
+    @Test
+    void testModificaAnnuncioInesistenteLanciaEccezione() {
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.modifica("id-inesistente", PROPRIETARIO, aggiornato);
+        });
+        assertEquals("Annuncio non trovato", ex.getMessage());
+    }
+
+    @Test
+    void testRimuoviDaProprietarioEliminaAnnuncio() {
+        AnnuncioDTO pubblicato = pubblicaAnnuncio();
+        assertTrue(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()));
+
+        annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+
+        assertFalse(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()),
+                "L'annuncio non deve essere più presente dopo la rimozione");
+        assertTrue(annuncioDatabase.getAnnunciCollection().isEmpty());
+    }
+
+    @Test
+    void testRimuoviDaNonProprietarioVieneRifiutata() {
+        AnnuncioDTO pubblicato = pubblicaAnnuncio();
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.rimuovi(pubblicato.getId(), NON_PROPRIETARIO);
+        });
+        assertEquals("Non autorizzato: l'annuncio appartiene a un altro utente", ex.getMessage());
+
+        // L'annuncio deve restare presente
+        assertTrue(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()),
+                "L'annuncio deve restare presente se la rimozione è rifiutata");
+        assertEquals(1, annuncioDatabase.getAnnunciCollection().size());
+    }
+
+    @Test
+    void testRimuoviAnnuncioInesistenteLanciaEccezione() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.rimuovi("id-inesistente", PROPRIETARIO);
+        });
+        assertEquals("Annuncio non trovato", ex.getMessage());
+    }
+
+    @Test
+    void testModificaConCampiObbligatoriMancantiVieneRifiutata() {
+        AnnuncioDTO pubblicato = pubblicaAnnuncio();
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo(null);
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        });
+        assertEquals("Il campo 'titolo' è obbligatorio", ex.getMessage());
+
+        // L'annuncio originale deve restare invariato
+        AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
+        assertNotNull(ricaricato);
+        assertEquals("Ripetizioni di Java", ricaricato.getTitolo(), "Il titolo non deve cambiare");
+    }
+
+    @Test
+    void testModificaDaProprietarioNonCambiaProprietario() {
+        AnnuncioDTO pubblicato = pubblicaAnnuncio();
+
+        // Tentativo di "cambiare proprietario" durante la modifica
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setIdUtente(NON_PROPRIETARIO);
+        aggiornato.setTitolo("Titolo Aggiornato");
+
+        AnnuncioDTO risultato = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+
+        // Il proprietario reale non deve poter essere cambiato: l'idUtente resta quello originale
+        assertEquals(PROPRIETARIO, risultato.getIdUtente(), "Il proprietario non deve cambiare");
+        assertNotEquals(NON_PROPRIETARIO, risultato.getIdUtente());
+
+        AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
+        assertEquals(PROPRIETARIO, ricaricato.getIdUtente());
+    }
+}
