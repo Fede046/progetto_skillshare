@@ -523,6 +523,20 @@ button.badge-remove-btn:focus-visible {
   border-top: 1px solid var(--grigio-neutro);
 }
 
+/* Messaggio di errore dentro un form */
+.form-errore {
+  background-color: #FDECEE;
+  border: 1px solid #E5A5AC;
+  border-left: 4px solid #B3261E;
+  border-radius: 6px;
+  color: #B3261E;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-top: 20px;
+  padding: 12px 14px;
+}
+
 /* ============================================================
    Sezione "I miei annunci"
    ============================================================ */
@@ -564,6 +578,15 @@ button.badge-remove-btn:focus-visible {
   font-size: 17px;
   font-weight: bold;
   margin-bottom: 12px;
+}
+
+/* Autore dell'annuncio, mostrato nel marketplace sotto il titolo */
+.annuncio-autore {
+  color: var(--grigio-testo);
+  font-size: 13px;
+  font-style: italic;
+  margin-top: -8px;
+  margin-bottom: 14px;
 }
 
 /* Le tre voci descrittive, affiancate finche' c'e' spazio */
