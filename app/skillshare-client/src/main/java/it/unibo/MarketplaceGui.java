@@ -5,9 +5,12 @@ import java.util.List;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -18,6 +21,7 @@ public class MarketplaceGui {
 
     private final UtenteDTO utente;
     private final MarketplaceServiceAsync marketplaceService = GWT.create(MarketplaceService.class);
+    private final RichiestaScambioServiceAsync richiestaScambioService = GWT.create(RichiestaScambioService.class);
 
     // Riempita dalla risposta RPC: al primo disegno mostra il caricamento
     private final FlowPanel listaAnnunci = new FlowPanel();
@@ -119,7 +123,145 @@ public class MarketplaceGui {
         campi.add(creaCampo("Controprestazione", annuncio.getControprestazione()));
         item.add(campi);
 
+        // Azione "Proponi scambio": sul proprio annuncio il pulsante e' nascosto
+        // e un messaggio spiega il perche'. Il controllo autoritativo resta sul server.
+        FlowPanel azioni = new FlowPanel();
+        azioni.addStyleName("annuncio-azioni");
+
+        if (utente.getEmail().equals(annuncio.getIdUtente())) {
+            Label tuoAnnuncio = new Label("Questo è il tuo annuncio: non puoi richiedere uno scambio con te stesso");
+            tuoAnnuncio.addStyleName("annuncio-proprio-nota");
+            azioni.add(tuoAnnuncio);
+        } else {
+            Button btnProponi = new Button("Proponi scambio");
+            btnProponi.addStyleName("btn-primary");
+            btnProponi.addStyleName("btn-sm");
+            btnProponi.addClickHandler(event -> apriDettaglioAnnuncio(annuncio));
+            azioni.add(btnProponi);
+        }
+
+        item.add(azioni);
+
         return item;
+    }
+
+    /**
+     * Apre il dettaglio di un annuncio altrui con il campo messaggio facoltativo
+     * e l'azione "Proponi scambio". Il feedback di successo sostituisce il contenuto
+     * del dialog; gli errori RPC compaiono nella label rossa interna.
+     */
+    private void apriDettaglioAnnuncio(AnnuncioDTO annuncio) {
+        DialogBox dialog = new DialogBox();
+        dialog.setText(testoOppure(annuncio.getTitolo(), "Dettaglio annuncio"));
+        dialog.setGlassEnabled(true);
+        dialog.setAnimationEnabled(true);
+        dialog.addStyleName("dettaglio-annuncio-dialog");
+
+        TextArea messaggioArea = new TextArea();
+        messaggioArea.setVisibleLines(3);
+        messaggioArea.setWidth("100%");
+        messaggioArea.getElement().setAttribute("placeholder", "Messaggio facoltativo per l'autore...");
+
+        Label messaggioErrore = new Label();
+        messaggioErrore.addStyleName("form-errore");
+        messaggioErrore.setVisible(false);
+
+        Button btnProponi = new Button("Proponi scambio");
+        btnProponi.addStyleName("btn-primary");
+
+        Button btnAnnulla = new Button("Annulla");
+        btnAnnulla.addStyleName("btn-secondary");
+        btnAnnulla.addClickHandler(event -> dialog.hide());
+
+        FlowPanel contenuto = new FlowPanel();
+        contenuto.addStyleName("dettaglio-annuncio-contenuto");
+
+        contenuto.add(creaCampo("Autore", annuncio.getNomeAutore()));
+        contenuto.add(creaCampo("Competenza offerta", annuncio.getCompetenzaOfferta()));
+        contenuto.add(creaCampo("Disponibilità", annuncio.getDisponibilita()));
+        contenuto.add(creaCampo("Controprestazione", annuncio.getControprestazione()));
+        if (annuncio.getDescrizione() != null && !annuncio.getDescrizione().trim().isEmpty()) {
+            contenuto.add(creaCampo("Descrizione", annuncio.getDescrizione()));
+        }
+
+        contenuto.add(creaEtichetta("Messaggio (facoltativo):"));
+        contenuto.add(messaggioArea);
+        contenuto.add(messaggioErrore);
+
+        FlowPanel azioni = new FlowPanel();
+        azioni.addStyleName("profile-form-azioni");
+        btnProponi.addClickHandler(event ->
+                inviaRichiestaScambio(annuncio, messaggioArea, messaggioErrore, btnProponi, dialog));
+        azioni.add(btnProponi);
+        azioni.add(btnAnnulla);
+        contenuto.add(azioni);
+
+        dialog.setWidget(contenuto);
+        dialog.center();
+        dialog.show();
+    }
+
+    /**
+     * Invia la richiesta di scambio via RPC. Durante l'invio il pulsante viene
+     * disabilitato con feedback "Invio in corso..."; in caso di errore il messaggio
+     * del server compare nella label rossa e si puo' riprovare; in caso di successo
+     * il dialog mostra la conferma.
+     */
+    private void inviaRichiestaScambio(AnnuncioDTO annuncio, TextArea messaggioArea,
+            Label messaggioErrore, Button btnProponi, DialogBox dialog) {
+        messaggioErrore.setVisible(false);
+
+        // Il messaggio e' facoltativo: se vuoto si invia null (percorso valido nel Database)
+        String messaggio = messaggioArea.getText().trim();
+        if (messaggio.isEmpty()) {
+            messaggio = null;
+        }
+
+        btnProponi.setEnabled(false);
+        btnProponi.setText("Invio in corso...");
+
+        richiestaScambioService.inviaRichiestaScambio(annuncio.getId(), utente.getEmail(), messaggio,
+                new AsyncCallback<RichiestaScambioDTO>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        btnProponi.setEnabled(true);
+                        btnProponi.setText("Proponi scambio");
+                        messaggioErrore.setText(caught.getMessage());
+                        messaggioErrore.setVisible(true);
+                    }
+
+                    @Override
+                    public void onSuccess(RichiestaScambioDTO result) {
+                        mostraConfermaInvio(dialog);
+                    }
+                });
+    }
+
+    /**
+     * Sostituisce il contenuto del dialog con il messaggio di conferma dell'invio.
+     */
+    private void mostraConfermaInvio(DialogBox dialog) {
+        dialog.setText("Richiesta inviata");
+
+        FlowPanel conferma = new FlowPanel();
+        conferma.addStyleName("dettaglio-annuncio-contenuto");
+
+        Label messaggio = new Label("Richiesta di scambio inviata!");
+        messaggio.addStyleName("dettaglio-annuncio-successo");
+        conferma.add(messaggio);
+
+        FlowPanel azioni = new FlowPanel();
+        azioni.addStyleName("profile-form-azioni");
+
+        Button btnChiudi = new Button("Chiudi");
+        btnChiudi.addStyleName("btn-primary");
+        btnChiudi.addClickHandler(event -> dialog.hide());
+
+        azioni.add(btnChiudi);
+        conferma.add(azioni);
+
+        dialog.setWidget(conferma);
+        dialog.center();
     }
 
     private Widget creaCampo(String etichetta, String valore) {
@@ -135,6 +277,12 @@ public class MarketplaceGui {
         campo.add(val);
 
         return campo;
+    }
+
+    private Widget creaEtichetta(String testo) {
+        Label etichetta = new Label(testo);
+        etichetta.addStyleName("form-label");
+        return etichetta;
     }
 
     private Widget creaMessaggioVuoto(String testo) {
