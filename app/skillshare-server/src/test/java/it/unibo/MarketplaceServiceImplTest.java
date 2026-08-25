@@ -4,7 +4,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 public class MarketplaceServiceImplTest {
@@ -60,5 +60,57 @@ public class MarketplaceServiceImplTest {
         annuncio.setDisponibilita("Lunedì e mercoledì pomeriggio");
         annuncio.setControprestazione("Lezioni di inglese");
         return annuncio;
+    }
+    @Test
+    void testListaAnnunciConFiltroCompetenzaEOrdinamentoPerTitolo() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.filtro." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "Filtro", "Utente"));
+
+        AnnuncioDatabase db = new AnnuncioDatabase();
+
+        AnnuncioDTO a1 = creaAnnuncio(email);
+        a1.setTitolo("Z: Corso Avanzato di Java");
+        a1.setCompetenzaOfferta("Programmazione Java");
+        db.pubblica(a1);
+
+        AnnuncioDTO a2 = creaAnnuncio(email);
+        a2.setTitolo("A: Corso Base di Java");
+        a2.setCompetenzaOfferta("Linguaggio Java");
+        db.pubblica(a2);
+
+        AnnuncioDTO a3 = creaAnnuncio(email);
+        a3.setTitolo("B: Corso di Graphic Design");
+        a3.setCompetenzaOfferta("Photoshop e Illustrator");
+        db.pubblica(a3);
+
+        MarketplaceServiceImpl service = new MarketplaceServiceImpl();
+
+        // Filtro per "JAVA" + ordinamento per titolo (A-Z)
+        List<AnnuncioDTO> filtratiEOrdinati = service.listaAnnunci("JAVA", true);
+        assertNotNull(filtratiEOrdinati);
+
+        boolean soloJava = filtratiEOrdinati.stream()
+                .allMatch(a -> a.getCompetenzaOfferta().toLowerCase().contains("java"));
+        assertTrue(soloJava, "Devono essere presenti solo gli annunci con competenza Java");
+
+        int idxA = -1, idxZ = -1;
+        for (int i = 0; i < filtratiEOrdinati.size(); i++) {
+            if (filtratiEOrdinati.get(i).getId().equals(a2.getId())) idxA = i;
+            if (filtratiEOrdinati.get(i).getId().equals(a1.getId())) idxZ = i;
+        }
+        assertTrue(idxA != -1 && idxZ != -1 && idxA < idxZ,
+                "L'annuncio con titolo 'A:' deve precedere l'annuncio con titolo 'Z:'");
+
+        AnnuncioDTO trovato = trovaAnnuncio(filtratiEOrdinati, a1.getId());
+        assertEquals("Filtro Utente", trovato.getNomeAutore());
+    }
+
+    @Test
+    void testListaAnnunciFiltroNessunaCorrispondenzaRestituisceListaVuota() {
+        MarketplaceServiceImpl service = new MarketplaceServiceImpl();
+        List<AnnuncioDTO> risultato = service.listaAnnunci("CompetenzaInesistente_XYZ_999", false);
+        assertNotNull(risultato);
+        assertTrue(risultato.isEmpty(), "Una ricerca senza corrispondenze deve restituire una lista vuota");
     }
 }
