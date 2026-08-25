@@ -12,6 +12,8 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
 
 /**
  * Schermata "Marketplace": tutti gli annunci pubblicati dagli utenti,
@@ -25,6 +27,9 @@ public class MarketplaceGui {
 
     // Riempita dalla risposta RPC: al primo disegno mostra il caricamento
     private final FlowPanel listaAnnunci = new FlowPanel();
+    // Controlli per ricerca e ordinamento
+    private final TextBox searchBox = new TextBox();
+    private final ListBox sortBox = new ListBox();
 
     public MarketplaceGui(UtenteDTO utente) {
         this.utente = utente;
@@ -62,6 +67,8 @@ public class MarketplaceGui {
         intestazione.add(titolo);
 
         card.add(intestazione);
+        // Barra con Ricerca per Competenza e Ordinamento
+        card.add(creaBarraControlli());
 
         listaAnnunci.clear();
         listaAnnunci.add(creaMessaggioVuoto("Caricamento annunci..."));
@@ -69,12 +76,35 @@ public class MarketplaceGui {
 
         return card;
     }
+    private Widget creaBarraControlli() {
+        FlowPanel controlli = new FlowPanel();
+        controlli.addStyleName("marketplace-controlli");
+
+        // Campo Ricerca per Competenza (ricerca in tempo reale durante la digitazione)
+        searchBox.getElement().setAttribute("placeholder", "Cerca per competenza...");
+        searchBox.addStyleName("marketplace-search-box");
+        searchBox.addKeyUpHandler(event -> caricaAnnunci());
+
+        // Dropdown Ordinamento
+        sortBox.addItem("Data (più recenti)", "data");
+        sortBox.addItem("Per titolo", "titolo");
+        sortBox.addStyleName("marketplace-sort-box");
+        sortBox.addChangeHandler(event -> caricaAnnunci());
+
+        controlli.add(searchBox);
+        controlli.add(sortBox);
+
+        return controlli;
+    }
 
     /**
-     * Chiede al server tutti gli annunci e ridisegna la lista.
+     * Chiede al server gli annunci filtrati per competenza e ordinati.
      */
     private void caricaAnnunci() {
-        marketplaceService.listaAnnunci(new AsyncCallback<List<AnnuncioDTO>>() {
+        String filtro = searchBox.getText().trim();
+        boolean ordinaPerTitolo = "titolo".equals(sortBox.getSelectedValue());
+
+        marketplaceService.listaAnnunci(filtro, ordinaPerTitolo, new AsyncCallback<List<AnnuncioDTO>>() {
             @Override
             public void onFailure(Throwable caught) {
                 listaAnnunci.clear();
@@ -92,7 +122,7 @@ public class MarketplaceGui {
         listaAnnunci.clear();
 
         if (annunci == null || annunci.isEmpty()) {
-            listaAnnunci.add(creaMessaggioVuoto("Nessun annuncio disponibile al momento"));
+            listaAnnunci.add(creaMessaggioVuoto("Nessun annuncio trovato"));
             return;
         }
 
