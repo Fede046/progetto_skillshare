@@ -15,6 +15,7 @@ public class NavBar {
     public static final String SEZIONE_PROFILO = "Profilo";
     public static final String SEZIONE_ANNUNCI = "I miei annunci";
     public static final String SEZIONE_MARKETPLACE = "Marketplace";
+    public static final String SEZIONE_RICHIESTE = "richieste";
 
     private final FlowPanel barra = new FlowPanel();
     private final FlowPanel sezioni = new FlowPanel();

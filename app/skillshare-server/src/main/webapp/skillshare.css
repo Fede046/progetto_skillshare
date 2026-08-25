@@ -709,6 +709,70 @@ button.btn-danger:focus-visible {
 }
 
 /* ============================================================
+   Controlli Marketplace (Ricerca per competenza e Ordinamento)
+   ============================================================ */
+
+.marketplace-controlli {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Campo di ricerca per competenza */
+.marketplace-search-box {
+  flex: 1 1 240px;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: sans-serif;
+  color: var(--grigio-testo);
+  background-color: var(--bianco);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.marketplace-search-box:focus {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3px rgba(110, 30, 43, 0.12);
+  outline: none;
+}
+
+/* Dropdown ordinamento */
+.marketplace-sort-box {
+  padding: 10px 14px;
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: sans-serif;
+  color: var(--grigio-testo);
+  background-color: var(--bianco);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.marketplace-sort-box:focus {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3px rgba(110, 30, 43, 0.12);
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  .marketplace-controlli {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .marketplace-sort-box {
+    width: 100%;
+  }
+}
+
+/* ============================================================
    Schermata Richieste (toggle, badge di stato)
    ============================================================ */
 .richieste-tabs {

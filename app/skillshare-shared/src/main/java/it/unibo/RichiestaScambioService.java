@@ -1,5 +1,7 @@
 package it.unibo;
 
+import java.util.List;
+
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
@@ -18,4 +20,23 @@ public interface RichiestaScambioService extends RemoteService {
      */
     RichiestaScambioDTO inviaRichiestaScambio(String idAnnuncio, String idRichiedente, String messaggio)
             throws IllegalArgumentException;
+            /**
+     * Recupera tutte le richieste di scambio ricevute dall'utente (in quanto creatore dell'annuncio).
+     */
+    List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String emailCreatore);
+
+    /**
+     * Recupera tutte le richieste di scambio inviate dall'utente.
+     */
+    List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String emailRichiedente);
+
+    /**
+     * Accetta una richiesta di scambio.
+     */
+    RichiestaScambioDTO accetta(String idRichiesta, String emailCreatore) throws IllegalArgumentException;
+
+    /**
+     * Rifiuta una richiesta di scambio.
+     */
+    RichiestaScambioDTO rifiuta(String idRichiesta, String emailCreatore) throws IllegalArgumentException;
 }

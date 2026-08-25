@@ -1,5 +1,7 @@
 package it.unibo;
 
+import java.util.List;
+
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
 public class RichiestaScambioServiceImpl extends RemoteServiceServlet implements RichiestaScambioService {
@@ -51,6 +53,25 @@ public class RichiestaScambioServiceImpl extends RemoteServiceServlet implements
         richiesta.setMessaggio(messaggio);
 
         return richiesteDatabase.salva(richiesta);
+    }
+    @Override
+    public List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String emailCreatore) {
+        return richiesteDatabase.richiesteRicevuteDaCreatore(emailCreatore);
+    }
+
+    @Override
+    public List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String emailRichiedente) {
+        return richiesteDatabase.richiesteInviateDaRichiedente(emailRichiedente);
+    }
+
+    @Override
+    public RichiestaScambioDTO accetta(String idRichiesta, String emailCreatore) throws IllegalArgumentException {
+        return richiesteDatabase.accetta(idRichiesta, emailCreatore);
+    }
+
+    @Override
+    public RichiestaScambioDTO rifiuta(String idRichiesta, String emailCreatore) throws IllegalArgumentException {
+        return richiesteDatabase.rifiuta(idRichiesta, emailCreatore);
     }
 }
 
