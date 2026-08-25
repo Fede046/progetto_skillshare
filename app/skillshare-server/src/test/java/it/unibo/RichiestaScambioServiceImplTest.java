@@ -125,5 +125,81 @@ public class RichiestaScambioServiceImplTest {
         assertEquals(StatoRichiesta.PENDING, salvata.getStato());
         assertNull(salvata.getMessaggio(), "Il messaggio opzionale può essere null");
     }
+
+    // --- Delega di liste, accetta e rifiuta ---
+
+    @Test
+    void testRichiesteRicevuteDaCreatoreViaServizio() {
+        RichiestaScambioDTO salvata = service.inviaRichiestaScambio(
+                annuncioCreato.getId(), RICHIEDENTE, "Vorrei scambiare con te");
+
+        List<RichiestaScambioDTO> ricevute = service.richiesteRicevuteDaCreatore(CREATORE);
+
+        assertEquals(1, ricevute.size(), "Il creatore deve vedere la richiesta ricevuta");
+        assertEquals(salvata.getId(), ricevute.get(0).getId());
+
+        // Il creatore non ha inviato nessuna richiesta: la delega non confonde le due letture
+        assertTrue(service.richiesteInviateDaRichiedente(CREATORE).isEmpty(),
+                "Il creatore non deve apparire tra i richiedenti");
+    }
+
+    @Test
+    void testRichiesteInviateDaRichiedenteViaServizio() {
+        RichiestaScambioDTO salvata = service.inviaRichiestaScambio(
+                annuncioCreato.getId(), RICHIEDENTE, "Vorrei scambiare con te");
+
+        List<RichiestaScambioDTO> inviate = service.richiesteInviateDaRichiedente(RICHIEDENTE);
+
+        assertEquals(1, inviate.size(), "Il richiedente deve vedere la richiesta inviata");
+        assertEquals(salvata.getId(), inviate.get(0).getId());
+
+        // Il richiedente non ha ricevuto nessuna richiesta: la delega non confonde le due letture
+        assertTrue(service.richiesteRicevuteDaCreatore(RICHIEDENTE).isEmpty(),
+                "Il richiedente non deve apparire tra i creatori");
+    }
+
+    @Test
+    void testAccettaViaServizioDelegaAlDatabase() {
+        RichiestaScambioDTO salvata = service.inviaRichiestaScambio(
+                annuncioCreato.getId(), RICHIEDENTE, "Vorrei scambiare con te");
+
+        RichiestaScambioDTO accettata = service.accetta(salvata.getId(), CREATORE);
+
+        assertEquals(StatoRichiesta.ACCEPTED, accettata.getStato(), "accetta() deve delegare ad ACCEPTED");
+    }
+
+    @Test
+    void testRifiutaViaServizioDelegaAlDatabase() {
+        RichiestaScambioDTO salvata = service.inviaRichiestaScambio(
+                annuncioCreato.getId(), RICHIEDENTE, "Vorrei scambiare con te");
+
+        RichiestaScambioDTO rifiutata = service.rifiuta(salvata.getId(), CREATORE);
+
+        assertEquals(StatoRichiesta.REJECTED, rifiutata.getStato(), "rifiuta() deve delegare a REJECTED");
+    }
+
+    @Test
+    void testAccettaViaServizioPropagaEccezioneNonCreatore() {
+        RichiestaScambioDTO salvata = service.inviaRichiestaScambio(
+                annuncioCreato.getId(), RICHIEDENTE, "Vorrei scambiare con te");
+
+        // L'eccezione di ownership del Database deve risalire fino al chiamante del servizio
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            service.accetta(salvata.getId(), "anna.bianchi@unibo.it");
+        });
+        assertEquals("Non autorizzato: solo il creatore dell'annuncio può accettare la richiesta", ex.getMessage());
+    }
+
+    @Test
+    void testRifiutaViaServizioPropagaEccezioneNonCreatore() {
+        RichiestaScambioDTO salvata = service.inviaRichiestaScambio(
+                annuncioCreato.getId(), RICHIEDENTE, "Vorrei scambiare con te");
+
+        // L'eccezione di ownership del Database deve risalire fino al chiamante del servizio
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            service.rifiuta(salvata.getId(), "anna.bianchi@unibo.it");
+        });
+        assertEquals("Non autorizzato: solo il creatore dell'annuncio può rifiutare la richiesta", ex.getMessage());
+    }
 }
 

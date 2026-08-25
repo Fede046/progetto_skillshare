@@ -20,23 +20,44 @@ public interface RichiestaScambioService extends RemoteService {
      */
     RichiestaScambioDTO inviaRichiestaScambio(String idAnnuncio, String idRichiedente, String messaggio)
             throws IllegalArgumentException;
-            /**
-     * Recupera tutte le richieste di scambio ricevute dall'utente (in quanto creatore dell'annuncio).
-     */
-    List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String emailCreatore);
 
     /**
-     * Recupera tutte le richieste di scambio inviate dall'utente.
+     * Richieste di scambio ricevute da un creatore di annunci,
+     * dalla più recente alla più vecchia.
+     *
+     * @param idCreatore L'id del creatore dell'annuncio.
+     * @return Lista delle richieste ricevute, vuota se l'id è nullo/vuoto o non ce ne sono.
      */
-    List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String emailRichiedente);
+    List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String idCreatore);
 
     /**
-     * Accetta una richiesta di scambio.
+     * Richieste di scambio inviate da un utente richiedente,
+     * dalla più recente alla più vecchia.
+     *
+     * @param idRichiedente L'id dell'utente che ha inviato le richieste.
+     * @return Lista delle richieste inviate, vuota se l'id è nullo/vuoto o non ce ne sono.
      */
-    RichiestaScambioDTO accetta(String idRichiesta, String emailCreatore) throws IllegalArgumentException;
+    List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String idRichiedente);
 
     /**
-     * Rifiuta una richiesta di scambio.
+     * Accetta una richiesta di scambio: solo il creatore dell'annuncio può accettarla.
+     *
+     * @param idRichiesta L'id della richiesta da accettare.
+     * @param idCreatore  L'id dell'utente autenticato che accetta (deve essere il creatore dell'annuncio).
+     * @return La richiesta aggiornata con stato ACCEPTED.
+     * @throws IllegalArgumentException Se i dati non sono validi, se la richiesta non esiste
+     *                                  o se l'utente non è il creatore dell'annuncio.
      */
-    RichiestaScambioDTO rifiuta(String idRichiesta, String emailCreatore) throws IllegalArgumentException;
+    RichiestaScambioDTO accetta(String idRichiesta, String idCreatore) throws IllegalArgumentException;
+
+    /**
+     * Rifiuta una richiesta di scambio: solo il creatore dell'annuncio può rifiutarla.
+     *
+     * @param idRichiesta L'id della richiesta da rifiutare.
+     * @param idCreatore  L'id dell'utente autenticato che rifiuta (deve essere il creatore dell'annuncio).
+     * @return La richiesta aggiornata con stato REJECTED.
+     * @throws IllegalArgumentException Se i dati non sono validi, se la richiesta non esiste
+     *                                  o se l'utente non è il creatore dell'annuncio.
+     */
+    RichiestaScambioDTO rifiuta(String idRichiesta, String idCreatore) throws IllegalArgumentException;
 }
