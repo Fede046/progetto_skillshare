@@ -1,16 +1,16 @@
 package it.unibo;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
-/**
- * Gestisce la collection MapDB "annunci".
- */
+/* Gestisce la collection MapDB "annunci"*/
 public class AnnuncioDatabase {
 
     private final DB db;
@@ -35,10 +35,7 @@ public class AnnuncioDatabase {
         return annunciCollection;
     }
 
-    /**
-     * Salva un nuovo annuncio su MapDB.
-     * L'idUtente si assume già valorizzato dal livello RPC.
-     */
+    /* Salva un nuovo annuncio su MapDB. L'idUtente si assume già valorizzato dal livello RPC.*/
     public AnnuncioDTO pubblica(AnnuncioDTO annuncio) throws IllegalArgumentException {
         if (annuncio == null) {
             throw new IllegalArgumentException("Dati non validi");
@@ -64,16 +61,14 @@ public class AnnuncioDatabase {
         return annuncio;
     }
 
-    /**
-     * Modifica un annuncio esistente, consentita solo al proprietario.
+    /* Modifica un annuncio esistente, consentita solo al proprietario.
      *
      * @param idAnnuncio          L'id dell'annuncio da modificare.
      * @param idUtenteRichiedente L'id dell'utente che richiede la modifica.
      * @param annuncioAggiornato  L'annuncio con i dati aggiornati.
      * @return L'annuncio aggiornato e salvato.
      * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
-     *                                  non e' il proprietario o se manca un campo obbligatorio.
-     */
+                                        non e' il proprietario o se manca un campo obbligatorio.*/
     public AnnuncioDTO modifica(String idAnnuncio, String idUtenteRichiedente, AnnuncioDTO annuncioAggiornato) throws IllegalArgumentException {
         if (idAnnuncio == null || idAnnuncio.trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
@@ -113,14 +108,11 @@ public class AnnuncioDatabase {
         return annuncioAggiornato;
     }
 
-    /**
-     * Rimuove un annuncio esistente, consentita solo al proprietario.
-     *
+    /* Rimuove un annuncio esistente, consentita solo al proprietario.
      * @param idAnnuncio          L'id dell'annuncio da rimuovere.
      * @param idUtenteRichiedente L'id dell'utente che richiede la rimozione.
      * @throws IllegalArgumentException Se l'annuncio non esiste o se il richiedente
-     *                                  non e' il proprietario.
-     */
+     *                                  non e' il proprietario.*/
     public void rimuovi(String idAnnuncio, String idUtenteRichiedente) throws IllegalArgumentException {
         if (idAnnuncio == null || idAnnuncio.trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
@@ -144,10 +136,8 @@ public class AnnuncioDatabase {
         DatabaseCore.commit();
     }
 
-    /**
-     * Annunci pubblicati da un utente, dal piu' recente al piu' vecchio.
-     * Restituisce lista vuota se l'utente non ne ha o se l'id non e' valorizzato.
-     */
+    /* Annunci pubblicati da un utente, dal piu' recente al piu' vecchio.
+     * Restituisce lista vuota se l'utente non ne ha o se l'id non e' valorizzato.*/
     public List<AnnuncioDTO> annunciDiUtente(String idUtente) {
         List<AnnuncioDTO> risultato = new ArrayList<>();
 
@@ -168,10 +158,8 @@ public class AnnuncioDatabase {
         return risultato;
     }
 
-    /**
-     * Tutti gli annunci pubblicati, dal piu' recente al piu' vecchio.
-     * Restituisce lista vuota se non ci sono annunci.
-     */
+    /* Tutti gli annunci pubblicati, dal piu' recente al piu' vecchio.
+     * Restituisce lista vuota se non ci sono annunci.*/
     public List<AnnuncioDTO> tuttiGliAnnunci() {
         List<AnnuncioDTO> risultato = new ArrayList<>(annunciCollection.values());
 
@@ -179,6 +167,46 @@ public class AnnuncioDatabase {
         risultato.sort((a, b) -> Long.compare(b.getDataCreazione(), a.getDataCreazione()));
 
         return risultato;
+    }
+
+    /**
+     * Filtra gli annunci in base alla competenza offerta (case-insensitive).
+     * Se la stringa di ricerca è nulla, vuota o composta solo da spazi, restituisce l'intera lista.
+     *
+     * @param skillQuery Testo o parola chiave da cercare nella competenza offerta.
+     * @return Lista degli annunci corrispondenti.
+     */
+    public List<AnnuncioDTO> filtraPerCompetenza(String skillQuery) {
+        List<AnnuncioDTO> tutti = tuttiGliAnnunci();
+
+        if (skillQuery == null || skillQuery.trim().isEmpty()) {
+            return tutti;
+        }
+
+        String queryNormalizzata = skillQuery.trim().toLowerCase();
+
+        return tutti.stream()
+                .filter(a -> a.getCompetenzaOfferta() != null &&
+                        a.getCompetenzaOfferta().toLowerCase().contains(queryNormalizzata))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Restituisce una lista di annunci ordinata alfabeticamente in ordine crescente per titolo (A-Z).
+     *
+     * @param listaAnnunci La lista da ordinare.
+     * @return Nuova lista ordinata per titolo.
+     */
+    public List<AnnuncioDTO> ordinaPerTitolo(List<AnnuncioDTO> listaAnnunci) {
+        if (listaAnnunci == null || listaAnnunci.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return listaAnnunci.stream()
+                .sorted(Comparator.comparing(
+                        a -> a.getTitolo() != null ? a.getTitolo() : "",
+                        String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
     }
 
     // Lancia eccezione se il campo è null o vuoto dopo il trim
