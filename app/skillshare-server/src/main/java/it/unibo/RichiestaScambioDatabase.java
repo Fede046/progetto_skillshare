@@ -70,6 +70,69 @@ public class RichiestaScambioDatabase {
     }
 
     /**
+     * Accetta una richiesta di scambio: solo il creatore dell'annuncio può accettarla.
+     *
+     * @param idRichiesta L'id della richiesta da accettare.
+     * @param idCreatore  L'id dell'utente autenticato che accetta (deve essere il creatore dell'annuncio).
+     * @return La richiesta aggiornata con stato ACCEPTED.
+     * @throws IllegalArgumentException Se l'id è nullo/vuoto, se la richiesta non esiste
+     *                                  o se l'utente non è il creatore dell'annuncio.
+     */
+    public RichiestaScambioDTO accetta(String idRichiesta, String idCreatore) throws IllegalArgumentException {
+        return aggiornaStatoRichiesta(idRichiesta, idCreatore, StatoRichiesta.ACCEPTED, "accettare");
+    }
+
+    /**
+     * Rifiuta una richiesta di scambio: solo il creatore dell'annuncio può rifiutarla.
+     *
+     * @param idRichiesta L'id della richiesta da rifiutare.
+     * @param idCreatore  L'id dell'utente autenticato che rifiuta (deve essere il creatore dell'annuncio).
+     * @return La richiesta aggiornata con stato REJECTED.
+     * @throws IllegalArgumentException Se l'id è nullo/vuoto, se la richiesta non esiste
+     *                                  o se l'utente non è il creatore dell'annuncio.
+     */
+    public RichiestaScambioDTO rifiuta(String idRichiesta, String idCreatore) throws IllegalArgumentException {
+        return aggiornaStatoRichiesta(idRichiesta, idCreatore, StatoRichiesta.REJECTED, "rifiutare");
+    }
+
+    /**
+     * Aggiorna lo stato di una richiesta esistente, consentito solo al creatore dell'annuncio.
+     * Nessuna guardia sulle transizioni: cambia lo stato a prescindere da quello corrente
+     * (la regola "solo PENDING è decidibile" appartiene al layer di orchestrazione di US-11,
+     * non alla persistenza).
+     *
+     * @param verbo Il verbo all'infinito usato nel messaggio di non autorizzazione
+     *              ("accettare" per accetta, "rifiutare" per rifiuta).
+     */
+    private RichiestaScambioDTO aggiornaStatoRichiesta(String idRichiesta, String idCreatore,
+            StatoRichiesta nuovoStato, String verbo) throws IllegalArgumentException {
+        if (idRichiesta == null || idRichiesta.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
+        if (idCreatore == null || idCreatore.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
+
+        RichiestaScambioDTO esistente = richiesteCollection.get(idRichiesta);
+        if (esistente == null) {
+            throw new IllegalArgumentException("Richiesta non trovata");
+        }
+
+        // Controllo proprietario: solo chi ha pubblicato l'annuncio puo' decidere sulla richiesta
+        if (!idCreatore.equals(esistente.getIdCreatoreAnnuncio())) {
+            throw new IllegalArgumentException(
+                    "Non autorizzato: solo il creatore dell'annuncio può " + verbo + " la richiesta");
+        }
+
+        // Aggiornamento dello stato e persistenza
+        esistente.setStato(nuovoStato);
+        richiesteCollection.put(esistente.getId(), esistente);
+        DatabaseCore.commit();
+
+        return esistente;
+    }
+
+    /**
      * Richieste di scambio ricevute da un creatore di annunci,
      * dalla più recente alla più vecchia.
      * Restituisce lista vuota se l'id è null/vuoto o non ci sono richieste.
