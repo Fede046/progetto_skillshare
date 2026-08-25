@@ -2,12 +2,11 @@ package it.unibo;
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapdb.DB;
@@ -187,4 +186,69 @@ public class AnnuncioDatabaseTest {
         assertNotNull(risultato, "Deve restituire una lista, non null");
         assertTrue(risultato.isEmpty(), "Senza annunci la lista deve essere vuota");
     }
+
+    @Test
+    void testFiltraPerCompetenzaCaseInsensitive() {
+        AnnuncioDTO a1 = creaAnnuncioValido();
+        a1.setTitolo("Ripetizioni Java e OOP");
+        a1.setCompetenzaOfferta("Programmazione Java");
+        annuncioDatabase.pubblica(a1);
+
+        AnnuncioDTO a2 = creaAnnuncioValido();
+        a2.setTitolo("Corso Base Python");
+        a2.setCompetenzaOfferta("Data Science in Python");
+        annuncioDatabase.pubblica(a2);
+
+        // Ricerca parziale maiuscola ("JAVA")
+        List<AnnuncioDTO> resJava = annuncioDatabase.filtraPerCompetenza("JAVA");
+        assertEquals(1, resJava.size());
+        assertEquals("Ripetizioni Java e OOP", resJava.get(0).getTitolo());
+
+        // Ricerca parziale minuscola ("python")
+        List<AnnuncioDTO> resPython = annuncioDatabase.filtraPerCompetenza("python");
+        assertEquals(1, resPython.size());
+        assertEquals("Corso Base Python", resPython.get(0).getTitolo());
+    }
+
+    @Test
+    void testFiltraConStringaVuotaOBlankRestituisceTutti() {
+        AnnuncioDTO a1 = creaAnnuncioValido();
+        annuncioDatabase.pubblica(a1);
+
+        List<AnnuncioDTO> resNull = annuncioDatabase.filtraPerCompetenza(null);
+        List<AnnuncioDTO> resBlank = annuncioDatabase.filtraPerCompetenza("   ");
+
+        assertEquals(1, resNull.size());
+        assertEquals(1, resBlank.size());
+    }
+
+    @Test
+    void testFiltraSenzaCorrispondenzeRestituisceListaVuota() {
+        AnnuncioDTO a1 = creaAnnuncioValido();
+        a1.setCompetenzaOfferta("Design Grafico");
+        annuncioDatabase.pubblica(a1);
+
+        List<AnnuncioDTO> res = annuncioDatabase.filtraPerCompetenza("InesistenteXYZ");
+        assertNotNull(res);
+        assertTrue(res.isEmpty(), "Una ricerca senza corrispondenze deve restituire lista vuota");
+    }
+
+    @Test
+    void testOrdinaPerTitoloAlfabetico() {
+        AnnuncioDTO a1 = creaAnnuncioValido();
+        a1.setTitolo("Zebra: Lezioni Grafica");
+
+        AnnuncioDTO a2 = creaAnnuncioValido();
+        a2.setTitolo("Algoritmi e Strutture Dati");
+
+        AnnuncioDTO a3 = creaAnnuncioValido();
+        a3.setTitolo("Basi di Dati e SQL");
+
+        List<AnnuncioDTO> lista = List.of(a1, a2, a3);
+        List<AnnuncioDTO> ordinata = annuncioDatabase.ordinaPerTitolo(lista);
+
+        assertEquals("Algoritmi e Strutture Dati", ordinata.get(0).getTitolo());
+        assertEquals("Basi di Dati e SQL", ordinata.get(1).getTitolo());
+        assertEquals("Zebra: Lezioni Grafica", ordinata.get(2).getTitolo());
+    }   
 }

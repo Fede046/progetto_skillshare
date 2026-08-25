@@ -1,5 +1,6 @@
 package it.unibo;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.core.client.GWT;
@@ -145,6 +146,11 @@ public class MieiAnnunciGui {
         controprestazioneBox.setWidth("100%");
         controprestazioneBox.setText(testoOppure(annuncio.getControprestazione(), ""));
 
+        // Banner di errore in fondo al form
+        Label lblErrore = new Label();
+        lblErrore.addStyleName("form-errore");
+        lblErrore.setVisible(false);
+
         Button btnSalva = new Button("Salva");
         btnSalva.addStyleName("btn-primary");
         btnSalva.addStyleName("btn-sm");
@@ -159,24 +165,51 @@ public class MieiAnnunciGui {
         });
 
         btnSalva.addClickHandler(event -> {
+            lblErrore.setVisible(false);
+            lblErrore.setText("");
+
+            String titolo = titoloBox.getText().trim();
+            String competenza = competenzaBox.getText().trim();
+            String disponibilita = disponibilitaBox.getText().trim();
+            String controprestazione = controprestazioneBox.getText().trim();
+
+            List<String> campiMancanti = new ArrayList<>();
+            if (titolo.isEmpty()) campiMancanti.add("titolo");
+            if (competenza.isEmpty()) campiMancanti.add("competenza offerta");
+            if (disponibilita.isEmpty()) campiMancanti.add("disponibilità");
+            if (controprestazione.isEmpty()) campiMancanti.add("controprestazione");
+
+            if (!campiMancanti.isEmpty()) {
+                String elencoCampi;
+                if (campiMancanti.size() == 1) {
+                    elencoCampi = campiMancanti.get(0);
+                } else {
+                    String primiCampi = String.join(", ", campiMancanti.subList(0, campiMancanti.size() - 1));
+                    elencoCampi = primiCampi + " e " + campiMancanti.get(campiMancanti.size() - 1);
+                }
+
+                lblErrore.setText("Non puoi salvare l'annuncio: compila " + elencoCampi + ".");
+                lblErrore.setVisible(true);
+                return;
+            }
+
             AnnuncioDTO aggiornato = new AnnuncioDTO();
-            aggiornato.setTitolo(titoloBox.getText().trim());
+            aggiornato.setTitolo(titolo);
             aggiornato.setDescrizione(descrizioneArea.getText().trim());
-            aggiornato.setCompetenzaOfferta(competenzaBox.getText().trim());
-            aggiornato.setDisponibilita(disponibilitaBox.getText().trim());
-            aggiornato.setControprestazione(controprestazioneBox.getText().trim());
+            aggiornato.setCompetenzaOfferta(competenza);
+            aggiornato.setDisponibilita(disponibilita);
+            aggiornato.setControprestazione(controprestazione);
 
             annuncioService.modifica(annuncio.getId(), utente.getEmail(), aggiornato,
                     new AsyncCallback<AnnuncioDTO>() {
                         @Override
                         public void onFailure(Throwable caught) {
-                            // Se il server rifiuta, mostriamo il messaggio di errore
-                            Window.alert(caught.getMessage());
+                            lblErrore.setText(caught.getMessage() != null ? caught.getMessage() : "Errore durante il salvataggio.");
+                            lblErrore.setVisible(true);
                         }
 
                         @Override
                         public void onSuccess(AnnuncioDTO result) {
-                            // Aggiorna la riga visibile con i nuovi dati e chiude il form
                             riga.aggiorna(result);
                             riga.formAperto = false;
                             form.removeFromParent();
@@ -200,6 +233,7 @@ public class MieiAnnunciGui {
         azioniForm.add(btnSalva);
         azioniForm.add(btnAnnulla);
         form.add(azioniForm);
+        form.add(lblErrore);
 
         // Il form appare in cima alla riga dell'annuncio
         riga.widget().insert(form, 0);
