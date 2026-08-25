@@ -64,6 +64,15 @@
     <url-pattern>/app/marketplace</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>richiestaScambioServlet</servlet-name>
+    <servlet-class>it.unibo.RichiestaScambioServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>richiestaScambioServlet</servlet-name>
+    <url-pattern>/app/richiestaScambio</url-pattern>
+  </servlet-mapping>
+
 	<!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
