@@ -676,3 +676,91 @@ button.btn-danger:focus-visible {
   outline: 2px solid #d9534f;
   outline-offset: 2px;
 }
+
+/* ============================================================
+   Dettaglio annuncio nel marketplace ("Proponi scambio")
+   ============================================================ */
+.dettaglio-annuncio-dialog .gwt-DialogBox {
+  width: 460px;
+}
+
+.dettaglio-annuncio-contenuto {
+  padding: 16px 20px;
+  min-width: 300px;
+}
+
+.dettaglio-annuncio-successo {
+  color: #1E7A3C;
+  background-color: #E9F7EE;
+  border: 1px solid #A9D8B8;
+  border-left: 4px solid #2E9B57;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Nota esplicativa sul proprio annuncio, al posto del pulsante */
+.annuncio-proprio-nota {
+  color: var(--grigio-testo);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ============================================================
+   Schermata Richieste (toggle, badge di stato)
+   ============================================================ */
+.richieste-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+button.richieste-tab {
+  background-color: var(--grigio-chiaro);
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 999px;
+  color: var(--grigio-testo);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 18px;
+}
+
+button.richieste-tab:hover {
+  background-color: var(--bordeaux-velo);
+}
+
+button.richieste-tab-attivo {
+  background-color: var(--bordeaux);
+  border-color: var(--bordeaux);
+  color: var(--bianco);
+  font-weight: bold;
+}
+
+.richiesta-stato {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.richiesta-stato-pending {
+  background-color: #FFF4E5;
+  color: #B26A00;
+  border: 1px solid #FFD9A8;
+}
+
+.richiesta-stato-accettata {
+  background-color: #E9F7EE;
+  color: #1E7A3C;
+  border: 1px solid #A9D8B8;
+}
+
+.richiesta-stato-rifiutata {
+  background-color: #FDECEE;
+  color: #B3261E;
+  border: 1px solid #E5A5AC;
+}
