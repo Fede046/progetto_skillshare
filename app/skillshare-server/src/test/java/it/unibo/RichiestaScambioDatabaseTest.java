@@ -274,5 +274,35 @@ public class RichiestaScambioDatabaseTest {
         assertNotNull(ricaricata);
         assertEquals(StatoRichiesta.PENDING, ricaricata.getStato(), "Lo stato non deve cambiare");
     }
+    @Test
+    void testAccettaRichiestaInesistente() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.accetta("id-inesistente", "mario.rossi@unibo.it");
+        });
+        assertEquals("Richiesta non trovata", ex.getMessage());
+    }
 
+    @Test
+    void testRifiutaRichiestaInesistente() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.rifiuta("id-inesistente", "mario.rossi@unibo.it");
+        });
+        assertEquals("Richiesta non trovata", ex.getMessage());
+    }
+
+    @Test
+    void testAccettaSenzaIdRichiesta() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.accetta("   ", "mario.rossi@unibo.it");
+        });
+        assertEquals("Dati non validi", ex.getMessage());
+    }
+
+    @Test
+    void testRifiutaSenzaIdCreatore() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.rifiuta("id-qualsiasi", null);
+        });
+        assertEquals("Dati non validi", ex.getMessage());
+    }
 }
