@@ -10,10 +10,22 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
 
     @Override
     public List<AnnuncioDTO> listaAnnunci() {
-        // Delega ad AnnuncioDatabase: tutti gli annunci, dal piu' recente al piu' vecchio
-        List<AnnuncioDTO> annunci = new AnnuncioDatabase().tuttiGliAnnunci();
+        return listaAnnunci(null, false);
+    }
 
-        // Arricchisce ogni annuncio con il nome completo dell'autore
+    @Override
+    public List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo) {
+        AnnuncioDatabase db = new AnnuncioDatabase();
+
+        // 1. Filtraggio per competenza (se il filtro è nullo/vuoto restituisce tutti gli annunci)
+        List<AnnuncioDTO> annunci = db.filtraPerCompetenza(filtroCompetenza);
+
+        // 2. Ordinamento alfabetico per titolo se richiesto
+        if (ordinaPerTitolo) {
+            annunci = db.ordinaPerTitolo(annunci);
+        }
+
+        // 3. Arricchimento con il nome completo dell'autore
         for (AnnuncioDTO annuncio : annunci) {
             annuncio.setNomeAutore(nomeAutore(annuncio.getIdUtente()));
         }
