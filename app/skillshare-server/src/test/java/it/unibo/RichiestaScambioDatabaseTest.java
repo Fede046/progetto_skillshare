@@ -209,4 +209,70 @@ public class RichiestaScambioDatabaseTest {
         assertTrue(richiestaDatabase.richiesteInviateDaRichiedente(null).isEmpty());
         assertTrue(richiestaDatabase.richiesteInviateDaRichiedente("   ").isEmpty());
     }
+
+    // --- Accetta / Rifiuta ---
+
+    @Test
+    void testCreatoreAccettaRichiestaPENDING() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+
+        RichiestaScambioDTO accettata = richiestaDatabase.accetta(salvata.getId(), "mario.rossi@unibo.it");
+
+        assertEquals(StatoRichiesta.ACCEPTED, accettata.getStato(), "Lo stato deve essere ACCEPTED");
+
+        // La richiesta deve essere aggiornata anche nella collection
+        RichiestaScambioDTO ricaricata = richiestaDatabase.getRichiesteCollection().get(salvata.getId());
+        assertNotNull(ricaricata);
+        assertEquals(StatoRichiesta.ACCEPTED, ricaricata.getStato(), "Lo stato persistito deve essere ACCEPTED");
+
+        // La lista delle richieste inviate dal richiedente deve riflettere il nuovo stato
+        List<RichiestaScambioDTO> inviate = richiestaDatabase.richiesteInviateDaRichiedente("luigi.verdi@unibo.it");
+        assertEquals(1, inviate.size(), "La richiesta deve restare nella lista inviate");
+        assertEquals(StatoRichiesta.ACCEPTED, inviate.get(0).getStato(), "La lista inviate deve riflettere ACCEPTED");
+    }
+
+    @Test
+    void testCreatoreRifiutaRichiestaPENDING() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+
+        RichiestaScambioDTO rifiutata = richiestaDatabase.rifiuta(salvata.getId(), "mario.rossi@unibo.it");
+
+        assertEquals(StatoRichiesta.REJECTED, rifiutata.getStato(), "Lo stato deve essere REJECTED");
+
+        // La richiesta deve essere aggiornata anche nella collection
+        RichiestaScambioDTO ricaricata = richiestaDatabase.getRichiesteCollection().get(salvata.getId());
+        assertNotNull(ricaricata);
+        assertEquals(StatoRichiesta.REJECTED, ricaricata.getStato(), "Lo stato persistito deve essere REJECTED");
+    }
+
+    @Test
+    void testAccettaComeNonCreatoreRifiutato() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.accetta(salvata.getId(), "anna.bianchi@unibo.it");
+        });
+        assertEquals("Non autorizzato: solo il creatore dell'annuncio può accettare la richiesta", ex.getMessage());
+
+        // Lo stato deve restare invariato (PENDING)
+        RichiestaScambioDTO ricaricata = richiestaDatabase.getRichiesteCollection().get(salvata.getId());
+        assertNotNull(ricaricata);
+        assertEquals(StatoRichiesta.PENDING, ricaricata.getStato(), "Lo stato non deve cambiare");
+    }
+
+    @Test
+    void testRifiutaComeNonCreatoreRifiutato() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.rifiuta(salvata.getId(), "anna.bianchi@unibo.it");
+        });
+        assertEquals("Non autorizzato: solo il creatore dell'annuncio può rifiutare la richiesta", ex.getMessage());
+
+        // Lo stato deve restare invariato (PENDING)
+        RichiestaScambioDTO ricaricata = richiestaDatabase.getRichiesteCollection().get(salvata.getId());
+        assertNotNull(ricaricata);
+        assertEquals(StatoRichiesta.PENDING, ricaricata.getStato(), "Lo stato non deve cambiare");
+    }
+
 }
