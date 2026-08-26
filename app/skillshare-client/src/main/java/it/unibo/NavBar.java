@@ -15,7 +15,7 @@ public class NavBar {
     public static final String SEZIONE_PROFILO = "Profilo";
     public static final String SEZIONE_ANNUNCI = "I miei annunci";
     public static final String SEZIONE_MARKETPLACE = "Marketplace";
-    public static final String SEZIONE_RICHIESTE = "richieste";
+    public static final String SEZIONE_RICHIESTE = "Richieste";
 
     private final FlowPanel barra = new FlowPanel();
     private final FlowPanel sezioni = new FlowPanel();
@@ -36,6 +36,7 @@ public class NavBar {
         aggiungiSezione(SEZIONE_PROFILO, () -> new ProfiloGui(utente).mostra());
         aggiungiSezione(SEZIONE_ANNUNCI, () -> new MieiAnnunciGui(utente).mostra());
         aggiungiSezione(SEZIONE_MARKETPLACE, () -> new MarketplaceGui(utente).mostra());
+        aggiungiSezione(SEZIONE_RICHIESTE, () -> new RichiesteGui(utente).mostra());
 
         barra.add(creaAreaUtente(utente));
     }
