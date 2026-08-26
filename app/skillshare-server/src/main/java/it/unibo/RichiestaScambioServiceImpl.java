@@ -54,24 +54,27 @@ public class RichiestaScambioServiceImpl extends RemoteServiceServlet implements
 
         return richiesteDatabase.salva(richiesta);
     }
+
     @Override
-    public List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String emailCreatore) {
-        return richiesteDatabase.richiesteRicevuteDaCreatore(emailCreatore);
+    public List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String idCreatore) {
+        return richiesteDatabase.richiesteRicevuteDaCreatore(idCreatore);
     }
 
     @Override
-    public List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String emailRichiedente) {
-        return richiesteDatabase.richiesteInviateDaRichiedente(emailRichiedente);
+    public List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String idRichiedente) {
+        return richiesteDatabase.richiesteInviateDaRichiedente(idRichiedente);
     }
 
     @Override
-    public RichiestaScambioDTO accetta(String idRichiesta, String emailCreatore) throws IllegalArgumentException {
-        return richiesteDatabase.accetta(idRichiesta, emailCreatore);
+    public RichiestaScambioDTO accetta(String idRichiesta, String idCreatore) throws IllegalArgumentException {
+        // Le eccezioni di ownership/inesistenza del Database risalgono fino al client
+        return richiesteDatabase.accetta(idRichiesta, idCreatore);
     }
 
     @Override
-    public RichiestaScambioDTO rifiuta(String idRichiesta, String emailCreatore) throws IllegalArgumentException {
-        return richiesteDatabase.rifiuta(idRichiesta, emailCreatore);
+    public RichiestaScambioDTO rifiuta(String idRichiesta, String idCreatore) throws IllegalArgumentException {
+        // Le eccezioni di ownership/inesistenza del Database risalgono fino al client
+        return richiesteDatabase.rifiuta(idRichiesta, idCreatore);
     }
 }
 
