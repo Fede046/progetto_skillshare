@@ -1,13 +1,18 @@
 package it.unibo;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextArea;
@@ -30,6 +35,11 @@ public class MarketplaceGui {
     // Controlli per ricerca e ordinamento
     private final TextBox searchBox = new TextBox();
     private final ListBox sortBox = new ListBox();
+    // Ricerca multi-campo: nessun campo spuntato di default
+    private final CheckBox chkTitolo = new CheckBox("Titolo");
+    private final CheckBox chkCompetenza = new CheckBox("Competenza offerta");
+    private final CheckBox chkControprestazione = new CheckBox("Controprestazione");
+    private final CheckBox chkAutore = new CheckBox("Autore");
 
     public MarketplaceGui(UtenteDTO utente) {
         this.utente = utente;
@@ -81,7 +91,7 @@ public class MarketplaceGui {
         controlli.addStyleName("marketplace-controlli");
 
         // Campo Ricerca per Competenza (ricerca in tempo reale durante la digitazione)
-        searchBox.getElement().setAttribute("placeholder", "Cerca per competenza...");
+        searchBox.getElement().setAttribute("placeholder", "Cerca negli annunci...");
         searchBox.addStyleName("marketplace-search-box");
         searchBox.addKeyUpHandler(event -> caricaAnnunci());
 
@@ -94,17 +104,40 @@ public class MarketplaceGui {
         controlli.add(searchBox);
         controlli.add(sortBox);
 
+        // Campi in cui cercare: nessuno spuntato => ricerca su tutti i campi (null)
+        FlowPanel campiRicerca = new FlowPanel();
+        campiRicerca.addStyleName("marketplace-campi-ricerca");
+        campiRicerca.add(chkTitolo);
+        campiRicerca.add(chkCompetenza);
+        campiRicerca.add(chkControprestazione);
+        campiRicerca.add(chkAutore);
+        chkTitolo.addValueChangeHandler(event -> caricaAnnunci());
+        chkCompetenza.addValueChangeHandler(event -> caricaAnnunci());
+        chkControprestazione.addValueChangeHandler(event -> caricaAnnunci());
+        chkAutore.addValueChangeHandler(event -> caricaAnnunci());
+        controlli.add(campiRicerca);
+
         return controlli;
     }
 
     /**
-     * Chiede al server gli annunci filtrati per competenza e ordinati.
+     * Chiede al server gli annunci che corrispondono alla query nei campi selezionati, ordinati.
      */
     private void caricaAnnunci() {
-        String filtro = searchBox.getText().trim();
+        String query = searchBox.getText().trim();
         boolean ordinaPerTitolo = "titolo".equals(sortBox.getSelectedValue());
 
-        marketplaceService.listaAnnunci(filtro, ordinaPerTitolo, new AsyncCallback<List<AnnuncioDTO>>() {
+        // Campi selezionati con le checkbox; se nessuno e' spuntato si cerca su tutti (null)
+        Set<CampoRicerca> campi = new HashSet<>();
+        if (chkTitolo.getValue()) campi.add(CampoRicerca.TITOLO);
+        if (chkCompetenza.getValue()) campi.add(CampoRicerca.COMPETENZA);
+        if (chkControprestazione.getValue()) campi.add(CampoRicerca.CONTROPRESTAZIONE);
+        if (chkAutore.getValue()) campi.add(CampoRicerca.AUTORE);
+        if (campi.isEmpty()) {
+            campi = null;
+        }
+
+        marketplaceService.cercaAnnunci(query, campi, ordinaPerTitolo, new AsyncCallback<List<AnnuncioDTO>>() {
             @Override
             public void onFailure(Throwable caught) {
                 listaAnnunci.clear();
@@ -152,6 +185,48 @@ public class MarketplaceGui {
         campi.add(creaCampo("Competenza offerta", annuncio.getCompetenzaOfferta()));
         campi.add(creaCampo("Controprestazione", annuncio.getControprestazione()));
         item.add(campi);
+        // Descrizione estesa: tendina accordion a tutta larghezza, solo visibilita in memoria
+        String descrizione = annuncio.getDescrizione();
+        if (descrizione != null && !descrizione.trim().isEmpty()) {
+            FocusPanel toggleDescrizione = new FocusPanel();
+            toggleDescrizione.addStyleName("annuncio-descrizione-toggle");
+            toggleDescrizione.getElement().setAttribute("role", "button");
+            toggleDescrizione.getElement().setAttribute("tabindex", "0");
+            toggleDescrizione.getElement().setAttribute("aria-expanded", "false");
+
+            Label testoToggle = new Label("Descrizione");
+            testoToggle.addStyleName("annuncio-descrizione-toggle-testo");
+
+            Label chevron = new Label("\u25B8");
+            chevron.addStyleName("annuncio-descrizione-toggle-chevron");
+
+            FlowPanel intestazione = new FlowPanel();
+            intestazione.addStyleName("annuncio-descrizione-toggle-intestazione");
+            intestazione.add(testoToggle);
+            intestazione.add(chevron);
+            toggleDescrizione.setWidget(intestazione);
+
+            FlowPanel contenutoDescrizione = new FlowPanel();
+            contenutoDescrizione.addStyleName("annuncio-descrizione-contenuto");
+            contenutoDescrizione.setVisible(false);
+
+            Label testoDescrizione = new Label(descrizione);
+            testoDescrizione.addStyleName("annuncio-descrizione-testo");
+            contenutoDescrizione.add(testoDescrizione);
+
+            toggleDescrizione.addClickHandler(event ->
+                    toggleDescrizione(toggleDescrizione, contenutoDescrizione));
+            toggleDescrizione.addKeyDownHandler(event -> {
+                int codice = event.getNativeKeyCode();
+                if (codice == KeyCodes.KEY_ENTER || codice == KeyCodes.KEY_SPACE) {
+                    event.preventDefault();
+                    toggleDescrizione(toggleDescrizione, contenutoDescrizione);
+                }
+            });
+
+            item.add(toggleDescrizione);
+            item.add(contenutoDescrizione);
+        }
 
         // Azione "Proponi scambio": sul proprio annuncio il pulsante e' nascosto
         // e un messaggio spiega il perche'. Il controllo autoritativo resta sul server.
@@ -173,6 +248,14 @@ public class MarketplaceGui {
         item.add(azioni);
 
         return item;
+    }
+
+    // Apre/chiude la tendina descrizione e aggiorna lo stato accessibile
+    private void toggleDescrizione(FocusPanel toggle, FlowPanel contenuto) {
+        boolean apri = !contenuto.isVisible();
+        contenuto.setVisible(apri);
+        toggle.setStyleName("annuncio-descrizione-toggle-aperto", apri);
+        toggle.getElement().setAttribute("aria-expanded", String.valueOf(apri));
     }
 
     /**

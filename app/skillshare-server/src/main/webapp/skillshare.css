@@ -760,6 +760,111 @@ button.btn-danger:focus-visible {
   box-shadow: 0 0 0 3px rgba(110, 30, 43, 0.12);
   outline: none;
 }
+/* Riga di checkbox per selezionare i campi in cui cercare */
+.marketplace-campi-ricerca {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+}
+
+.marketplace-campi-ricerca label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--grigio-testo);
+  cursor: pointer;
+}
+
+.marketplace-campi-ricerca input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--bordeaux);
+  cursor: pointer;
+}
+
+/* Tendina "Descrizione": header accordion a tutta larghezza, area di click comoda */
+.annuncio-descrizione-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 14px;
+  padding: 12px 16px;
+  font-family: sans-serif;
+  font-size: 14px;
+  text-align: left;
+  color: var(--grigio-testo);
+  background-color: var(--bianco);
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.annuncio-descrizione-toggle:hover,
+.annuncio-descrizione-toggle:focus-visible {
+  background-color: var(--bordeaux-velo);
+  border-color: var(--bordeaux);
+  outline: none;
+}
+
+.annuncio-descrizione-toggle-intestazione {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.annuncio-descrizione-toggle-testo {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--bordeaux);
+}
+
+.annuncio-descrizione-toggle-chevron {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--bordeaux);
+  transition: transform 0.2s ease;
+}
+
+/* Stato aperto: l header si aggancia visivamente al contenuto */
+.annuncio-descrizione-toggle-aperto {
+  background-color: var(--bordeaux-velo);
+  border-color: var(--bordeaux);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.annuncio-descrizione-toggle-aperto .annuncio-descrizione-toggle-chevron {
+  transform: rotate(90deg);
+}
+
+/* Contenuto: si unisce all header aperto (effetto accordion) */
+.annuncio-descrizione-contenuto {
+  padding: 12px 16px;
+  border: 1px solid var(--grigio-bordo);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background-color: var(--bianco);
+}
+
+.annuncio-descrizione-testo {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--grigio-testo);
+  white-space: pre-wrap;
+}
+
+
 
 @media (max-width: 600px) {
   .marketplace-controlli {
