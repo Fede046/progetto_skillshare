@@ -1,9 +1,13 @@
 package it.unibo;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -112,5 +116,159 @@ public class MarketplaceServiceImplTest {
         List<AnnuncioDTO> risultato = service.listaAnnunci("CompetenzaInesistente_XYZ_999", false);
         assertNotNull(risultato);
         assertTrue(risultato.isEmpty(), "Una ricerca senza corrispondenze deve restituire una lista vuota");
+    }
+
+    @Test
+    void testCercaAnnunciPerTitolo() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.cerca.titolo." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "CercaTitolo", "Utente"));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        annuncio.setTitolo("TitoloUnicoRicerca_" + ts);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
+                .cercaAnnunci("TitoloUnicoRicerca_" + ts, EnumSet.of(CampoRicerca.TITOLO), false);
+
+        AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
+        assertEquals("TitoloUnicoRicerca_" + ts, trovato.getTitolo());
+    }
+
+    @Test
+    void testCercaAnnunciPerCompetenza() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.cerca.competenza." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "CercaCompetenza", "Utente"));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        annuncio.setCompetenzaOfferta("CompetenzaUnicaRicerca_" + ts);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
+                .cercaAnnunci("CompetenzaUnicaRicerca_" + ts, EnumSet.of(CampoRicerca.COMPETENZA), false);
+
+        assertEquals(annuncio.getId(), trovaAnnuncio(risultato, annuncio.getId()).getId());
+    }
+
+    @Test
+    void testCercaAnnunciPerAutoreUsaNomeCompleto() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.cerca.autore." + ts + "@unibo.it";
+        String nome = "AutoreRicerca" + ts;
+        String cognome = "CognomeRicerca" + ts;
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", nome, cognome));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        // Il campo AUTORE cerca nel nome completo (nome + cognome) valorizzato dal servizio
+        List<AnnuncioDTO> perNome = new MarketplaceServiceImpl()
+                .cercaAnnunci(nome, EnumSet.of(CampoRicerca.AUTORE), false);
+        AnnuncioDTO trovato = trovaAnnuncio(perNome, annuncio.getId());
+        assertEquals(nome + " " + cognome, trovato.getNomeAutore(),
+                "La ricerca per autore deve usare nome e cognome arricchiti");
+
+        List<AnnuncioDTO> perCognome = new MarketplaceServiceImpl()
+                .cercaAnnunci(cognome, EnumSet.of(CampoRicerca.AUTORE), false);
+        assertEquals(annuncio.getId(), trovaAnnuncio(perCognome, annuncio.getId()).getId());
+    }
+
+    @Test
+    void testCercaAnnunciOrSuPiuCampi() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.cerca.or." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "CercaOr", "Utente"));
+
+        AnnuncioDatabase db = new AnnuncioDatabase();
+
+        // La stessa query deve bastare da sola: soloTitolo matcha solo per TITOLO
+        // (la sua competenza resta "Programmazione Java"), soloCompetenza solo per COMPETENZA
+        // (il suo titolo resta "Ripetizioni di Java"), nessunCampo per nessun campo.
+        AnnuncioDTO soloTitolo = creaAnnuncio(email);
+        soloTitolo.setTitolo("MatchOrUnico_" + ts);
+        db.pubblica(soloTitolo);
+
+        AnnuncioDTO soloCompetenza = creaAnnuncio(email);
+        soloCompetenza.setCompetenzaOfferta("MatchOrUnico_" + ts);
+        db.pubblica(soloCompetenza);
+
+        AnnuncioDTO nessunCampo = creaAnnuncio(email);
+        nessunCampo.setTitolo("NessunMatch_" + ts);
+        nessunCampo.setCompetenzaOfferta("NessunaCompetenza_" + ts);
+        db.pubblica(nessunCampo);
+
+        String query = "MatchOrUnico_" + ts;
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl().cercaAnnunci(
+                query, EnumSet.of(CampoRicerca.TITOLO, CampoRicerca.COMPETENZA), false);
+
+        boolean trovatoPerTitolo = risultato.stream().anyMatch(a -> a.getId().equals(soloTitolo.getId()));
+        boolean trovatoPerCompetenza = risultato.stream().anyMatch(a -> a.getId().equals(soloCompetenza.getId()));
+        boolean esclusoNessunCampo = risultato.stream().noneMatch(a -> a.getId().equals(nessunCampo.getId()));
+
+        assertTrue(trovatoPerTitolo, "Deve bastare il match sul titolo (logica OR)");
+        assertTrue(trovatoPerCompetenza, "Deve bastare il match sulla competenza (logica OR)");
+        assertTrue(esclusoNessunCampo, "Un annuncio senza alcun match deve restare escluso");
+    }
+
+    @Test
+    void testCercaAnnunciCampiNulloCercaSuTuttiICampi() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.cerca.nullcampi." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "CercaNullCampi", "Utente"));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        annuncio.setControprestazione("MatchInControprestazione_" + ts);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        // campi = null: la ricerca avviene su tutti i campi disponibili
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
+                .cercaAnnunci("MatchInControprestazione_" + ts, null, false);
+
+        assertEquals(annuncio.getId(), trovaAnnuncio(risultato, annuncio.getId()).getId());
+    }
+
+    @Test
+    void testCercaAnnunciQueryNullaOVuotaRestituisceTutti() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.cerca.queryvuota." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "CercaQueryVuota", "Utente"));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        MarketplaceServiceImpl service = new MarketplaceServiceImpl();
+        Set<CampoRicerca> tutti = EnumSet.allOf(CampoRicerca.class);
+
+        List<AnnuncioDTO> conNull = service.cercaAnnunci(null, tutti, false);
+        List<AnnuncioDTO> conVuota = service.cercaAnnunci("   ", tutti, false);
+
+        assertEquals(annuncio.getId(), trovaAnnuncio(conNull, annuncio.getId()).getId());
+        assertEquals(annuncio.getId(), trovaAnnuncio(conVuota, annuncio.getId()).getId());
+    }
+
+    @Test
+    void testCercaAnnunciNessunaCorrispondenzaRestituisceListaVuota() {
+        String queryInesistente = "QueryInesistente_" + UUID.randomUUID();
+
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
+                .cercaAnnunci(queryInesistente, EnumSet.allOf(CampoRicerca.class), false);
+
+        assertNotNull(risultato);
+        assertTrue(risultato.isEmpty(), "Una ricerca senza corrispondenze deve restituire una lista vuota");
+    }
+
+    @Test
+    void testCercaAnnunciAutoreNonRegistratoUsaEmailComeFallback() {
+        String email = "fantasma.cerca." + System.currentTimeMillis() + "@unibo.it";
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        // Autore non piu registrato: la ricerca per AUTORE usa l email come fallback
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
+                .cercaAnnunci("fantasma.cerca", EnumSet.of(CampoRicerca.AUTORE), false);
+
+        AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
+        assertEquals(email, trovato.getNomeAutore(), "Senza utente registrato si mostra l email come fallback");
     }
 }
