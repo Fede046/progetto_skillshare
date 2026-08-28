@@ -5,6 +5,14 @@
 
 	<!-- Servlets -->
    <servlet>
+        <servlet-name>chatService</servlet-name>
+        <servlet-class>it.unibo.ChatServiceImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>chatService</servlet-name>
+        <url-pattern>/app/chatService</url-pattern>
+    </servlet-mapping>
+   <servlet>
     <servlet-name>accessoServlet</servlet-name>
     <servlet-class>it.unibo.AccessoServiceImpl</servlet-class>
   </servlet>
