@@ -28,6 +28,27 @@ public class RecensioneServiceImpl extends RemoteServiceServlet implements Recen
 
     @Override
     public List<RecensioneDTO> recensioniPerAnnuncio(String idAnnuncio) {
-        return recensioneDatabase.recensioniPerAnnuncio(idAnnuncio);
+        List<RecensioneDTO> recensioni = recensioneDatabase.recensioniPerAnnuncio(idAnnuncio);
+
+        // Arricchisce ogni recensione con il nome completo di chi l'ha scritta
+        for (RecensioneDTO recensione : recensioni) {
+            recensione.setNomeAutore(nomeAutore(recensione.getIdAutore()));
+        }
+
+        return recensioni;
+    }
+
+    // Nome e cognome dell'autore, con fallback sull'email se l'utente non esiste piu'
+    private String nomeAutore(String idAutore) {
+        try {
+            UtenteDTO autore = UtenteDatabase.getProfilo(idAutore);
+            String nome = autore.getNome() != null ? autore.getNome().trim() : "";
+            String cognome = autore.getCognome() != null ? autore.getCognome().trim() : "";
+            String completo = (nome + " " + cognome).trim();
+            return completo.isEmpty() ? idAutore : completo;
+        } catch (IllegalArgumentException e) {
+            // Autore non piu' registrato: resta visibile la sua email
+            return idAutore;
+        }
     }
 }

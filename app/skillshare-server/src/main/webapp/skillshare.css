@@ -933,3 +933,113 @@ button.richieste-tab-attivo {
   color: #B3261E;
   border: 1px solid #E5A5AC;
 }
+
+/* ============================================================
+   Completamento scambio e recensioni
+   ============================================================ */
+
+/* Blocco agganciato in fondo alla riga di una richiesta */
+.completamento-blocco {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--grigio-neutro);
+}
+
+.completamento-azioni {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* Stelle cliccabili del form di recensione */
+.stelle-selettore {
+  display: flex;
+  gap: 4px;
+  margin: 6px 0 12px 0;
+}
+
+.stella {
+  color: var(--grigio-bordo);
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.05s ease;
+  user-select: none;
+}
+
+.stella:hover {
+  color: var(--bordeaux-chiaro);
+}
+
+.stella:active {
+  transform: translateY(1px);
+}
+
+/* Stella selezionata */
+.stella-attiva {
+  color: var(--bordeaux);
+}
+
+.recensione-form {
+  margin-top: 4px;
+}
+
+/* Recensione gia' inviata, in sola lettura */
+.recensione-inviata {
+  margin-top: 4px;
+}
+
+/* Striscia di stelle in sola lettura */
+.recensione-stelle {
+  color: var(--bordeaux);
+  font-size: 20px;
+  letter-spacing: 3px;
+  line-height: 1.2;
+  margin: 4px 0;
+}
+
+.recensione-commento {
+  color: var(--grigio-testo);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 6px;
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella {
+    transition: none;
+  }
+  .stella:active {
+    transform: none;
+  }
+}
+
+/* Chi ha scritto la recensione, sopra le stelle */
+.recensione-autore-riga {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.recensione-autore {
+  color: var(--bordeaux);
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Segnala che la recensione arriva da chi ha pubblicato l'annuncio */
+.recensione-autore-badge {
+  background-color: var(--bordeaux-velo);
+  border: 1px solid #e2cfd2;
+  border-radius: 999px;
+  color: var(--bordeaux);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+}
