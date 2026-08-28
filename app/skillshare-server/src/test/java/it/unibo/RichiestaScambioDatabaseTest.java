@@ -305,4 +305,68 @@ public class RichiestaScambioDatabaseTest {
         });
         assertEquals("Dati non validi", ex.getMessage());
     }
+
+    // --- completa(): chiusura dello scambio (US-13) ---
+
+    @Test
+    void testRichiedenteCompletaRichiestaACCEPTED() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+        richiestaDatabase.accetta(salvata.getId(), "mario.rossi@unibo.it");
+
+        RichiestaScambioDTO completata = richiestaDatabase.completa(salvata.getId(), "luigi.verdi@unibo.it");
+
+        assertEquals(StatoRichiesta.COMPLETED, completata.getStato(), "Lo stato deve passare a COMPLETED");
+
+        // Anche il dato persistito deve risultare aggiornato
+        RichiestaScambioDTO ricaricata = richiestaDatabase.getRichiesteCollection().get(salvata.getId());
+        assertEquals(StatoRichiesta.COMPLETED, ricaricata.getStato());
+    }
+
+    @Test
+    void testCreatoreAnnuncioCompletaRichiestaACCEPTED() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+        richiestaDatabase.accetta(salvata.getId(), "mario.rossi@unibo.it");
+
+        // Anche l'altro partecipante puo' chiudere lo scambio
+        RichiestaScambioDTO completata = richiestaDatabase.completa(salvata.getId(), "mario.rossi@unibo.it");
+
+        assertEquals(StatoRichiesta.COMPLETED, completata.getStato());
+    }
+
+    @Test
+    void testCompletaComeEstraneoRifiutato() {
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+        richiestaDatabase.accetta(salvata.getId(), "mario.rossi@unibo.it");
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.completa(salvata.getId(), "estraneo@unibo.it");
+        });
+        assertEquals("Non sei autorizzato a completare questo scambio", ex.getMessage());
+
+        // Lo stato non deve essere cambiato
+        assertEquals(StatoRichiesta.ACCEPTED,
+                richiestaDatabase.getRichiesteCollection().get(salvata.getId()).getStato());
+    }
+
+    @Test
+    void testCompletaRichiestaPENDINGRifiutato() {
+        // Salvata ma mai accettata: resta PENDING
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(creaRichiestaValida());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.completa(salvata.getId(), "luigi.verdi@unibo.it");
+        });
+        assertEquals("Impossibile completare uno scambio non ancora accettato", ex.getMessage());
+
+        assertEquals(StatoRichiesta.PENDING,
+                richiestaDatabase.getRichiesteCollection().get(salvata.getId()).getStato());
+    }
+
+    @Test
+    void testCompletaRichiestaInesistente() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.completa("id-inesistente", "luigi.verdi@unibo.it");
+        });
+        assertEquals("Richiesta non trovata", ex.getMessage());
+    }
 }

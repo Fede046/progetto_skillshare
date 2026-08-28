@@ -6,5 +6,6 @@ package it.unibo;
 public enum StatoRichiesta {
     PENDING,
     ACCEPTED,
-    REJECTED
+    REJECTED,
+    COMPLETED
 }
