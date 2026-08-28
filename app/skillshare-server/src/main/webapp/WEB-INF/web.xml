@@ -73,6 +73,15 @@
     <url-pattern>/app/richiestaScambio</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>recensioneServlet</servlet-name>
+    <servlet-class>it.unibo.RecensioneServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>recensioneServlet</servlet-name>
+    <url-pattern>/app/recensione</url-pattern>
+  </servlet-mapping>
+
 	<!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
