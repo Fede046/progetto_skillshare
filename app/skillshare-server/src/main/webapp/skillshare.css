@@ -1080,3 +1080,21 @@ button.richieste-tab-attivo {
 .profile-recensioni {
   margin-top: 24px;
 }
+
+/* ============================================================
+   US-14 - Profilo pubblico di un altro utente
+   ============================================================ */
+
+/* Le due azioni dell'intestazione (modifica / ritorno) restano affiancate
+   e vanno a capo insieme sugli schermi stretti */
+.profile-hero-azioni {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Via d'uscita centrata nelle pagine di attesa ed errore del profilo */
+.profile-messaggio-azione {
+  text-align: center;
+}

@@ -239,6 +239,14 @@ public class MarketplaceGui {
         btnRecensioni.addClickHandler(event -> new RecensioniAnnuncioGui(utente, annuncio).mostra());
         azioni.add(btnRecensioni);
 
+        // Profilo pubblico di chi propone lo scambio: rating e recensioni
+        // ricevute aiutano a valutarlo prima di contattarlo (US-14)
+        Button btnProfilo = new Button("Vedi profilo");
+        btnProfilo.addStyleName("btn-secondary");
+        btnProfilo.addStyleName("btn-sm");
+        btnProfilo.addClickHandler(event -> new ProfiloGui(utente, annuncio.getIdUtente()).mostra());
+        azioni.add(btnProfilo);
+
         if (utente.getEmail().equals(annuncio.getIdUtente())) {
             Label tuoAnnuncio = new Label("Questo è il tuo annuncio: non puoi richiedere uno scambio con te stesso");
             tuoAnnuncio.addStyleName("annuncio-proprio-nota");

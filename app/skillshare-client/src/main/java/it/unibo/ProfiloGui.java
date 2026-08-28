@@ -14,8 +14,20 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class ProfiloGui {
 
-    private UtenteDTO utente;
+    // Chi sta navigando: serve alla NavBar e a decidere la sola lettura
+    private final UtenteDTO utenteLoggato;
 
+    // Di chi e' il profilo mostrato. Sul profilo altrui arriva via RPC,
+    // quindi al primo disegno puo' essere ancora null.
+    private UtenteDTO visualizzato;
+
+    // Id del profilo da caricare quando non e' il proprio
+    private final String idVisualizzato;
+
+    // Vero quando la schermata e' stata aperta sul profilo di un altro utente
+    private final boolean profiloAltrui;
+
+    private final ProfileServiceAsync profileService = GWT.create(ProfileService.class);
     private final ReputazioneServiceAsync reputazioneService = GWT.create(ReputazioneService.class);
 
     // Riempiti dalle risposte RPC: al primo disegno mostrano il caricamento
@@ -24,20 +36,81 @@ public class ProfiloGui {
 
     // Passiamo l'utente loggato al costruttore
     public ProfiloGui(UtenteDTO utente) {
-        this.utente = utente;
+        this.utenteLoggato = utente;
+        this.visualizzato = utente;
+        this.idVisualizzato = utente != null ? utente.getEmail() : null;
+        this.profiloAltrui = false;
+    }
+
+    /**
+     * Profilo pubblico di un altro utente, aperto dal Marketplace: i dati non
+     * sono in mano al chiamante e vengono caricati qui via ProfileService,
+     * cosi' l'eventuale errore si vede sulla schermata del profilo.
+     *
+     * @param utenteLoggato Chi sta navigando.
+     * @param idVisualizzato L'id (email) del profilo da aprire.
+     */
+    public ProfiloGui(UtenteDTO utenteLoggato, String idVisualizzato) {
+        this.utenteLoggato = utenteLoggato;
+        this.visualizzato = null;
+        this.idVisualizzato = idVisualizzato;
+        this.profiloAltrui = true;
     }
 
     public void mostra() {
-        FlowPanel pagina = new FlowPanel();
+        // Il proprio profilo e' gia' in memoria: si disegna subito
+        if (visualizzato != null) {
+            disegnaProfilo();
+            return;
+        }
 
-        // Barra di navigazione orizzontale: questa e' la home dopo il login
-        pagina.add(new NavBar(utente, NavBar.SEZIONE_PROFILO).getWidget());
+        renderizza(creaPaginaMessaggio("Caricamento profilo..."));
+        caricaProfilo();
+    }
 
+    /**
+     * Recupera il profilo dell'utente selezionato. Un id inesistente o non
+     * caricabile porta a un messaggio esplicito, non a una pagina vuota.
+     */
+    private void caricaProfilo() {
+        profileService.getProfilo(idVisualizzato, new AsyncCallback<UtenteDTO>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                renderizza(creaPaginaMessaggio(
+                        "Impossibile aprire questo profilo: l'utente non esiste piu' o non e' raggiungibile."));
+            }
+
+            @Override
+            public void onSuccess(UtenteDTO result) {
+                if (result == null) {
+                    renderizza(creaPaginaMessaggio("Impossibile aprire questo profilo: utente non trovato."));
+                    return;
+                }
+                visualizzato = result;
+                disegnaProfilo();
+            }
+        });
+    }
+
+    private void disegnaProfilo() {
         FlowPanel contenuto = new FlowPanel();
         contenuto.addStyleName("app-page");
         contenuto.add(creaIntestazione());
         contenuto.add(creaColonne());
         contenuto.add(creaSezioneRecensioni());
+
+        renderizza(contenuto);
+        caricaReputazione();
+    }
+
+    /**
+     * Disegna la pagina completa di barra di navigazione e sfondo.
+     */
+    private void renderizza(Widget contenuto) {
+        FlowPanel pagina = new FlowPanel();
+
+        // Barra di navigazione orizzontale: questa e' la home dopo il login
+        pagina.add(new NavBar(utenteLoggato, sezioneAttiva()).getWidget());
         pagina.add(contenuto);
 
         // Pulizia e rendering
@@ -48,8 +121,57 @@ public class ProfiloGui {
         Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
         Document.get().getBody().getStyle().setProperty("margin", "0");
         Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
+    }
 
-        caricaReputazione();
+    /**
+     * Sul profilo di un altro utente la voce "Profilo" resta cliccabile: porta
+     * al proprio, non a quello in visualizzazione. Si evidenzia il Marketplace,
+     * da cui si arriva, come gia' fa RecensioniAnnuncioGui.
+     */
+    private String sezioneAttiva() {
+        return profiloAltrui ? NavBar.SEZIONE_MARKETPLACE : NavBar.SEZIONE_PROFILO;
+    }
+
+    /**
+     * Vero quando le azioni personali non vanno mostrate. Durante il
+     * caricamento il profilo non e' ancora noto e si resta in sola lettura.
+     */
+    private boolean soloLettura() {
+        return ProfiloVisibilita.soloLettura(
+                utenteLoggato != null ? utenteLoggato.getEmail() : null,
+                visualizzato != null ? visualizzato.getEmail() : null);
+    }
+
+    /**
+     * Pagina di servizio per attesa ed errore: stessa cornice del profilo,
+     * con la via d'uscita verso il Marketplace.
+     */
+    private Widget creaPaginaMessaggio(String testo) {
+        FlowPanel contenuto = new FlowPanel();
+        contenuto.addStyleName("app-page");
+
+        FlowPanel card = new FlowPanel();
+        card.addStyleName("profile-card");
+        card.add(creaTitoloSezione("Profilo"));
+        card.add(creaTestoVuoto(testo));
+
+        if (profiloAltrui) {
+            FlowPanel azione = new FlowPanel();
+            azione.addStyleName("profile-messaggio-azione");
+            azione.add(creaBottoneIndietro());
+            card.add(azione);
+        }
+
+        contenuto.add(card);
+        return contenuto;
+    }
+
+    private Widget creaBottoneIndietro() {
+        Button btnIndietro = new Button("Torna al Marketplace");
+        btnIndietro.addStyleName("btn-secondary");
+        btnIndietro.addStyleName("btn-sm");
+        btnIndietro.addClickHandler(event -> new MarketplaceGui(utenteLoggato).mostra());
+        return btnIndietro;
     }
 
     /**
@@ -77,11 +199,12 @@ public class ProfiloGui {
         FlowPanel dati = new FlowPanel();
         dati.addStyleName("profile-header-dati");
 
-        Label nome = new Label(testoOppure(utente.getNome(), "") + " " + testoOppure(utente.getCognome(), ""));
+        Label nome = new Label(testoOppure(visualizzato.getNome(), "") + " "
+                + testoOppure(visualizzato.getCognome(), ""));
         nome.addStyleName("profile-nome");
         dati.add(nome);
 
-        Label email = new Label(testoOppure(utente.getEmail(), ""));
+        Label email = new Label(testoOppure(visualizzato.getEmail(), ""));
         email.addStyleName("profile-email");
         dati.add(email);
 
@@ -96,10 +219,19 @@ public class ProfiloGui {
         FlowPanel azioni = new FlowPanel();
         azioni.addStyleName("profile-hero-azioni");
 
-        Button btnModifica = new Button("Modifica Profilo");
-        btnModifica.addStyleName("btn-primary");
-        btnModifica.addClickHandler(event -> new ModificaProfiloGui(utente).mostra());
-        azioni.add(btnModifica);
+        // Sul profilo di un altro utente la modifica non ha senso e sparisce
+        if (!soloLettura()) {
+            Button btnModifica = new Button("Modifica Profilo");
+            btnModifica.addStyleName("btn-primary");
+            btnModifica.addClickHandler(event -> new ModificaProfiloGui(visualizzato).mostra());
+            azioni.add(btnModifica);
+        }
+
+        // Arrivando dal Marketplace serve comunque la via di ritorno, anche
+        // quando il profilo aperto e' il proprio
+        if (profiloAltrui) {
+            azioni.add(creaBottoneIndietro());
+        }
 
         riga.add(azioni);
         corpo.add(riga);
@@ -126,7 +258,7 @@ public class ProfiloGui {
         card.addStyleName("profile-card");
         card.add(creaTitoloSezione("Biografia"));
 
-        String bio = utente.getBio();
+        String bio = visualizzato.getBio();
         boolean bioPresente = bio != null && !bio.trim().isEmpty();
 
         Label testo = new Label(bioPresente ? bio : "Nessuna biografia inserita.");
@@ -148,12 +280,12 @@ public class ProfiloGui {
         FlowPanel badges = new FlowPanel();
         badges.addStyleName("tag-badges-container");
 
-        if (utente.getTagCompetenza() == null || utente.getTagCompetenza().isEmpty()) {
+        if (visualizzato.getTagCompetenza() == null || visualizzato.getTagCompetenza().isEmpty()) {
             Label vuoto = new Label("Nessuna competenza aggiunta.");
             vuoto.addStyleName("profile-bio");
             badges.add(vuoto);
         } else {
-            for (String tag : utente.getTagCompetenza()) {
+            for (String tag : visualizzato.getTagCompetenza()) {
                 Label badge = new Label(tag);
                 badge.addStyleName("skill-badge");
                 badges.add(badge);
@@ -192,7 +324,7 @@ public class ProfiloGui {
      * indipendenti, cosi' il rating compare senza attendere l'elenco.
      */
     private void caricaReputazione() {
-        String idUtente = utente.getEmail();
+        String idUtente = visualizzato.getEmail();
 
         reputazioneService.ratingMedio(idUtente, new AsyncCallback<Double>() {
             @Override
@@ -285,7 +417,7 @@ public class ProfiloGui {
         FlowPanel contenitore = new FlowPanel();
         contenitore.addStyleName("profile-avatar-wrapper");
 
-        String photoUrl = utente.getPhotoUrl();
+        String photoUrl = visualizzato.getPhotoUrl();
         if (photoUrl == null || photoUrl.trim().isEmpty()) {
             contenitore.add(creaPlaceholderAvatar());
             return contenitore;
@@ -307,11 +439,11 @@ public class ProfiloGui {
      */
     private Widget creaPlaceholderAvatar() {
         String iniziali = "";
-        if (utente.getNome() != null && !utente.getNome().trim().isEmpty()) {
-            iniziali += utente.getNome().trim().charAt(0);
+        if (visualizzato.getNome() != null && !visualizzato.getNome().trim().isEmpty()) {
+            iniziali += visualizzato.getNome().trim().charAt(0);
         }
-        if (utente.getCognome() != null && !utente.getCognome().trim().isEmpty()) {
-            iniziali += utente.getCognome().trim().charAt(0);
+        if (visualizzato.getCognome() != null && !visualizzato.getCognome().trim().isEmpty()) {
+            iniziali += visualizzato.getCognome().trim().charAt(0);
         }
         if (iniziali.isEmpty()) {
             iniziali = "?";
