@@ -90,6 +90,15 @@
     <url-pattern>/app/recensione</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>reputazioneServlet</servlet-name>
+    <servlet-class>it.unibo.ReputazioneServiceImpl</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>reputazioneServlet</servlet-name>
+    <url-pattern>/app/reputazione</url-pattern>
+  </servlet-mapping>
+
 	<!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
