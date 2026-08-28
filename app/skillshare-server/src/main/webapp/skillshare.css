@@ -1043,3 +1043,40 @@ button.richieste-tab-attivo {
   padding: 3px 10px;
   text-transform: uppercase;
 }
+
+/* ============================================================
+   US-14 - Rating pubblico e storico sul profilo
+   ============================================================ */
+
+/* Stelle e valore del rating, in riga sotto nome ed email */
+.profile-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+/* Le stelle riusano .recensione-stelle: qui si toglie solo il margine
+   verticale, che nell'intestazione scollerebbe la riga dall'email */
+.profile-rating .recensione-stelle {
+  margin: 0;
+}
+
+.profile-rating-valore {
+  color: var(--grigio-testo);
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Assenza di rating: si dichiara, non si mostrano stelle vuote */
+.profile-rating-vuoto {
+  color: #8a8a8a;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Storico recensioni, a tutta larghezza sotto bio e competenze */
+.profile-recensioni {
+  margin-top: 24px;
+}

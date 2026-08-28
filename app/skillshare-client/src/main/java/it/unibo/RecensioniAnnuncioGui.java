@@ -104,55 +104,19 @@ public class RecensioniAnnuncioGui {
         }
 
         for (RecensioneDTO recensione : recensioni) {
-            listaRecensioni.add(creaRigaRecensione(recensione));
+            listaRecensioni.add(RecensioneItem.crea(recensione, badgeAutore(recensione)));
         }
     }
 
     /**
-     * Riquadro di una recensione: autore in cima, poi stelle e,
-     * solo se presente, il commento.
+     * Segnala che la recensione arriva da chi ha pubblicato l'annuncio: la sua
+     * voce pesa diversamente da quella di chi ha ricevuto il servizio.
+     * Restituisce null quando il badge non va mostrato.
      */
-    private Widget creaRigaRecensione(RecensioneDTO recensione) {
-        FlowPanel item = new FlowPanel();
-        item.addStyleName("annuncio-item");
-
-        item.add(creaIntestazioneAutore(recensione));
-
-        Label stelle = new Label(Stelle.perVoto(recensione.getVoto()));
-        stelle.addStyleName("recensione-stelle");
-        item.add(stelle);
-
-        // Il commento e' facoltativo: se manca si omette la riga, senza placeholder
-        if (recensione.getCommento() != null && !recensione.getCommento().trim().isEmpty()) {
-            Label commento = new Label(recensione.getCommento());
-            commento.addStyleName("recensione-commento");
-            item.add(commento);
-        }
-
-        return item;
-    }
-
-    /**
-     * Chi ha scritto la recensione. Se e' l'autore dell'annuncio lo si segnala:
-     * la sua voce pesa diversamente da quella di chi ha ricevuto il servizio.
-     */
-    private Widget creaIntestazioneAutore(RecensioneDTO recensione) {
-        FlowPanel intestazione = new FlowPanel();
-        intestazione.addStyleName("recensione-autore-riga");
-
-        Label nome = new Label(testoOppure(recensione.getNomeAutore(),
-                testoOppure(recensione.getIdAutore(), "Utente sconosciuto")));
-        nome.addStyleName("recensione-autore");
-        intestazione.add(nome);
-
-        if (recensione.getIdAutore() != null
-                && recensione.getIdAutore().equals(annuncio.getIdUtente())) {
-            Label badge = new Label("Autore dell'annuncio");
-            badge.addStyleName("recensione-autore-badge");
-            intestazione.add(badge);
-        }
-
-        return intestazione;
+    private String badgeAutore(RecensioneDTO recensione) {
+        boolean eAutoreAnnuncio = recensione.getIdAutore() != null
+                && recensione.getIdAutore().equals(annuncio.getIdUtente());
+        return eAutoreAnnuncio ? "Autore dell'annuncio" : null;
     }
 
     private Widget creaMessaggioVuoto(String testo) {
