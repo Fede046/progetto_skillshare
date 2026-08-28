@@ -233,6 +233,12 @@ public class MarketplaceGui {
         FlowPanel azioni = new FlowPanel();
         azioni.addStyleName("annuncio-azioni");
 
+        Button btnRecensioni = new Button("Vedi recensioni");
+        btnRecensioni.addStyleName("btn-secondary");
+        btnRecensioni.addStyleName("btn-sm");
+        btnRecensioni.addClickHandler(event -> new RecensioniAnnuncioGui(utente, annuncio).mostra());
+        azioni.add(btnRecensioni);
+
         if (utente.getEmail().equals(annuncio.getIdUtente())) {
             Label tuoAnnuncio = new Label("Questo è il tuo annuncio: non puoi richiedere uno scambio con te stesso");
             tuoAnnuncio.addStyleName("annuncio-proprio-nota");
@@ -286,6 +292,7 @@ public class MarketplaceGui {
         btnAnnulla.addStyleName("btn-secondary");
         btnAnnulla.addClickHandler(event -> dialog.hide());
 
+
         FlowPanel contenuto = new FlowPanel();
         contenuto.addStyleName("dettaglio-annuncio-contenuto");
 
@@ -305,8 +312,8 @@ public class MarketplaceGui {
         azioni.addStyleName("profile-form-azioni");
         btnProponi.addClickHandler(event ->
                 inviaRichiestaScambio(annuncio, messaggioArea, messaggioErrore, btnProponi, dialog));
-        azioni.add(btnProponi);
         azioni.add(btnAnnulla);
+        azioni.add(btnProponi);
         contenuto.add(azioni);
 
         dialog.setWidget(contenuto);

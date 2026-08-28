@@ -19,6 +19,10 @@ public class RecensioneDTO implements Serializable {
     private String idAnnuncio;
 
     private String idAutore;
+
+    // Risolto dal server alla lettura: il client non deve mostrare un'email
+    private String nomeAutore;
+
     private String idDestinatario;
     private int voto;
 
@@ -62,6 +66,14 @@ public class RecensioneDTO implements Serializable {
 
     public void setIdAutore(String idAutore) {
         this.idAutore = idAutore;
+    }
+
+    public String getNomeAutore() {
+        return nomeAutore;
+    }
+
+    public void setNomeAutore(String nomeAutore) {
+        this.nomeAutore = nomeAutore;
     }
 
     public String getIdDestinatario() {
