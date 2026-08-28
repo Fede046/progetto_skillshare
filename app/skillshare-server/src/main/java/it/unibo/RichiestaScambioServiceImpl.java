@@ -76,5 +76,11 @@ public class RichiestaScambioServiceImpl extends RemoteServiceServlet implements
         // Le eccezioni di ownership/inesistenza del Database risalgono fino al client
         return richiesteDatabase.rifiuta(idRichiesta, idCreatore);
     }
+
+    @Override
+    public RichiestaScambioDTO completa(String idRichiesta, String idUtente) throws IllegalArgumentException {
+        // Stato, partecipazione allo scambio e persistenza vivono in RichiestaScambioDatabase
+        return richiesteDatabase.completa(idRichiesta, idUtente);
+    }
 }
 

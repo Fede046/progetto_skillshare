@@ -60,4 +60,16 @@ public interface RichiestaScambioService extends RemoteService {
      *                                  o se l'utente non è il creatore dell'annuncio.
      */
     RichiestaScambioDTO rifiuta(String idRichiesta, String idCreatore) throws IllegalArgumentException;
+
+    /**
+     * Segna come completato uno scambio gia' accettato.
+     * Puo' agire ciascuno dei due partecipanti allo scambio.
+     *
+     * @param idRichiesta L'id della richiesta da completare.
+     * @param idUtente    L'id dell'utente che completa (richiedente o creatore dell'annuncio).
+     * @return La richiesta aggiornata con stato COMPLETED.
+     * @throws IllegalArgumentException Se la richiesta non esiste, non e' accettata
+     *                                  o l'utente non partecipa allo scambio.
+     */
+    RichiestaScambioDTO completa(String idRichiesta, String idUtente) throws IllegalArgumentException;
 }

@@ -15,4 +15,6 @@ public interface RichiestaScambioServiceAsync {
     void accetta(String idRichiesta, String idCreatore, AsyncCallback<RichiestaScambioDTO> callback);
 
     void rifiuta(String idRichiesta, String idCreatore, AsyncCallback<RichiestaScambioDTO> callback);
+
+    void completa(String idRichiesta, String idUtente, AsyncCallback<RichiestaScambioDTO> callback);
 }
