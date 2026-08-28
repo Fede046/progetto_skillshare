@@ -4,6 +4,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -175,5 +176,81 @@ public class RecensioneDatabaseTest {
 
         assertNotNull(risultato, "Deve restituire una lista, non null");
         assertTrue(risultato.isEmpty(), "Un annuncio senza recensioni ha lista vuota");
+    }
+
+    // --- rating pubblico e storico ricevuto (US-14) ---
+
+    /**
+     * Pubblica una recensione verso il destinatario indicato, su un nuovo
+     * scambio completato: cosi' ogni chiamata evita il blocco sui duplicati.
+     */
+    private RecensioneDTO recensisce(String idAnnuncio, String idDestinatario, int voto) {
+        RichiestaScambioDTO scambio = scambioCompletato(idAnnuncio);
+        RecensioneDTO recensione = creaRecensione(scambio.getId(), RICHIEDENTE, voto);
+        recensione.setIdDestinatario(idDestinatario);
+        return recensioneDatabase.lascia(recensione);
+    }
+
+    @Test
+    void testRatingMedioConPiuRecensioni() {
+        recensisce("annuncio-1", CREATORE, 5);
+        recensisce("annuncio-2", CREATORE, 4);
+        recensisce("annuncio-3", CREATORE, 3);
+
+        // Una recensione verso un altro utente non deve entrare nel calcolo
+        recensisce("annuncio-4", "altro.utente@unibo.it", 1);
+
+        Double media = recensioneDatabase.ratingMedio(CREATORE);
+
+        assertNotNull(media, "Con recensioni ricevute la media deve essere valorizzata");
+        assertEquals(4.0, media, 0.0001, "(5 + 4 + 3) / 3 = 4.0");
+    }
+
+    @Test
+    void testRatingMedioNonInteroCalcolatoCorrettamente() {
+        recensisce("annuncio-1", CREATORE, 5);
+        recensisce("annuncio-2", CREATORE, 4);
+
+        assertEquals(4.5, recensioneDatabase.ratingMedio(CREATORE), 0.0001, "(5 + 4) / 2 = 4.5");
+    }
+
+    @Test
+    void testRatingMedioSenzaRecensioniRestituisceNull() {
+        recensisce("annuncio-1", CREATORE, 5);
+
+        Double media = recensioneDatabase.ratingMedio("nessuno@unibo.it");
+
+        // null, non 0.0: i voti vanno da 1 a 5, quindi 0.0 sarebbe ambiguo
+        assertNull(media, "Un utente senza recensioni non ha un rating");
+    }
+
+    @Test
+    void testRecensioniRicevuteSoloSueEOrdinatePerDataDecrescente() {
+        RecensioneDTO piuVecchia = recensisce("annuncio-1", CREATORE, 5);
+        RecensioneDTO piuRecente = recensisce("annuncio-2", CREATORE, 4);
+        recensisce("annuncio-3", "altro.utente@unibo.it", 3);
+
+        // lascia() usa System.currentTimeMillis(): forziamo le date per rendere
+        // l'ordinamento verificabile a prescindere dalla velocita' del test
+        piuVecchia.setDataCreazione(1000L);
+        piuRecente.setDataCreazione(2000L);
+        recensioneDatabase.getRecensioniCollection().put(piuVecchia.getId(), piuVecchia);
+        recensioneDatabase.getRecensioniCollection().put(piuRecente.getId(), piuRecente);
+
+        List<RecensioneDTO> ricevute = recensioneDatabase.recensioniRicevute(CREATORE);
+
+        assertEquals(2, ricevute.size(), "Deve restituire solo le recensioni ricevute dal creatore");
+        assertEquals(piuRecente.getId(), ricevute.get(0).getId(), "La piu' recente va per prima");
+        assertEquals(piuVecchia.getId(), ricevute.get(1).getId());
+    }
+
+    @Test
+    void testRecensioniRicevuteSenzaRecensioniRestituisceListaVuota() {
+        recensisce("annuncio-1", CREATORE, 5);
+
+        List<RecensioneDTO> ricevute = recensioneDatabase.recensioniRicevute("nessuno@unibo.it");
+
+        assertNotNull(ricevute, "Deve restituire una lista, non null");
+        assertTrue(ricevute.isEmpty(), "Un utente senza recensioni ricevute ha lista vuota");
     }
 }

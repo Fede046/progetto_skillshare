@@ -110,6 +110,53 @@ public class RecensioneDatabase {
         return risultato;
     }
 
+    /**
+     * Recensioni ricevute da un utente, dalla piu' recente alla piu' vecchia.
+     * Restituisce lista vuota se l'id e' null/vuoto o non ci sono recensioni.
+     */
+    public List<RecensioneDTO> recensioniRicevute(String idUtente) {
+        List<RecensioneDTO> risultato = new ArrayList<>();
+
+        if (idUtente == null || idUtente.trim().isEmpty()) {
+            return risultato;
+        }
+
+        String id = idUtente.trim();
+        for (RecensioneDTO recensione : recensioniCollection.values()) {
+            if (id.equals(recensione.getIdDestinatario())) {
+                risultato.add(recensione);
+            }
+        }
+
+        // Ordine decrescente: la piu' recente in cima
+        risultato.sort((a, b) -> Long.compare(b.getDataCreazione(), a.getDataCreazione()));
+
+        return risultato;
+    }
+
+    /**
+     * Media dei voti ricevuti da un utente.
+     * Restituisce null quando l'utente non ha ancora recensioni: i voti vanno
+     * da 1 a 5, quindi 0.0 sarebbe indistinguibile da una media reale bassa.
+     *
+     * @param idUtente L'utente di cui calcolare il rating.
+     * @return La media dei voti, oppure null se non ci sono recensioni.
+     */
+    public Double ratingMedio(String idUtente) {
+        List<RecensioneDTO> ricevute = recensioniRicevute(idUtente);
+
+        if (ricevute.isEmpty()) {
+            return null;
+        }
+
+        int somma = 0;
+        for (RecensioneDTO recensione : ricevute) {
+            somma += recensione.getVoto();
+        }
+
+        return (double) somma / ricevute.size();
+    }
+
     // Vero se l'autore ha gia' recensito quello scambio
     private boolean haGiaRecensito(String idRichiestaScambio, String idAutore) {
         for (RecensioneDTO esistente : recensioniCollection.values()) {
