@@ -1,6 +1,10 @@
 package it.unibo;
 
+import java.util.List;
+
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -11,6 +15,12 @@ import com.google.gwt.user.client.ui.Widget;
 public class ProfiloGui {
 
     private UtenteDTO utente;
+
+    private final ReputazioneServiceAsync reputazioneService = GWT.create(ReputazioneService.class);
+
+    // Riempiti dalle risposte RPC: al primo disegno mostrano il caricamento
+    private final FlowPanel rating = new FlowPanel();
+    private final FlowPanel listaRecensioni = new FlowPanel();
 
     // Passiamo l'utente loggato al costruttore
     public ProfiloGui(UtenteDTO utente) {
@@ -27,6 +37,7 @@ public class ProfiloGui {
         contenuto.addStyleName("app-page");
         contenuto.add(creaIntestazione());
         contenuto.add(creaColonne());
+        contenuto.add(creaSezioneRecensioni());
         pagina.add(contenuto);
 
         // Pulizia e rendering
@@ -37,6 +48,8 @@ public class ProfiloGui {
         Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
         Document.get().getBody().getStyle().setProperty("margin", "0");
         Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
+
+        caricaReputazione();
     }
 
     /**
@@ -71,6 +84,12 @@ public class ProfiloGui {
         Label email = new Label(testoOppure(utente.getEmail(), ""));
         email.addStyleName("profile-email");
         dati.add(email);
+
+        // Rating pubblico, subito sotto nome ed email (US-14)
+        rating.clear();
+        rating.addStyleName("profile-rating");
+        rating.add(creaTestoVuotoRating("Caricamento rating..."));
+        dati.add(rating);
 
         riga.add(dati);
 
@@ -150,6 +169,111 @@ public class ProfiloGui {
         Label titolo = new Label(testo);
         titolo.addStyleName("profile-sezione-titolo");
         return titolo;
+    }
+
+    /**
+     * Storico delle recensioni ricevute, a tutta larghezza sotto le due colonne.
+     */
+    private Widget creaSezioneRecensioni() {
+        FlowPanel card = new FlowPanel();
+        card.addStyleName("profile-card");
+        card.addStyleName("profile-recensioni");
+        card.add(creaTitoloSezione("Recensioni ricevute"));
+
+        listaRecensioni.clear();
+        listaRecensioni.add(creaTestoVuoto("Caricamento recensioni..."));
+        card.add(listaRecensioni);
+
+        return card;
+    }
+
+    /**
+     * Rating medio e storico dell'utente in visualizzazione: due chiamate
+     * indipendenti, cosi' il rating compare senza attendere l'elenco.
+     */
+    private void caricaReputazione() {
+        String idUtente = utente.getEmail();
+
+        reputazioneService.ratingMedio(idUtente, new AsyncCallback<Double>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                mostraTestoRating("Rating non disponibile");
+            }
+
+            @Override
+            public void onSuccess(Double media) {
+                mostraRating(media);
+            }
+        });
+
+        reputazioneService.recensioniRicevute(idUtente, new AsyncCallback<List<RecensioneDTO>>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                listaRecensioni.clear();
+                listaRecensioni.add(creaTestoVuoto("Impossibile caricare le recensioni. Riprova."));
+            }
+
+            @Override
+            public void onSuccess(List<RecensioneDTO> result) {
+                mostraRecensioni(result);
+            }
+        });
+    }
+
+    /**
+     * Stelle e valore numerico del rating. La media arriva a null quando
+     * l'utente non ha ancora recensioni: in quel caso si dichiara l'assenza
+     * invece di mostrare cinque stelle vuote, che si leggerebbero come un
+     * giudizio pessimo.
+     */
+    private void mostraRating(Double media) {
+        rating.clear();
+
+        if (media == null) {
+            rating.add(creaTestoVuotoRating("Nessuna recensione ricevuta"));
+            return;
+        }
+
+        Label stelle = new Label(Stelle.perMedia(media));
+        stelle.addStyleName("recensione-stelle");
+        rating.add(stelle);
+
+        // Il valore esatto accanto alle stelle: l'arrotondamento e' alla
+        // stella intera, la media va mostrata comunque per intero
+        Label valore = new Label(Stelle.mediaFormattata(media));
+        valore.addStyleName("profile-rating-valore");
+        rating.add(valore);
+    }
+
+    private void mostraTestoRating(String testo) {
+        rating.clear();
+        rating.add(creaTestoVuotoRating(testo));
+    }
+
+    private void mostraRecensioni(List<RecensioneDTO> recensioni) {
+        listaRecensioni.clear();
+
+        if (recensioni == null || recensioni.isEmpty()) {
+            listaRecensioni.add(creaTestoVuoto("Nessuna recensione ricevuta"));
+            return;
+        }
+
+        // Stesso riquadro della pagina recensioni dell'annuncio (US-13)
+        for (RecensioneDTO recensione : recensioni) {
+            listaRecensioni.add(RecensioneItem.crea(recensione));
+        }
+    }
+
+    private Widget creaTestoVuotoRating(String testo) {
+        Label messaggio = new Label(testo);
+        messaggio.addStyleName("profile-rating-vuoto");
+        return messaggio;
+    }
+
+    private Widget creaTestoVuoto(String testo) {
+        Label messaggio = new Label(testo);
+        messaggio.addStyleName("annunci-vuoto");
+        return messaggio;
     }
 
     /**

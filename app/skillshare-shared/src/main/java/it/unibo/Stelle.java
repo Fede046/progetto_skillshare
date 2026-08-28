@@ -39,4 +39,32 @@ public final class Stelle {
         }
         return striscia.toString();
     }
+
+    /**
+     * Converte un rating medio nella sua striscia di stelle, arrotondando alla
+     * stella intera piu' vicina. Si resta sull'intero - e non sulla mezza
+     * stella - per riusare lo stesso alfabeto di perVoto(): le stelle del
+     * profilo e quelle delle singole recensioni restano cosi' identiche.
+     * Il valore esatto non va perso: va affiancato con mediaFormattata().
+     *
+     * @param media La media dei voti ricevuti.
+     * @return Es. "★★★★★" per una media di 4.5.
+     */
+    public static String perMedia(double media) {
+        return perVoto((int) Math.round(media));
+    }
+
+    /**
+     * Media con una sola cifra decimale e virgola come separatore.
+     * La stringa e' costruita con aritmetica intera invece che con
+     * String.valueOf(double): in GWT la conversione di un double passa da
+     * JavaScript e 4.0 diventerebbe "4" invece di "4,0".
+     *
+     * @param media La media dei voti ricevuti.
+     * @return Es. "4,5" per una media di 4.47.
+     */
+    public static String mediaFormattata(double media) {
+        long decimi = Math.round(media * 10);
+        return (decimi / 10) + "," + Math.abs(decimi % 10);
+    }
 }
