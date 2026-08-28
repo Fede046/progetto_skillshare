@@ -172,6 +172,10 @@ public class RichiesteGui {
         }
     }
 
+    /**
+     * Riga di una richiesta inviata. Anche il richiedente e' partecipante allo
+     * scambio, quindi vede completamento e recensione come il creatore.
+     */
     private Widget creaRigaInviata(RichiestaScambioDTO richiesta) {
         FlowPanel item = new FlowPanel();
         item.addStyleName("annuncio-item");
@@ -187,6 +191,8 @@ public class RichiesteGui {
         statoBadge.addStyleName("richiesta-stato");
         statoBadge.addStyleName("richiesta-stato-" + nomeStato(richiesta.getStato()));
         item.add(statoBadge);
+
+        // Chat disponibile finche' lo scambio e' in corso
         if (richiesta.getStato() == StatoRichiesta.ACCEPTED) {
             FlowPanel azioni = new FlowPanel();
             azioni.addStyleName("annuncio-azioni");
@@ -199,7 +205,24 @@ public class RichiesteGui {
             azioni.add(btnChat);
             item.add(azioni);
         }
+
+        item.add(creaBloccoCompletamento(richiesta, statoBadge));
+
         return item;
+    }
+
+    /**
+     * Blocco completamento/recensione agganciato a una riga: quando lo scambio
+     * viene completato aggiorna il badge di stato senza ricaricare la lista.
+     */
+    private Widget creaBloccoCompletamento(RichiestaScambioDTO richiesta, Label statoBadge) {
+        CompletamentoRecensioneGui blocco = new CompletamentoRecensioneGui(utente, richiesta);
+        blocco.setAscoltatoreStato(aggiornata -> {
+            statoBadge.setText(testoStato(aggiornata.getStato()));
+            statoBadge.setStyleName("richiesta-stato");
+            statoBadge.addStyleName("richiesta-stato-" + nomeStato(aggiornata.getStato()));
+        });
+        return blocco.getWidget();
     }
 
     /**
@@ -243,7 +266,7 @@ public class RichiesteGui {
 
             btnChat.addStyleName("btn-primary");
             btnChat.addStyleName("btn-sm");
-            btnChat.addClickHandler(event -> new ChatGui(utente, richiesta.getId()).mostra());
+            btnChat.addClickHandler(event -> new ChatGui(utente, this.richiesta.getId()).mostra());
 
             azioni.add(btnAccetta);
             azioni.add(btnRifiuta);
@@ -251,12 +274,27 @@ public class RichiesteGui {
             item.add(azioni);
 
             aggiornaBadge();
+
+            // Il completamento aggiorna badge e pulsanti insieme: chiusa la chat,
+            // la riga passa da sola alla fase di recensione
+            CompletamentoRecensioneGui blocco = new CompletamentoRecensioneGui(utente, richiesta);
+            blocco.setAscoltatoreStato(aggiornata -> {
+                this.richiesta = aggiornata;
+                aggiornaBadge();
+            });
+            item.add(blocco.getWidget());
         }
 
         FlowPanel widget() {
             return item;
         }
 
+        /**
+         * Ridisegna badge e azioni in base allo stato corrente.
+         * Le richieste gia' decise non mostrano Accetta/Rifiuta: la UI non offre
+         * mai una ri-decisione, quindi il Database non ha bisogno di una guardia.
+         * La chat prende il loro posto finche' lo scambio e' in corso.
+         */
         private void aggiornaBadge() {
             StatoRichiesta stato = richiesta.getStato();
             statoBadge.setText(testoStato(stato));
@@ -266,6 +304,8 @@ public class RichiesteGui {
             btnAccetta.setVisible(stato == StatoRichiesta.PENDING);
             btnRifiuta.setVisible(stato == StatoRichiesta.PENDING);
             btnChat.setVisible(stato == StatoRichiesta.ACCEPTED);
+
+            azioni.setVisible(stato == StatoRichiesta.PENDING || stato == StatoRichiesta.ACCEPTED);
         }
 
         private void aggiornaStato(StatoRichiesta nuovoStato, Button pulsante) {
@@ -282,6 +322,7 @@ public class RichiesteGui {
 
                 @Override
                 public void onSuccess(RichiestaScambioDTO result) {
+                    // Update inline della riga, senza ricaricare la lista
                     richiesta = result;
                     aggiornaBadge();
                 }
@@ -329,6 +370,8 @@ public class RichiesteGui {
                 return "Accettata";
             case REJECTED:
                 return "Rifiutata";
+            case COMPLETED:
+                return "Completata";
             default:
                 return "In attesa";
         }
