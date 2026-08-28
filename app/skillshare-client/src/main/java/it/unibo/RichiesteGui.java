@@ -172,6 +172,10 @@ public class RichiesteGui {
         }
     }
 
+    /**
+     * Riga di una richiesta inviata. Anche il richiedente e' partecipante allo
+     * scambio, quindi vede completamento e recensione come il creatore.
+     */
     private Widget creaRigaInviata(RichiestaScambioDTO richiesta) {
         FlowPanel item = new FlowPanel();
         item.addStyleName("annuncio-item");
@@ -188,7 +192,23 @@ public class RichiesteGui {
         statoBadge.addStyleName("richiesta-stato-" + nomeStato(richiesta.getStato()));
         item.add(statoBadge);
 
+        item.add(creaBloccoCompletamento(richiesta, statoBadge));
+
         return item;
+    }
+
+    /**
+     * Blocco completamento/recensione agganciato a una riga: quando lo scambio
+     * viene completato aggiorna il badge di stato senza ricaricare la lista.
+     */
+    private Widget creaBloccoCompletamento(RichiestaScambioDTO richiesta, Label statoBadge) {
+        CompletamentoRecensioneGui blocco = new CompletamentoRecensioneGui(utente, richiesta);
+        blocco.setAscoltatoreStato(aggiornata -> {
+            statoBadge.setText(testoStato(aggiornata.getStato()));
+            statoBadge.setStyleName("richiesta-stato");
+            statoBadge.addStyleName("richiesta-stato-" + nomeStato(aggiornata.getStato()));
+        });
+        return blocco.getWidget();
     }
 
     /**
@@ -234,6 +254,8 @@ public class RichiesteGui {
             item.add(azioni);
 
             aggiornaBadge();
+
+            item.add(creaBloccoCompletamento(richiesta, statoBadge));
         }
 
         FlowPanel widget() {
@@ -316,6 +338,8 @@ public class RichiesteGui {
                 return "Accettata";
             case REJECTED:
                 return "Rifiutata";
+            case COMPLETED:
+                return "Completata";
             default:
                 return "In attesa";
         }

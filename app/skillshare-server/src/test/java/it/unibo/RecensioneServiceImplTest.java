@@ -135,4 +135,33 @@ public class RecensioneServiceImplTest {
         assertNotNull(risultato, "Deve restituire una lista, non null");
         assertTrue(risultato.isEmpty(), "Un annuncio senza recensioni ha lista vuota");
     }
+
+    @Test
+    void testRecensioniPerAnnuncioRisolveNomeAutore() {
+        // Utente registrato: UtenteDatabase e' statico sul database reale,
+        // quindi usiamo un'email univoca per non collidere con gli altri test
+        String email = "recensore." + System.currentTimeMillis() + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "Anna", "Bianchi"));
+
+        RichiestaScambioDTO scambio = scambioCompletato("annuncio-nome");
+        service.lascia(creaRecensione(scambio.getId(), email, 5));
+
+        List<RecensioneDTO> risultato = service.recensioniPerAnnuncio("annuncio-nome");
+
+        assertEquals(1, risultato.size());
+        assertEquals("Anna Bianchi", risultato.get(0).getNomeAutore(),
+                "Il nome autore deve essere risolto via UtenteDatabase");
+    }
+
+    @Test
+    void testRecensioniPerAnnuncioAutoreNonRegistratoUsaEmailComeFallback() {
+        RichiestaScambioDTO scambio = scambioCompletato("annuncio-fantasma");
+        String email = "fantasma." + System.currentTimeMillis() + "@unibo.it";
+        service.lascia(creaRecensione(scambio.getId(), email, 3));
+
+        List<RecensioneDTO> risultato = service.recensioniPerAnnuncio("annuncio-fantasma");
+
+        assertEquals(email, risultato.get(0).getNomeAutore(),
+                "Senza utente registrato resta visibile l'email");
+    }
 }
