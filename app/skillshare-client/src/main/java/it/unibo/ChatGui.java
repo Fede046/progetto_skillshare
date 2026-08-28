@@ -16,8 +16,8 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- * Schermata della Chat interna ridisegnata in stile moderno con box messaggi
- * scrollabile.
+ * Schermata della Chat interna con pulsante per tornare indietro alla sezione
+ * richieste.
  */
 public class ChatGui {
 
@@ -48,9 +48,24 @@ public class ChatGui {
         card.getElement().getStyle().setProperty("maxWidth", "700px");
         card.getElement().getStyle().setProperty("margin", "0 auto");
 
-        HTML titolo = new HTML("Chat dello Scambio");
-        titolo.getElement().getStyle().setProperty("marginBottom", "15px");
-        card.add(titolo);
+        // Intestazione con pulsante Indietro e Titolo allineati
+        FlowPanel intestazione = new FlowPanel();
+        intestazione.getElement().getStyle().setProperty("display", "flex");
+        intestazione.getElement().getStyle().setProperty("alignItems", "center");
+        intestazione.getElement().getStyle().setProperty("gap", "15px");
+        intestazione.getElement().getStyle().setProperty("marginBottom", "15px");
+
+        Button btnIndietro = new Button("← Indietro");
+        btnIndietro.addStyleName("btn-secondary");
+        btnIndietro.addStyleName("btn-sm");
+        btnIndietro.addClickHandler(event -> new RichiesteGui(utente).mostra());
+
+        HTML titolo = new HTML("<h2>Chat dello Scambio</h2>");
+        titolo.getElement().getStyle().setProperty("margin", "0");
+
+        intestazione.add(btnIndietro);
+        intestazione.add(titolo);
+        card.add(intestazione);
 
         // Contenitore messaggi con altezza fissa e scroll verticale pulito
         listaMessaggi.getElement().getStyle().setHeight(380, Unit.PX);
@@ -63,7 +78,7 @@ public class ChatGui {
         listaMessaggi.add(creaMessaggioStato("Caricamento messaggi..."));
         card.add(listaMessaggi);
 
-        // Banner errori interno (niente più alert fastidiosi)
+        // Banner errori interno
         lblErrore.addStyleName("form-errore");
         lblErrore.setVisible(false);
         card.add(lblErrore);
@@ -111,21 +126,22 @@ public class ChatGui {
     }
 
     private void caricaMessaggi() {
-        chatService.getMessaggi(idRichiestaScambio, new AsyncCallback<List<MessaggioDTO>>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                mostraErrore("Errore accesso chat: "
-                        + (caught.getMessage() != null ? caught.getMessage() : "Non autorizzato"));
-            }
+        chatService.getMessaggi(idRichiestaScambio, utente.getEmail(),
+                new AsyncCallback<List<MessaggioDTO>>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        mostraErrore("Errore accesso chat: "
+                                + (caught.getMessage() != null ? caught.getMessage() : "Non autorizzato"));
+                    }
 
-            @Override
-            public void onSuccess(List result) {
-                mostraMessaggi(result);
-            }
-        });
+                    @Override
+                    public void onSuccess(List<MessaggioDTO> result) {
+                        mostraMessaggi(result);
+                    }
+                });
     }
 
-    private void mostraMessaggi(List messaggi) {
+    private void mostraMessaggi(List<MessaggioDTO> messaggi) {
         listaMessaggi.clear();
 
         if (messaggi == null || messaggi.isEmpty()) {
@@ -133,10 +149,8 @@ public class ChatGui {
             return;
         }
 
-        for (Object obj : messaggi) {
-            if (obj instanceof MessaggioDTO) {
-                listaMessaggi.add(creaRigaMessaggio((MessaggioDTO) obj));
-            }
+        for (MessaggioDTO messaggio : messaggi) {
+            listaMessaggi.add(creaRigaMessaggio(messaggio));
         }
 
         // Scroll automatico in fondo alla chat

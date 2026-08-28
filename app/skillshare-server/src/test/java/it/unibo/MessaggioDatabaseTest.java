@@ -82,7 +82,7 @@ public class MessaggioDatabaseTest {
 
         // Verifica recupero messaggi da parte di un partecipante (ordinati per
         // timestamp ascendente)
-        List messaggi = messaggioDatabase.getMessaggi(idRichiestaAccettata, RICHIEDENTE);
+        List<MessaggioDTO> messaggi = messaggioDatabase.getMessaggi(idRichiestaAccettata, RICHIEDENTE);
 
         assertEquals(2, messaggi.size(), "Dovrebbero esserci esattamente 2 messaggi");
         assertEquals("Ciao Mario, concordiamo per le ripetizioni?", ((MessaggioDTO) messaggi.get(0)).getTesto(),

@@ -16,7 +16,7 @@ public class MessaggioDatabase {
     private final DB db;
 
     // Chiave = id (String), Valore = MessaggioDTO
-    private final ConcurrentMap messaggiCollection;
+    private final ConcurrentMap<String, MessaggioDTO> messaggiCollection;
     private final RichiestaScambioDatabase richiestaScambioDatabase;
 
     public MessaggioDatabase() {
@@ -33,7 +33,7 @@ public class MessaggioDatabase {
         this.richiestaScambioDatabase = new RichiestaScambioDatabase(db);
     }
 
-    public ConcurrentMap getMessaggiCollection() {
+    public ConcurrentMap<String, MessaggioDTO> getMessaggiCollection() {
         return messaggiCollection;
     }
 
@@ -93,7 +93,8 @@ public class MessaggioDatabase {
      * Restituisce i messaggi di una richiesta di scambio ordinati per timestamp ascendente,
      * solo se idUtenteRichiedente è uno dei due partecipanti, altrimenti lancia un'IllegalArgumentException.
      */
-public List getMessaggi(String idRichiestaScambio, String idUtenteRichiedente) throws IllegalArgumentException {
+    public List<MessaggioDTO> getMessaggi(String idRichiestaScambio, String idUtenteRichiedente)
+            throws IllegalArgumentException {
         if (idRichiestaScambio == null || idRichiestaScambio.trim().isEmpty()) {
             throw new IllegalArgumentException("Id richiesta non valido");
         }
@@ -119,13 +120,10 @@ public List getMessaggi(String idRichiestaScambio, String idUtenteRichiedente) t
         }
 
         // 3. Filtra i messaggi appartenenti a questa richiesta
-        List risultato = new ArrayList<>();
-        for (Object obj : messaggiCollection.values()) {
-            if (obj instanceof MessaggioDTO) {
-                MessaggioDTO m = (MessaggioDTO) obj;
-                if (idRichiestaScambio.equals(m.getIdRichiestaScambio())) {
-                    risultato.add(m);
-                }
+        List<MessaggioDTO> risultato = new ArrayList<>();
+        for (MessaggioDTO m : messaggiCollection.values()) {
+            if (idRichiestaScambio.equals(m.getIdRichiestaScambio())) {
+                risultato.add(m);
             }
         }
 

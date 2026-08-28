@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapdb.DB;
@@ -69,13 +70,38 @@ public class ChatServiceImplTest {
     }
 
     @Test
-    void testGetMessaggiSenzaSessioneLanciaEccezione() {
-        // Poiché siamo in un test unitario senza un contesto HTTP attivo
-        // (RemoteServiceServlet),
-        // getThreadLocalRequest() restituirà null, scatenando l'eccezione di utente non
-        // autenticato.
+    void testGetMessaggiDelegatoCorrettamente() {
+        MessaggioDTO primo = new MessaggioDTO();
+        primo.setIdRichiestaScambio(idRichiestaAccettata);
+        primo.setIdMittente(RICHIEDENTE);
+        primo.setTesto("Ciao, quando ci vediamo?");
+        chatService.inviaMessaggio(primo);
+
+        MessaggioDTO secondo = new MessaggioDTO();
+        secondo.setIdRichiestaScambio(idRichiestaAccettata);
+        secondo.setIdMittente(CREATORE);
+        secondo.setTesto("Direi giovedì pomeriggio");
+        chatService.inviaMessaggio(secondo);
+
+        List<MessaggioDTO> messaggi = chatService.getMessaggi(idRichiestaAccettata, RICHIEDENTE);
+
+        assertEquals(2, messaggi.size(), "Deve restituire i due messaggi della chat");
+        assertEquals("Ciao, quando ci vediamo?", messaggi.get(0).getTesto(), "Il piu' vecchio va per primo");
+    }
+
+    @Test
+    void testGetMessaggiComeEstraneoLanciaEccezione() {
+        // L'autorizzazione arriva da MessaggioDatabase: la servlet non la rifa'
         assertThrows(IllegalArgumentException.class, () -> {
-            chatService.getMessaggi(idRichiestaAccettata);
+            chatService.getMessaggi(idRichiestaAccettata, "estraneo@unibo.it");
         });
+    }
+
+    @Test
+    void testGetMessaggiChatSenzaMessaggiRestituisceListaVuota() {
+        List<MessaggioDTO> messaggi = chatService.getMessaggi(idRichiestaAccettata, CREATORE);
+
+        assertNotNull(messaggi, "Deve restituire una lista, non null");
+        assertTrue(messaggi.isEmpty(), "Una chat senza messaggi ha lista vuota");
     }
 }
