@@ -29,24 +29,9 @@ public class ChatServiceImpl extends RemoteServiceServlet implements ChatService
     }
 
     @Override
-    public List getMessaggi(String idRichiestaScambio) throws IllegalArgumentException {
-
-        String idUtenteAutenticato = null;
-        if (getThreadLocalRequest() != null && getThreadLocalRequest().getSession() != null) {
-            Object userSession = getThreadLocalRequest().getSession().getAttribute("user");
-            if (userSession instanceof String) {
-                idUtenteAutenticato = (String) userSession;
-            } else if (userSession instanceof UtenteDTO) {
-                idUtenteAutenticato = ((UtenteDTO) userSession).getEmail();
-            }
-        }
-
-       
-        if (idUtenteAutenticato == null || idUtenteAutenticato.trim().isEmpty()) {
-            // Fallback di sicurezza o eccezione se l'utente non è autenticato in sessione
-            throw new IllegalArgumentException("Utente non autenticato");
-        }
-
-        return messaggioDatabase.getMessaggi(idRichiestaScambio, idUtenteAutenticato);
+    public List<MessaggioDTO> getMessaggi(String idRichiestaScambio, String idUtenteRichiedente)
+            throws IllegalArgumentException {
+        // Autorizzazione e filtro vivono in MessaggioDatabase
+        return messaggioDatabase.getMessaggi(idRichiestaScambio, idUtenteRichiedente);
     }
 }

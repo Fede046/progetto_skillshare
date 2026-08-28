@@ -12,6 +12,7 @@
   <packaging>gwt-app</packaging>
 
   <dependencies>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>skillshare-shared</artifactId>

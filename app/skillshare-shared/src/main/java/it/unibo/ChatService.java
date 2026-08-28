@@ -15,5 +15,6 @@ public interface ChatService extends RemoteService {
     /**
      * Restituisce la lista dei messaggi per una specifica richiesta di scambio.
      */
-    List getMessaggi(String idRichiestaScambio) throws IllegalArgumentException;
+    List<MessaggioDTO> getMessaggi(String idRichiestaScambio, String idUtenteRichiedente)
+            throws IllegalArgumentException;
 }

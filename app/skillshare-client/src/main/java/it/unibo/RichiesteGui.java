@@ -192,6 +192,20 @@ public class RichiesteGui {
         statoBadge.addStyleName("richiesta-stato-" + nomeStato(richiesta.getStato()));
         item.add(statoBadge);
 
+        // Chat disponibile finche' lo scambio e' in corso
+        if (richiesta.getStato() == StatoRichiesta.ACCEPTED) {
+            FlowPanel azioni = new FlowPanel();
+            azioni.addStyleName("annuncio-azioni");
+
+            Button btnChat = new Button("Apri Chat");
+            btnChat.addStyleName("btn-primary");
+            btnChat.addStyleName("btn-sm");
+            btnChat.addClickHandler(event -> new ChatGui(utente, richiesta.getId()).mostra());
+
+            azioni.add(btnChat);
+            item.add(azioni);
+        }
+
         item.add(creaBloccoCompletamento(richiesta, statoBadge));
 
         return item;
@@ -220,6 +234,9 @@ public class RichiesteGui {
         private final FlowPanel item = new FlowPanel();
         private final Label statoBadge = new Label();
         private final FlowPanel azioni = new FlowPanel();
+        private final Button btnAccetta = new Button("Accetta");
+        private final Button btnRifiuta = new Button("Rifiuta");
+        private final Button btnChat = new Button("Apri Chat");
         private RichiestaScambioDTO richiesta;
 
         RigaRichiestaRicevuta(RichiestaScambioDTO richiesta) {
@@ -239,23 +256,33 @@ public class RichiesteGui {
 
             azioni.addStyleName("annuncio-azioni");
 
-            Button btnAccetta = new Button("Accetta");
             btnAccetta.addStyleName("btn-primary");
             btnAccetta.addStyleName("btn-sm");
             btnAccetta.addClickHandler(event -> aggiornaStato(StatoRichiesta.ACCEPTED, btnAccetta));
 
-            Button btnRifiuta = new Button("Rifiuta");
             btnRifiuta.addStyleName("btn-danger");
             btnRifiuta.addStyleName("btn-sm");
             btnRifiuta.addClickHandler(event -> aggiornaStato(StatoRichiesta.REJECTED, btnRifiuta));
 
+            btnChat.addStyleName("btn-primary");
+            btnChat.addStyleName("btn-sm");
+            btnChat.addClickHandler(event -> new ChatGui(utente, this.richiesta.getId()).mostra());
+
             azioni.add(btnAccetta);
             azioni.add(btnRifiuta);
+            azioni.add(btnChat);
             item.add(azioni);
 
             aggiornaBadge();
 
-            item.add(creaBloccoCompletamento(richiesta, statoBadge));
+            // Il completamento aggiorna badge e pulsanti insieme: chiusa la chat,
+            // la riga passa da sola alla fase di recensione
+            CompletamentoRecensioneGui blocco = new CompletamentoRecensioneGui(utente, richiesta);
+            blocco.setAscoltatoreStato(aggiornata -> {
+                this.richiesta = aggiornata;
+                aggiornaBadge();
+            });
+            item.add(blocco.getWidget());
         }
 
         FlowPanel widget() {
@@ -264,8 +291,9 @@ public class RichiesteGui {
 
         /**
          * Ridisegna badge e azioni in base allo stato corrente.
-         * Le richieste gia' decise non mostrano i pulsanti: la UI non offre mai
-         * una ri-decisione, quindi il Database non ha bisogno di una guardia.
+         * Le richieste gia' decise non mostrano Accetta/Rifiuta: la UI non offre
+         * mai una ri-decisione, quindi il Database non ha bisogno di una guardia.
+         * La chat prende il loro posto finche' lo scambio e' in corso.
          */
         private void aggiornaBadge() {
             StatoRichiesta stato = richiesta.getStato();
@@ -273,7 +301,11 @@ public class RichiesteGui {
             statoBadge.setStyleName("richiesta-stato");
             statoBadge.addStyleName("richiesta-stato-" + nomeStato(stato));
 
-            azioni.setVisible(stato == StatoRichiesta.PENDING);
+            btnAccetta.setVisible(stato == StatoRichiesta.PENDING);
+            btnRifiuta.setVisible(stato == StatoRichiesta.PENDING);
+            btnChat.setVisible(stato == StatoRichiesta.ACCEPTED);
+
+            azioni.setVisible(stato == StatoRichiesta.PENDING || stato == StatoRichiesta.ACCEPTED);
         }
 
         private void aggiornaStato(StatoRichiesta nuovoStato, Button pulsante) {
@@ -363,4 +395,3 @@ public class RichiesteGui {
         return valore < 10 ? "0" + valore : String.valueOf(valore);
     }
 }
-
