@@ -133,6 +133,53 @@ public class RichiestaScambioDatabase {
     }
 
     /**
+     * Segna come COMPLETED uno scambio gia' accettato.
+     * A differenza di accetta/rifiuta, qui puo' agire ciascuno dei due
+     * partecipanti: lo scambio si conclude per entrambi.
+     *
+     * @param idRichiesta          L'id della richiesta da completare.
+     * @param idUtenteRichiedente  L'id dell'utente autenticato che completa
+     *                             (il richiedente o il creatore dell'annuncio).
+     * @return La richiesta aggiornata con stato COMPLETED.
+     * @throws IllegalArgumentException Se l'id e' nullo/vuoto, se la richiesta non esiste,
+     *                                  se non e' ancora accettata o se l'utente non partecipa allo scambio.
+     */
+    public RichiestaScambioDTO completa(String idRichiesta, String idUtenteRichiedente) throws IllegalArgumentException {
+        if (idRichiesta == null || idRichiesta.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
+        if (idUtenteRichiedente == null || idUtenteRichiedente.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dati non validi");
+        }
+
+        // 1. La richiesta deve esistere
+        RichiestaScambioDTO esistente = richiesteCollection.get(idRichiesta);
+        if (esistente == null) {
+            throw new IllegalArgumentException("Richiesta non trovata");
+        }
+
+        // 2. Si completa solo cio' che e' stato accettato
+        if (esistente.getStato() != StatoRichiesta.ACCEPTED) {
+            throw new IllegalArgumentException("Impossibile completare uno scambio non ancora accettato");
+        }
+
+        // 3. Deve agire uno dei due partecipanti allo scambio
+        String utente = idUtenteRichiedente.trim();
+        boolean partecipante = utente.equals(esistente.getIdRichiedente())
+                || utente.equals(esistente.getIdCreatoreAnnuncio());
+        if (!partecipante) {
+            throw new IllegalArgumentException("Non sei autorizzato a completare questo scambio");
+        }
+
+        // Aggiornamento dello stato e persistenza
+        esistente.setStato(StatoRichiesta.COMPLETED);
+        richiesteCollection.put(esistente.getId(), esistente);
+        DatabaseCore.commit();
+
+        return esistente;
+    }
+
+    /**
      * Richieste di scambio ricevute da un creatore di annunci,
      * dalla più recente alla più vecchia.
      * Restituisce lista vuota se l'id è null/vuoto o non ci sono richieste.
