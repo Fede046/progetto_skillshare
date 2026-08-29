@@ -27,7 +27,7 @@ public interface MarketplaceService extends RemoteService {
      *                         se false mantiene l'ordine temporale decrescente.
      * @return Lista degli annunci filtrati/ordinati.
      */
-    List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo);
+    List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo, boolean ordinaPerRating);
 
     /**
      * Ricerca testuale sugli annunci su uno o piu' campi selezionabili.
@@ -43,5 +43,5 @@ public interface MarketplaceService extends RemoteService {
      *                        se false mantiene l'ordine temporale decrescente.
      * @return Lista degli annunci corrispondenti, filtrati/ordinati.
      */
-    List<AnnuncioDTO> cercaAnnunci(String query, Set<CampoRicerca> campi, boolean ordinaPerTitolo);
+    List<AnnuncioDTO> cercaAnnunci(String query, Set<CampoRicerca> campi, boolean ordinaPerTitolo, boolean ordinaPerRating);
 }

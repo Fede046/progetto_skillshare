@@ -137,7 +137,7 @@ public class MarketplaceGui {
             campi = null;
         }
 
-        marketplaceService.cercaAnnunci(query, campi, ordinaPerTitolo, new AsyncCallback<List<AnnuncioDTO>>() {
+        marketplaceService.cercaAnnunci(query, campi, ordinaPerTitolo, false, new AsyncCallback<List<AnnuncioDTO>>() {
             @Override
             public void onFailure(Throwable caught) {
                 listaAnnunci.clear();

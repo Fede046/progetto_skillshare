@@ -59,7 +59,7 @@ public class MarketplaceRicercaAvanzataTest {
         pubblica("Partite di scacchi", "Scacchi" + competenzaUnivoca.hashCode());
 
         // La query arriva tutta in maiuscolo: il filtro deve ignorare il caso
-        List<AnnuncioDTO> risultato = service.listaAnnunci(competenzaUnivoca.toUpperCase(), false);
+        List<AnnuncioDTO> risultato = service.listaAnnunci(competenzaUnivoca.toUpperCase(), false, false);
 
         assertNotNull(risultato, "Il servizio deve restituire una lista, non null");
         assertEquals(2, risultato.size(), "Devono tornare solo i due annunci con la competenza cercata");
@@ -74,7 +74,7 @@ public class MarketplaceRicercaAvanzataTest {
     void testFiltroSenzaCorrispondenzeRestituisceListaVuota() {
         pubblica("Corso di uncinetto base", competenzaUnivoca);
 
-        List<AnnuncioDTO> risultato = service.listaAnnunci("competenza-inesistente-" + competenzaUnivoca, false);
+        List<AnnuncioDTO> risultato = service.listaAnnunci("competenza-inesistente-" + competenzaUnivoca, false,false);
 
         assertNotNull(risultato, "Il servizio deve restituire una lista, non null");
         assertTrue(risultato.isEmpty(), "Un filtro senza corrispondenze restituisce lista vuota");
@@ -87,7 +87,7 @@ public class MarketplaceRicercaAvanzataTest {
         pubblica("Aquilone artigianale", competenzaUnivoca);
         pubblica("Mandolino napoletano", competenzaUnivoca);
 
-        List<AnnuncioDTO> risultato = service.listaAnnunci(competenzaUnivoca, true);
+        List<AnnuncioDTO> risultato = service.listaAnnunci(competenzaUnivoca, true,false);
 
         assertEquals(3, risultato.size(), "Il filtro deve trovare i tre annunci del test");
         assertEquals("Aquilone artigianale", risultato.get(0).getTitolo());

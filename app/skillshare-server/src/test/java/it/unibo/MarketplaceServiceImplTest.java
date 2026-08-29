@@ -79,6 +79,7 @@ public class MarketplaceServiceImplTest {
         annuncio.setControprestazione("Lezioni di inglese");
         return annuncio;
     }
+
     @Test
     void testListaAnnunciConFiltroCompetenzaEOrdinamentoPerTitolo() {
         String ts = String.valueOf(System.currentTimeMillis());
@@ -105,7 +106,7 @@ public class MarketplaceServiceImplTest {
         MarketplaceServiceImpl service = new MarketplaceServiceImpl();
 
         // Filtro per "JAVA" + ordinamento per titolo (A-Z)
-        List<AnnuncioDTO> filtratiEOrdinati = service.listaAnnunci("JAVA", true);
+        List<AnnuncioDTO> filtratiEOrdinati = service.listaAnnunci("JAVA", true, false);
         assertNotNull(filtratiEOrdinati);
 
         boolean soloJava = filtratiEOrdinati.stream()
@@ -114,8 +115,10 @@ public class MarketplaceServiceImplTest {
 
         int idxA = -1, idxZ = -1;
         for (int i = 0; i < filtratiEOrdinati.size(); i++) {
-            if (filtratiEOrdinati.get(i).getId().equals(a2.getId())) idxA = i;
-            if (filtratiEOrdinati.get(i).getId().equals(a1.getId())) idxZ = i;
+            if (filtratiEOrdinati.get(i).getId().equals(a2.getId()))
+                idxA = i;
+            if (filtratiEOrdinati.get(i).getId().equals(a1.getId()))
+                idxZ = i;
         }
         assertTrue(idxA != -1 && idxZ != -1 && idxA < idxZ,
                 "L'annuncio con titolo 'A:' deve precedere l'annuncio con titolo 'Z:'");
@@ -127,7 +130,7 @@ public class MarketplaceServiceImplTest {
     @Test
     void testListaAnnunciFiltroNessunaCorrispondenzaRestituisceListaVuota() {
         MarketplaceServiceImpl service = new MarketplaceServiceImpl();
-        List<AnnuncioDTO> risultato = service.listaAnnunci("CompetenzaInesistente_XYZ_999", false);
+        List<AnnuncioDTO> risultato = service.listaAnnunci("CompetenzaInesistente_XYZ_999", false, false);
         assertNotNull(risultato);
         assertTrue(risultato.isEmpty(), "Una ricerca senza corrispondenze deve restituire una lista vuota");
     }
@@ -143,7 +146,7 @@ public class MarketplaceServiceImplTest {
         new AnnuncioDatabase().pubblica(annuncio);
 
         List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
-                .cercaAnnunci("TitoloUnicoRicerca_" + ts, EnumSet.of(CampoRicerca.TITOLO), false);
+                .cercaAnnunci("TitoloUnicoRicerca_" + ts, EnumSet.of(CampoRicerca.TITOLO), false, false);
 
         AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
         assertEquals("TitoloUnicoRicerca_" + ts, trovato.getTitolo());
@@ -160,7 +163,7 @@ public class MarketplaceServiceImplTest {
         new AnnuncioDatabase().pubblica(annuncio);
 
         List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
-                .cercaAnnunci("CompetenzaUnicaRicerca_" + ts, EnumSet.of(CampoRicerca.COMPETENZA), false);
+                .cercaAnnunci("CompetenzaUnicaRicerca_" + ts, EnumSet.of(CampoRicerca.COMPETENZA), false, false);
 
         assertEquals(annuncio.getId(), trovaAnnuncio(risultato, annuncio.getId()).getId());
     }
@@ -176,15 +179,16 @@ public class MarketplaceServiceImplTest {
         AnnuncioDTO annuncio = creaAnnuncio(email);
         new AnnuncioDatabase().pubblica(annuncio);
 
-        // Il campo AUTORE cerca nel nome completo (nome + cognome) valorizzato dal servizio
+        // Il campo AUTORE cerca nel nome completo (nome + cognome) valorizzato dal
+        // servizio
         List<AnnuncioDTO> perNome = new MarketplaceServiceImpl()
-                .cercaAnnunci(nome, EnumSet.of(CampoRicerca.AUTORE), false);
+                .cercaAnnunci(nome, EnumSet.of(CampoRicerca.AUTORE), false, false);
         AnnuncioDTO trovato = trovaAnnuncio(perNome, annuncio.getId());
         assertEquals(nome + " " + cognome, trovato.getNomeAutore(),
                 "La ricerca per autore deve usare nome e cognome arricchiti");
 
         List<AnnuncioDTO> perCognome = new MarketplaceServiceImpl()
-                .cercaAnnunci(cognome, EnumSet.of(CampoRicerca.AUTORE), false);
+                .cercaAnnunci(cognome, EnumSet.of(CampoRicerca.AUTORE), false, false);
         assertEquals(annuncio.getId(), trovaAnnuncio(perCognome, annuncio.getId()).getId());
     }
 
@@ -197,7 +201,8 @@ public class MarketplaceServiceImplTest {
         AnnuncioDatabase db = new AnnuncioDatabase();
 
         // La stessa query deve bastare da sola: soloTitolo matcha solo per TITOLO
-        // (la sua competenza resta "Programmazione Java"), soloCompetenza solo per COMPETENZA
+        // (la sua competenza resta "Programmazione Java"), soloCompetenza solo per
+        // COMPETENZA
         // (il suo titolo resta "Ripetizioni di Java"), nessunCampo per nessun campo.
         AnnuncioDTO soloTitolo = creaAnnuncio(email);
         soloTitolo.setTitolo("MatchOrUnico_" + ts);
@@ -214,7 +219,7 @@ public class MarketplaceServiceImplTest {
 
         String query = "MatchOrUnico_" + ts;
         List<AnnuncioDTO> risultato = new MarketplaceServiceImpl().cercaAnnunci(
-                query, EnumSet.of(CampoRicerca.TITOLO, CampoRicerca.COMPETENZA), false);
+                query, EnumSet.of(CampoRicerca.TITOLO, CampoRicerca.COMPETENZA), false, false);
 
         boolean trovatoPerTitolo = risultato.stream().anyMatch(a -> a.getId().equals(soloTitolo.getId()));
         boolean trovatoPerCompetenza = risultato.stream().anyMatch(a -> a.getId().equals(soloCompetenza.getId()));
@@ -237,7 +242,7 @@ public class MarketplaceServiceImplTest {
 
         // campi = null: la ricerca avviene su tutti i campi disponibili
         List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
-                .cercaAnnunci("MatchInControprestazione_" + ts, null, false);
+                .cercaAnnunci("MatchInControprestazione_" + ts, null, false, false);
 
         assertEquals(annuncio.getId(), trovaAnnuncio(risultato, annuncio.getId()).getId());
     }
@@ -254,8 +259,8 @@ public class MarketplaceServiceImplTest {
         MarketplaceServiceImpl service = new MarketplaceServiceImpl();
         Set<CampoRicerca> tutti = EnumSet.allOf(CampoRicerca.class);
 
-        List<AnnuncioDTO> conNull = service.cercaAnnunci(null, tutti, false);
-        List<AnnuncioDTO> conVuota = service.cercaAnnunci("   ", tutti, false);
+        List<AnnuncioDTO> conNull = service.cercaAnnunci(null, tutti, false, false);
+        List<AnnuncioDTO> conVuota = service.cercaAnnunci("   ", tutti, false, false);
 
         assertEquals(annuncio.getId(), trovaAnnuncio(conNull, annuncio.getId()).getId());
         assertEquals(annuncio.getId(), trovaAnnuncio(conVuota, annuncio.getId()).getId());
@@ -266,7 +271,7 @@ public class MarketplaceServiceImplTest {
         String queryInesistente = "QueryInesistente_" + UUID.randomUUID();
 
         List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
-                .cercaAnnunci(queryInesistente, EnumSet.allOf(CampoRicerca.class), false);
+                .cercaAnnunci(queryInesistente, EnumSet.allOf(CampoRicerca.class), false, false);
 
         assertNotNull(risultato);
         assertTrue(risultato.isEmpty(), "Una ricerca senza corrispondenze deve restituire una lista vuota");
@@ -280,7 +285,7 @@ public class MarketplaceServiceImplTest {
 
         // Autore non piu registrato: la ricerca per AUTORE usa l email come fallback
         List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
-                .cercaAnnunci("fantasma.cerca", EnumSet.of(CampoRicerca.AUTORE), false);
+                .cercaAnnunci("fantasma.cerca", EnumSet.of(CampoRicerca.AUTORE), false, false);
 
         AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
         assertEquals(email, trovato.getNomeAutore(), "Senza utente registrato si mostra l email come fallback");
@@ -299,20 +304,67 @@ public class MarketplaceServiceImplTest {
         // NOTA: Poiché non ha recensioni, la valutazione media deve essere null (non 0)
         List risultato = new MarketplaceServiceImpl().listaAnnunci();
         AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
-        
+
         assertNotNull(trovato, "L'annuncio deve essere presente");
-        // Verifica che un autore senza recensioni abbia valutazione null (e non venga trattato come 0)
-        assertTrue(trovato.getValutazioneAutore() == null, 
+        // Verifica che un autore senza recensioni abbia valutazione null (e non venga
+        // trattato come 0)
+        assertTrue(trovato.getValutazioneAutore() == null,
                 "Gli autori senza recensioni devono avere valutazione null e non 0");
     }
 
     @Test
     void testAutoreSenzaRecensioniNonTrattatoComeZero() {
-        // Test esplicito per la regola: "Listings whose author has no reviews are flagged accordingly (not treated as rating 0)"
+        // Test esplicito per la regola: "Listings whose author has no reviews are
+        // flagged accordingly (not treated as rating 0)"
         AnnuncioDTO annuncio = new AnnuncioDTO();
         annuncio.setValutazioneAutore(null); // Rappresenta l'assenza di recensioni
-        
-        assertTrue(annuncio.getValutazioneAutore() == null, 
+
+        assertTrue(annuncio.getValutazioneAutore() == null,
                 "Il flag/valore per l'assenza di recensioni deve essere null per distinguerlo da un rating pari a 0.0");
+    }
+    // --- NUOVI TEST SPECIFICI PER LA US-15 (Ordinamento per Rating) ---
+
+    @Test
+    void testOrdinamentoPerRatingAutoreDiscendenteESenzaRecensioniInFondo() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String e1 = "autore1_" + ts + "@unibo.it";
+        String e2 = "autore2_" + ts + "@unibo.it";
+        String e3 = "autore3_" + ts + "@unibo.it";
+
+        UtenteDatabase.registra(new UtenteDTO(e1, "@Pass123", "Basso", "Rating"));
+        UtenteDatabase.registra(new UtenteDTO(e2, "@Pass123", "Alto", "Rating"));
+        UtenteDatabase.registra(new UtenteDTO(e3, "@Pass123", "Senza", "Recensioni"));
+
+        AnnuncioDatabase annDb = new AnnuncioDatabase();
+        AnnuncioDTO a1 = creaAnnuncio(e1);
+        a1.setTitolo("Annuncio 1");
+        annDb.pubblica(a1);
+        AnnuncioDTO a2 = creaAnnuncio(e2);
+        a2.setTitolo("Annuncio 2");
+        annDb.pubblica(a2);
+        AnnuncioDTO a3 = creaAnnuncio(e3);
+        a3.setTitolo("Annuncio 3");
+        annDb.pubblica(a3);
+
+        // Verifichiamo direttamente l'ordinamento tramite la funzione del database
+        // degli annunci
+        // che ordina per rating decrescente posizionando i null in fondo
+        a1.setValutazioneAutore(2.0);
+        a2.setValutazioneAutore(5.0);
+        a3.setValutazioneAutore(null); // Senza recensioni
+
+        List lista = List.of(a1, a3, a2); // Mescolati disordinati
+        List ordinati = annDb.ordinaPerRatingAutoreDesc(lista);
+
+        assertNotNull(ordinati);
+        assertEquals(3, ordinati.size());
+
+        // L'autore con rating più alto (5.0) deve essere primo
+        assertEquals(a2.getId(), ((AnnuncioDTO) ordinati.get(0)).getId(), "Il rating più alto deve essere in cima");
+        // L'autore con rating più basso (2.0) deve essere secondo
+        assertEquals(a1.getId(), ((AnnuncioDTO) ordinati.get(1)).getId(), "Il rating più basso segue");
+        // L'autore senza recensioni (null) deve essere SEMPRE in fondo
+        assertEquals(a3.getId(), ((AnnuncioDTO) ordinati.get(2)).getId(),
+                "Gli autori senza recensioni devono finire in fondo");
     }
 }

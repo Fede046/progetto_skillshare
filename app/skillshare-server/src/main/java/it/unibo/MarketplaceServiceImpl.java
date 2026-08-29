@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
@@ -13,17 +14,21 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
 
     @Override
     public List<AnnuncioDTO> listaAnnunci() {
-        return listaAnnunci(null, false);
+        return listaAnnunci(null, false, false);
     }
 
     @Override
-    public List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo) {
+    public List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo, boolean ordinaPerRating) {
         AnnuncioDatabase db = new AnnuncioDatabase();
 
         // 1. Filtraggio per competenza (se il filtro è nullo/vuoto restituisce tutti
         // gli annunci)
         List<AnnuncioDTO> annunci = db.filtraPerCompetenza(filtroCompetenza);
-
+        // Arricchimento PRIMA dell'ordinamento per rating (così i dati di valutazione sono presenti)
+        for (AnnuncioDTO annuncio : annunci) {
+            annuncio.setNomeAutore(nomeAutore(annuncio.getIdUtente()));
+            annuncio.setValutazioneAutore(valutazioneAutore(annuncio.getIdUtente()));
+        }
         // 2. Ordinamento alfabetico per titolo se richiesto
         if (ordinaPerTitolo) {
             annunci = db.ordinaPerTitolo(annunci);
@@ -39,7 +44,7 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
     }
 
     @Override
-    public List<AnnuncioDTO> cercaAnnunci(String query, Set<CampoRicerca> campi, boolean ordinaPerTitolo) {
+    public List<AnnuncioDTO> cercaAnnunci(String query, Set<CampoRicerca> campi, boolean ordinaPerTitolo, boolean ordinaPerRating) {
         AnnuncioDatabase db = new AnnuncioDatabase();
 
         // 1. Parto da tutti gli annunci in ordine temporale decrescente
@@ -62,6 +67,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
         // 4. Ordinamento alfabetico per titolo se richiesto
         if (ordinaPerTitolo) {
             risultato = db.ordinaPerTitolo(risultato);
+        } else if (ordinaPerRating) {
+            risultato = db.ordinaPerRatingAutoreDesc(risultato);
         }
 
         return risultato;
@@ -134,4 +141,5 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
             return null;
         }
     }
+    
 }
