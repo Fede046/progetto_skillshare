@@ -215,4 +215,27 @@ public class AnnuncioDatabase {
             throw new IllegalArgumentException("Il campo '" + nomeCampo + "' è obbligatorio");
         }
     }
+    /**
+     * Ordina la lista degli annunci in base alla valutazione media dell'autore in ordine decrescente.
+     * Gli autori senza recensioni (valutazione null) sono posizionati in fondo alla lista.
+     */
+    public List ordinaPerRatingAutoreDesc(List<AnnuncioDTO> listaAnnunci) {
+        if (listaAnnunci == null || listaAnnunci.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return listaAnnunci.stream()
+                .sorted((a1, a2) -> {
+                    Double r1 = a1.getValutazioneAutore();
+                    Double r2 = a2.getValutazioneAutore();
+
+                    if (r1 == null && r2 == null) return 0;
+                    if (r1 == null) return 1;  // r1 va in fondo
+                    if (r2 == null) return -1; // r2 va in fondo
+
+                    return Double.compare(r2, r1); // Ordine decrescente (dal più alto al più basso)
+                })
+                .collect(Collectors.toList());
+    }
+    
 }
