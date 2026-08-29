@@ -3,12 +3,12 @@ package it.unibo;
 import java.io.Serializable;
 
 /**
- * Oggetto di trasferimento dati che rappresenta un annuncio pubblicato da un utente.
+ * Oggetto di trasferimento dati che rappresenta un annuncio pubblicato da un
+ * utente.
  * Implementa Serializable per poter viaggiare sulle chiamate RPC di GWT
  * ed essere persistito su MapDB tramite Serializer.JAVA.
  */
 public class AnnuncioDTO implements Serializable {
-
     private String id;
     private String idUtente;
     private String titolo;
@@ -18,12 +18,21 @@ public class AnnuncioDTO implements Serializable {
     private String controprestazione;
     private long dataCreazione;
     private String nomeAutore;
+    private Double valutazioneAutore;
+
+    public Double getValutazioneAutore() {
+        return valutazioneAutore;
+    }
+
+    public void setValutazioneAutore(Double valutazioneAutore) {
+        this.valutazioneAutore = valutazioneAutore;
+    }
 
     // Costruttore vuoto OBBLIGATORIO per GWT
     public AnnuncioDTO() {
     }
 
-    //Getters e Setters
+    // Getters e Setters
     public String getId() {
         return id;
     }

@@ -20,7 +20,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
     public List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo) {
         AnnuncioDatabase db = new AnnuncioDatabase();
 
-        // 1. Filtraggio per competenza (se il filtro è nullo/vuoto restituisce tutti gli annunci)
+        // 1. Filtraggio per competenza (se il filtro è nullo/vuoto restituisce tutti
+        // gli annunci)
         List<AnnuncioDTO> annunci = db.filtraPerCompetenza(filtroCompetenza);
 
         // 2. Ordinamento alfabetico per titolo se richiesto
@@ -28,9 +29,10 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
             annunci = db.ordinaPerTitolo(annunci);
         }
 
-        // 3. Arricchimento con il nome completo dell'autore
+        // 3. Arricchimento con il nome completo e la valutazione dell'autore
         for (AnnuncioDTO annuncio : annunci) {
             annuncio.setNomeAutore(nomeAutore(annuncio.getIdUtente()));
+            annuncio.setValutazioneAutore(valutazioneAutore(annuncio.getIdUtente()));
         }
 
         return annunci;
@@ -43,10 +45,10 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
         // 1. Parto da tutti gli annunci in ordine temporale decrescente
         List<AnnuncioDTO> tutti = db.tuttiGliAnnunci();
 
-        // 2. Arricchimento con il nome autore PRIMA del filtro:
-        //    serve perche' la ricerca per AUTORE lavora su nomeAutore, non su idUtente.
+        // 2. Arricchimento con il nome autore e valutazione PRIMA del filtro
         for (AnnuncioDTO annuncio : tutti) {
             annuncio.setNomeAutore(nomeAutore(annuncio.getIdUtente()));
+            annuncio.setValutazioneAutore(valutazioneAutore(annuncio.getIdUtente()));
         }
 
         // 3. Filtro testuale OR sui campi selezionati
@@ -66,7 +68,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
     }
 
     /**
-     * Verifica se un annuncio corrisponde alla query in almeno uno dei campi selezionati (OR).
+     * Verifica se un annuncio corrisponde alla query in almeno uno dei campi
+     * selezionati (OR).
      * Query nulla/vuota => sempre true (nessun filtro).
      * Campi nulli/vuoti => ricerca su tutti i campi disponibili.
      */
@@ -105,7 +108,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
         }
     }
 
-    // Nome e cognome dell'autore, con fallback sull'email se l'utente non esiste piu'
+    // Nome e cognome dell'autore, con fallback sull'email se l'utente non esiste
+    // piu'
     private String nomeAutore(String idUtente) {
         try {
             UtenteDTO autore = UtenteDatabase.getProfilo(idUtente);
@@ -116,6 +120,18 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
         } catch (IllegalArgumentException e) {
             // Autore non piu' registrato: resta visibile la sua email
             return idUtente;
+        }
+    }
+
+    // Valutazione media dell'autore, con restituzione di null se non ci sono
+    // recensioni
+    private Double valutazioneAutore(String idUtente) {
+        try {
+            RecensioneDatabase recDb = new RecensioneDatabase();
+            return recDb.ratingMedio(idUtente);
+        } catch (Exception e) {
+            // In caso di problemi con il database, restituisce null (nessuna valutazione)
+            return null;
         }
     }
 }

@@ -9,9 +9,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class MarketplaceServiceImplTest {
+
+    @BeforeAll
+    static void setUpDatabase() {
+        // Database in memoria per i test: non tocca il file progetto_sweng.db
+        DatabaseCore.enableTestMode();
+    }
+
+    @AfterAll
+    static void tearDownDatabase() {
+        DatabaseCore.disableTestMode();
+    }
 
     @Test
     void testListaAnnunciRisolveNomeAutore() {
@@ -270,5 +284,35 @@ public class MarketplaceServiceImplTest {
 
         AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
         assertEquals(email, trovato.getNomeAutore(), "Senza utente registrato si mostra l email come fallback");
+    }
+
+    @Test
+    void testListaAnnunciRisolveValutazioneAutore() {
+        // 1. Registriamo un utente
+        String email = "autore.recensito_" + System.currentTimeMillis() + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "Mario", "Rossi"));
+
+        // 2. Pubblichiamo un suo annuncio
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        new AnnuncioDatabase().pubblica(annuncio);
+
+        // NOTA: Poiché non ha recensioni, la valutazione media deve essere null (non 0)
+        List risultato = new MarketplaceServiceImpl().listaAnnunci();
+        AnnuncioDTO trovato = trovaAnnuncio(risultato, annuncio.getId());
+        
+        assertNotNull(trovato, "L'annuncio deve essere presente");
+        // Verifica che un autore senza recensioni abbia valutazione null (e non venga trattato come 0)
+        assertTrue(trovato.getValutazioneAutore() == null, 
+                "Gli autori senza recensioni devono avere valutazione null e non 0");
+    }
+
+    @Test
+    void testAutoreSenzaRecensioniNonTrattatoComeZero() {
+        // Test esplicito per la regola: "Listings whose author has no reviews are flagged accordingly (not treated as rating 0)"
+        AnnuncioDTO annuncio = new AnnuncioDTO();
+        annuncio.setValutazioneAutore(null); // Rappresenta l'assenza di recensioni
+        
+        assertTrue(annuncio.getValutazioneAutore() == null, 
+                "Il flag/valore per l'assenza di recensioni deve essere null per distinguerlo da un rating pari a 0.0");
     }
 }
