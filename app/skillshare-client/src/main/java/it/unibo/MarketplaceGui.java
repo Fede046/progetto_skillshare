@@ -86,6 +86,7 @@ public class MarketplaceGui {
 
         return card;
     }
+
     private Widget creaBarraControlli() {
         FlowPanel controlli = new FlowPanel();
         controlli.addStyleName("marketplace-controlli");
@@ -98,6 +99,7 @@ public class MarketplaceGui {
         // Dropdown Ordinamento
         sortBox.addItem("Data (più recenti)", "data");
         sortBox.addItem("Per titolo", "titolo");
+        sortBox.addItem("Rating (highest first)", "rating");
         sortBox.addStyleName("marketplace-sort-box");
         sortBox.addChangeHandler(event -> caricaAnnunci());
 
@@ -121,34 +123,42 @@ public class MarketplaceGui {
     }
 
     /**
-     * Chiede al server gli annunci che corrispondono alla query nei campi selezionati, ordinati.
+     * Chiede al server gli annunci che corrispondono alla query nei campi
+     * selezionati, ordinati.
      */
     private void caricaAnnunci() {
         String query = searchBox.getText().trim();
         boolean ordinaPerTitolo = "titolo".equals(sortBox.getSelectedValue());
+        boolean ordinaPerRating = "rating".equals(sortBox.getSelectedValue());
 
-        // Campi selezionati con le checkbox; se nessuno e' spuntato si cerca su tutti (null)
+        // Campi selezionati con le checkbox; se nessuno e' spuntato si cerca su tutti
+        // (null)
         Set<CampoRicerca> campi = new HashSet<>();
-        if (chkTitolo.getValue()) campi.add(CampoRicerca.TITOLO);
-        if (chkCompetenza.getValue()) campi.add(CampoRicerca.COMPETENZA);
-        if (chkControprestazione.getValue()) campi.add(CampoRicerca.CONTROPRESTAZIONE);
-        if (chkAutore.getValue()) campi.add(CampoRicerca.AUTORE);
+        if (chkTitolo.getValue())
+            campi.add(CampoRicerca.TITOLO);
+        if (chkCompetenza.getValue())
+            campi.add(CampoRicerca.COMPETENZA);
+        if (chkControprestazione.getValue())
+            campi.add(CampoRicerca.CONTROPRESTAZIONE);
+        if (chkAutore.getValue())
+            campi.add(CampoRicerca.AUTORE);
         if (campi.isEmpty()) {
             campi = null;
         }
 
-        marketplaceService.cercaAnnunci(query, campi, ordinaPerTitolo, false, new AsyncCallback<List<AnnuncioDTO>>() {
-            @Override
-            public void onFailure(Throwable caught) {
-                listaAnnunci.clear();
-                listaAnnunci.add(creaMessaggioVuoto("Impossibile caricare gli annunci. Riprova."));
-            }
+        marketplaceService.cercaAnnunci(query, campi, ordinaPerTitolo, ordinaPerRating,
+                new AsyncCallback<List<AnnuncioDTO>>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        listaAnnunci.clear();
+                        listaAnnunci.add(creaMessaggioVuoto("Impossibile caricare gli annunci. Riprova."));
+                    }
 
-            @Override
-            public void onSuccess(List<AnnuncioDTO> result) {
-                mostraAnnunci(result);
-            }
-        });
+                    @Override
+                    public void onSuccess(List<AnnuncioDTO> result) {
+                        mostraAnnunci(result);
+                    }
+                });
     }
 
     private void mostraAnnunci(List<AnnuncioDTO> annunci) {
@@ -179,13 +189,17 @@ public class MarketplaceGui {
         Label autore = new Label("di " + testoOppure(annuncio.getNomeAutore(), "Autore sconosciuto"));
         autore.addStyleName("annuncio-autore");
         item.add(autore);
-
         FlowPanel campi = new FlowPanel();
+        Double rating = annuncio.getValutazioneAutore();
+        String testoRating = (rating != null) ? (rating + " / 5.0") : "Nessuna recensione";
+        campi.add(creaCampo("Rating autore", testoRating));
+
         campi.addStyleName("annuncio-campi");
         campi.add(creaCampo("Competenza offerta", annuncio.getCompetenzaOfferta()));
         campi.add(creaCampo("Controprestazione", annuncio.getControprestazione()));
         item.add(campi);
-        // Descrizione estesa: tendina accordion a tutta larghezza, solo visibilita in memoria
+        // Descrizione estesa: tendina accordion a tutta larghezza, solo visibilita in
+        // memoria
         String descrizione = annuncio.getDescrizione();
         if (descrizione != null && !descrizione.trim().isEmpty()) {
             FocusPanel toggleDescrizione = new FocusPanel();
@@ -214,8 +228,7 @@ public class MarketplaceGui {
             testoDescrizione.addStyleName("annuncio-descrizione-testo");
             contenutoDescrizione.add(testoDescrizione);
 
-            toggleDescrizione.addClickHandler(event ->
-                    toggleDescrizione(toggleDescrizione, contenutoDescrizione));
+            toggleDescrizione.addClickHandler(event -> toggleDescrizione(toggleDescrizione, contenutoDescrizione));
             toggleDescrizione.addKeyDownHandler(event -> {
                 int codice = event.getNativeKeyCode();
                 if (codice == KeyCodes.KEY_ENTER || codice == KeyCodes.KEY_SPACE) {
@@ -274,7 +287,8 @@ public class MarketplaceGui {
 
     /**
      * Apre il dettaglio di un annuncio altrui con il campo messaggio facoltativo
-     * e l'azione "Proponi scambio". Il feedback di successo sostituisce il contenuto
+     * e l'azione "Proponi scambio". Il feedback di successo sostituisce il
+     * contenuto
      * del dialog; gli errori RPC compaiono nella label rossa interna.
      */
     private void apriDettaglioAnnuncio(AnnuncioDTO annuncio) {
@@ -300,7 +314,6 @@ public class MarketplaceGui {
         btnAnnulla.addStyleName("btn-secondary");
         btnAnnulla.addClickHandler(event -> dialog.hide());
 
-
         FlowPanel contenuto = new FlowPanel();
         contenuto.addStyleName("dettaglio-annuncio-contenuto");
 
@@ -318,8 +331,8 @@ public class MarketplaceGui {
 
         FlowPanel azioni = new FlowPanel();
         azioni.addStyleName("profile-form-azioni");
-        btnProponi.addClickHandler(event ->
-                inviaRichiestaScambio(annuncio, messaggioArea, messaggioErrore, btnProponi, dialog));
+        btnProponi.addClickHandler(
+                event -> inviaRichiestaScambio(annuncio, messaggioArea, messaggioErrore, btnProponi, dialog));
         azioni.add(btnAnnulla);
         azioni.add(btnProponi);
         contenuto.add(azioni);
@@ -339,7 +352,8 @@ public class MarketplaceGui {
             Label messaggioErrore, Button btnProponi, DialogBox dialog) {
         messaggioErrore.setVisible(false);
 
-        // Il messaggio e' facoltativo: se vuoto si invia null (percorso valido nel Database)
+        // Il messaggio e' facoltativo: se vuoto si invia null (percorso valido nel
+        // Database)
         String messaggio = messaggioArea.getText().trim();
         if (messaggio.isEmpty()) {
             messaggio = null;
