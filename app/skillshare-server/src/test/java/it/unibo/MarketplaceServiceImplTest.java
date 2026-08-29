@@ -10,10 +10,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class MarketplaceServiceImplTest {
+
+    @BeforeAll
+    static void setUpDatabase() {
+        // Database in memoria per i test: non tocca il file progetto_sweng.db
+        DatabaseCore.enableTestMode();
+    }
+
+    @AfterAll
+    static void tearDownDatabase() {
+        DatabaseCore.disableTestMode();
+    }
 
     @Test
     void testListaAnnunciRisolveNomeAutore() {

@@ -11,29 +11,39 @@ import org.mapdb.Serializer;
 
 public class UtenteDatabase {
 
-    private static final DB db = DatabaseCore.getDB();
+    private static DB dbAttuale;
+    private static ConcurrentMap<String, UtenteDTO> utentiCollection;
 
-    // Mappa per memorizzare gli utenti: Chiave = Email (String), Valore = UtenteDTO
-    private static final ConcurrentMap<String, UtenteDTO> utentiCollection = db.hashMap(
-            "utenti",
-            Serializer.STRING,
-            Serializer.JAVA).createOrOpen();
+    /**
+     * Risolve la collection sul database attualmente attivo.
+     * Se il DB cambia (es. passaggio da file a memoria nei test),
+     * la riapre sulla nuova istanza.
+     */
+    private static ConcurrentMap<String, UtenteDTO> collection() {
+        DB dbCorrente = DatabaseCore.getDB();
+        if (utentiCollection == null || dbAttuale != dbCorrente) {
+            dbAttuale = dbCorrente;
+            utentiCollection = dbCorrente.hashMap(
+                    "utenti",
+                    Serializer.STRING,
+                    Serializer.JAVA).createOrOpen();
 
-    static {
-        // Se la collezione è vuota, registriamo un utente di test valido
-        if (utentiCollection.isEmpty()) {
-            try {
-                UtenteDTO defaultUser = new UtenteDTO();
-                defaultUser.setEmail("test@unibo.it");
-                defaultUser.setPassword("Password123!");
-                defaultUser.setNome("Mario");
-                defaultUser.setCognome("Rossi");
+            // Se la collezione è vuota, registriamo un utente di test valido
+            if (utentiCollection.isEmpty()) {
+                try {
+                    UtenteDTO defaultUser = new UtenteDTO();
+                    defaultUser.setEmail("test@unibo.it");
+                    defaultUser.setPassword("Password123!");
+                    defaultUser.setNome("Mario");
+                    defaultUser.setCognome("Rossi");
 
-                registra(defaultUser);
-            } catch (Exception e) {
-                // Gestione silenziosa in fase di avvio
+                    registra(defaultUser);
+                } catch (Exception e) {
+                    // Gestione silenziosa in fase di avvio
+                }
             }
         }
+        return utentiCollection;
     }
 
     /**
@@ -61,7 +71,7 @@ public class UtenteDatabase {
         }
 
         // 4. Controllo email duplicata
-        if (utentiCollection.containsKey(email)) {
+        if (collection().containsKey(email)) {
             return false; // Email già esistente, blocca il salvataggio
         }
 
@@ -70,7 +80,7 @@ public class UtenteDatabase {
         utente.setPassword(passwordCifrata);
 
         // 6. Salvataggio nel database MapDB e commit
-        utentiCollection.put(email, utente);
+        collection().put(email, utente);
         DatabaseCore.commit();
 
         return true;
@@ -108,12 +118,12 @@ public class UtenteDatabase {
         String emailTrimmed = email.trim();
 
         // 1. Controlla se l'utente esiste
-        if (!utentiCollection.containsKey(emailTrimmed)) {
+        if (!collection().containsKey(emailTrimmed)) {
             throw new IllegalArgumentException("User not found");
         }
 
         // 2. Recupera l'utente dal database
-        UtenteDTO utenteRegistrato = utentiCollection.get(emailTrimmed);
+        UtenteDTO utenteRegistrato = collection().get(emailTrimmed);
 
         // 3. Cifra la password inserita per il confronto
         String passwordCifrata = hashPassword(password);
@@ -140,11 +150,11 @@ public class UtenteDatabase {
 
         String emailTrimmed = email.trim();
 
-        if (!utentiCollection.containsKey(emailTrimmed)) {
+        if (!collection().containsKey(emailTrimmed)) {
             throw new IllegalArgumentException("User not found");
         }
 
-        return utentiCollection.get(emailTrimmed);
+        return collection().get(emailTrimmed);
     }
     /**
      * Aggiorna bio, photoUrl e tagCompetenza di un utente preservandone credenziali e dati anagrafici.
@@ -160,12 +170,12 @@ public class UtenteDatabase {
 
         String email = utenteAggiornato.getEmail().trim();
 
-        if (!utentiCollection.containsKey(email)) {
+        if (!collection().containsKey(email)) {
             throw new IllegalArgumentException("User not found");
         }
 
         // Recupera l'utente esistente per preservare password, nome e cognome
-        UtenteDTO utenteEsistente = utentiCollection.get(email);
+        UtenteDTO utenteEsistente = collection().get(email);
 
         utenteEsistente.setBio(utenteAggiornato.getBio() != null ? utenteAggiornato.getBio() : "");
         utenteEsistente.setPhotoUrl(utenteAggiornato.getPhotoUrl() != null ? utenteAggiornato.getPhotoUrl() : "");
@@ -173,7 +183,7 @@ public class UtenteDatabase {
                 utenteAggiornato.getTagCompetenza() != null ? new ArrayList<>(utenteAggiornato.getTagCompetenza()) : new ArrayList<>());
 
         // Salvataggio e persistenza
-        utentiCollection.put(email, utenteEsistente);
+        collection().put(email, utenteEsistente);
         DatabaseCore.commit();
 
         return utenteEsistente;
