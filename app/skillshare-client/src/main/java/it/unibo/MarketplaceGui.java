@@ -192,7 +192,7 @@ public class MarketplaceGui {
         FlowPanel campi = new FlowPanel();
         Double rating = annuncio.getValutazioneAutore();
         String testoRating = (rating != null)
-                ? String.format(java.util.Locale.US, "%.1f / 5.0", rating)
+                ? Stelle.mediaFormattata(rating) + " / 5.0"
                 : "Nessuna recensione";
         campi.add(creaCampo("Rating autore", testoRating));
 
