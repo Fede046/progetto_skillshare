@@ -191,7 +191,9 @@ public class MarketplaceGui {
         item.add(autore);
         FlowPanel campi = new FlowPanel();
         Double rating = annuncio.getValutazioneAutore();
-        String testoRating = (rating != null) ? (rating + " / 5.0") : "Nessuna recensione";
+        String testoRating = (rating != null)
+                ? String.format(java.util.Locale.US, "%.1f / 5.0", rating)
+                : "Nessuna recensione";
         campi.add(creaCampo("Rating autore", testoRating));
 
         campi.addStyleName("annuncio-campi");
