@@ -88,10 +88,10 @@ public class ChatGui {
         formInvio.getElement().getStyle().setProperty("display", "flex");
         formInvio.getElement().getStyle().setProperty("gap", "10px");
 
+        // Aspetto dei campi condiviso con il resto della piattaforma;
+        // qui resta inline solo il flex, che dipende da questo layout
+        inputMessaggio.addStyleName("campo-app");
         inputMessaggio.getElement().getStyle().setProperty("flex", "1");
-        inputMessaggio.getElement().getStyle().setProperty("padding", "10px");
-        inputMessaggio.getElement().getStyle().setProperty("borderRadius", "4px");
-        inputMessaggio.getElement().getStyle().setProperty("border", "1px solid #CCC");
         inputMessaggio.getElement().setAttribute("placeholder", "Scrivi un messaggio...");
 
         Button btnInvia = new Button("Invia");

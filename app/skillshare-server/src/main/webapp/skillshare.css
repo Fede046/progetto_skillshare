@@ -1119,3 +1119,242 @@ button.richieste-tab-attivo {
 .profile-messaggio-azione {
   text-align: center;
 }
+
+/* ============================================================
+   Schermate di accesso: Welcome, Login, Registrazione
+   Riusano .btn-primary, .btn-secondary e .form-errore gia'
+   definiti sopra; qui stanno solo contenitore e campi, che
+   prima erano scritti inline in ogni singola schermata
+   ============================================================ */
+
+/* Sfondo pieno su cui galleggia la card: stessa base grigia
+   delle altre pagine dell'app */
+.auth-sfondo {
+  background-color: var(--grigio-neutro);
+  box-sizing: border-box;
+  display: flex;
+  font-family: sans-serif;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 16px;
+}
+
+/* Card centrata che contiene il form o le azioni iniziali */
+.auth-card {
+  background-color: var(--bianco);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
+  box-sizing: border-box;
+  /* margin auto su tutti i lati: centra in verticale ma lascia scorrere
+     i form piu' alti dello schermo, cosa che align-items non farebbe */
+  margin: auto;
+  max-width: 400px;
+  padding: 36px 32px;
+  width: 100%;
+}
+
+/* La Welcome e' la prima schermata: card piu' ampia e piu' arieggiata */
+.auth-card-welcome {
+  max-width: 480px;
+  padding: 52px 44px;
+}
+
+/* Marchio e titolo: il bordeaux porta l'identita' della piattaforma
+   sulla prima schermata che l'utente incontra */
+.auth-marchio {
+  color: var(--bordeaux);
+  font-family: sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: -0.4px;
+  margin: 0;
+  text-align: center;
+}
+
+.auth-titolo {
+  color: var(--bordeaux);
+  font-family: sans-serif;
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+}
+
+.auth-sottotitolo {
+  color: var(--grigio-testo);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  text-align: center;
+}
+
+/* Filetto bordeaux sotto l'intestazione, come stacco fra
+   titolo e contenuto */
+.auth-intestazione {
+  border-bottom: 1px solid var(--grigio-neutro);
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+}
+
+/* Campi del form: stesso trattamento di bordo e focus dei campi del
+   profilo, ma utilizzabili fuori da .profile-container.
+   Il selettore include il tag input per vincere sul tema Clean di GWT */
+input.auth-campo {
+  background-color: var(--grigio-chiaro);
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: var(--grigio-testo);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 14px 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              box-shadow 0.15s ease;
+  width: 100%;
+}
+
+input.auth-campo::placeholder {
+  color: #9a9a9a;
+}
+
+input.auth-campo:hover {
+  border-color: #bcbcbc;
+}
+
+/* Il campo attivo si stacca dal fondo grigio e prende l'anello bordeaux */
+input.auth-campo:focus {
+  background-color: var(--bianco);
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3px var(--bordeaux-velo);
+  outline: none;
+}
+
+/* Etichetta sopra al campo: dice cosa si sta scrivendo anche dopo che
+   il placeholder e' sparito */
+.auth-campo-gruppo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-campo-etichetta {
+  color: var(--grigio-testo);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+/* Impila i campi e i pulsanti con un ritmo costante */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Le azioni restano separate dai campi */
+.auth-azioni {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Sulla Welcome i due pulsanti sono il contenuto principale: piu' corposi */
+.auth-card-welcome .auth-azioni button.btn-primary,
+.auth-card-welcome .auth-azioni button.btn-secondary {
+  border-radius: 10px;
+  font-size: 15px;
+  padding: 14px 20px;
+}
+
+/* I pulsanti delle schermate di accesso occupano tutta la larghezza */
+.auth-azioni button.btn-primary,
+.auth-azioni button.btn-secondary {
+  width: 100%;
+}
+
+/* L'alert condiviso qui sta sopra al form, non sotto: annulla
+   il margine superiore pensato per il form del profilo */
+.auth-card .form-errore {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+/* ============================================================
+   Campi di inserimento: aspetto unico in tutta la piattaforma
+   Introdotto con l'enhancement delle schermate di accesso e
+   poi esteso a profilo, annunci, marketplace, chat e recensioni.
+   Il selettore include il tag per vincere sul tema Clean di GWT.
+   Le regole specifiche piu' su restano solo per cio' che e'
+   peculiare della singola schermata (flex, larghezze, margini).
+   ============================================================ */
+input.auth-campo,
+input.marketplace-search-box,
+select.marketplace-sort-box,
+input.campo-app,
+textarea.campo-app,
+.profile-container input[type="text"],
+.profile-container textarea,
+.annuncio-modifica-form input[type="text"],
+.annuncio-modifica-form textarea,
+.recensione-form textarea {
+  background-color: var(--grigio-chiaro);
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: var(--grigio-testo);
+  font-family: sans-serif;
+  font-size: 15px;
+  padding: 14px 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              box-shadow 0.15s ease;
+}
+
+input.auth-campo::placeholder,
+input.marketplace-search-box::placeholder,
+input.campo-app::placeholder,
+textarea.campo-app::placeholder,
+.profile-container input[type="text"]::placeholder,
+.profile-container textarea::placeholder,
+.annuncio-modifica-form input[type="text"]::placeholder,
+.annuncio-modifica-form textarea::placeholder,
+.recensione-form textarea::placeholder {
+  color: #9a9a9a;
+}
+
+input.auth-campo:hover,
+input.marketplace-search-box:hover,
+select.marketplace-sort-box:hover,
+input.campo-app:hover,
+textarea.campo-app:hover,
+.profile-container input[type="text"]:hover,
+.profile-container textarea:hover,
+.annuncio-modifica-form input[type="text"]:hover,
+.annuncio-modifica-form textarea:hover,
+.recensione-form textarea:hover {
+  border-color: #bcbcbc;
+}
+
+/* Il campo attivo si stacca dal fondo grigio e prende l'anello bordeaux */
+input.auth-campo:focus,
+input.marketplace-search-box:focus,
+select.marketplace-sort-box:focus,
+input.campo-app:focus,
+textarea.campo-app:focus,
+.profile-container input[type="text"]:focus,
+.profile-container textarea:focus,
+.annuncio-modifica-form input[type="text"]:focus,
+.annuncio-modifica-form textarea:focus,
+.recensione-form textarea:focus {
+  background-color: var(--bianco);
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3px var(--bordeaux-velo);
+  outline: none;
+}
+
+/* Le checkbox della ricerca restano fuori: non sono campi di testo */
+.marketplace-campi-ricerca input[type="checkbox"] {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+}

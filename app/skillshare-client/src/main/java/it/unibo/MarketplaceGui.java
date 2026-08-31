@@ -352,6 +352,7 @@ public class MarketplaceGui {
         dialog.addStyleName("dettaglio-annuncio-dialog");
 
         TextArea messaggioArea = new TextArea();
+        messaggioArea.addStyleName("campo-app");
         messaggioArea.setVisibleLines(3);
         messaggioArea.setWidth("100%");
         messaggioArea.getElement().setAttribute("placeholder", "Messaggio facoltativo per l'autore...");
