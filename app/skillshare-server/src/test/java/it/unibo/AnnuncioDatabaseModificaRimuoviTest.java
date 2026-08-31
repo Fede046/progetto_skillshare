@@ -179,4 +179,118 @@ public class AnnuncioDatabaseModificaRimuoviTest {
         AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
         assertEquals(PROPRIETARIO, ricaricato.getIdUtente());
     }
+
+    // --- Annuncio con scambio in corso: non modificabile ne' rimovibile ---
+
+    /**
+     * Porta una richiesta su quell'annuncio fino allo stato ACCEPTED,
+     * cioe' lo scambio e' in corso.
+     */
+    private void creaScambioAccettatoSu(String idAnnuncio) {
+        RichiestaScambioDatabase richieste = new RichiestaScambioDatabase(dbTest);
+
+        RichiestaScambioDTO richiesta = new RichiestaScambioDTO();
+        richiesta.setIdAnnuncio(idAnnuncio);
+        richiesta.setIdRichiedente(NON_PROPRIETARIO);
+        richiesta.setIdCreatoreAnnuncio(PROPRIETARIO);
+        RichiestaScambioDTO salvata = richieste.salva(richiesta);
+
+        richieste.accetta(salvata.getId(), PROPRIETARIO);
+    }
+
+    @Test
+    void testModificaBloccataConScambioInCorso() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        creaScambioAccettatoSu(pubblicato.getId());
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo cambiato");
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        });
+        assertEquals("Non puoi modificare un annuncio con uno scambio in corso", ex.getMessage());
+
+        // L'annuncio deve essere rimasto quello originale
+        AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
+        assertEquals("Ripetizioni di Java", ricaricato.getTitolo());
+    }
+
+    @Test
+    void testRimozioneBloccataConScambioInCorso() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        creaScambioAccettatoSu(pubblicato.getId());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+        });
+        assertEquals("Non puoi rimuovere un annuncio con uno scambio in corso", ex.getMessage());
+
+        assertTrue(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()),
+                "L'annuncio non deve essere stato rimosso");
+    }
+
+    @Test
+    void testRichiestaSoloPENDINGNonBloccaModificaERimozione() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        // Richiesta ricevuta ma non ancora accettata: l'annuncio resta disponibile
+        RichiestaScambioDatabase richieste = new RichiestaScambioDatabase(dbTest);
+        RichiestaScambioDTO richiesta = new RichiestaScambioDTO();
+        richiesta.setIdAnnuncio(pubblicato.getId());
+        richiesta.setIdRichiedente(NON_PROPRIETARIO);
+        richiesta.setIdCreatoreAnnuncio(PROPRIETARIO);
+        richieste.salva(richiesta);
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo aggiornato");
+        AnnuncioDTO esito = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        assertEquals("Titolo aggiornato", esito.getTitolo(), "Con richieste PENDING la modifica resta possibile");
+
+        annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+        assertFalse(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()),
+                "Con richieste PENDING la rimozione resta possibile");
+    }
+
+    @Test
+    void testScambioCompletatoSbloccaModificaERimozione() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        RichiestaScambioDatabase richieste = new RichiestaScambioDatabase(dbTest);
+        RichiestaScambioDTO richiesta = new RichiestaScambioDTO();
+        richiesta.setIdAnnuncio(pubblicato.getId());
+        richiesta.setIdRichiedente(NON_PROPRIETARIO);
+        richiesta.setIdCreatoreAnnuncio(PROPRIETARIO);
+        RichiestaScambioDTO salvata = richieste.salva(richiesta);
+        richieste.accetta(salvata.getId(), PROPRIETARIO);
+        richieste.completa(salvata.getId(), PROPRIETARIO);
+
+        // Scambio concluso: l'annuncio torna nella piena disponibilita' del proprietario
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Di nuovo modificabile");
+        AnnuncioDTO esito = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        assertEquals("Di nuovo modificabile", esito.getTitolo());
+
+        annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+        assertFalse(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()));
+    }
+
+    @Test
+    void testScambioSuUnAltroAnnuncioNonBlocca() {
+        AnnuncioDTO mio = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        AnnuncioDTO altro = creaAnnuncioValido();
+        altro.setTitolo("Corso di chitarra");
+        AnnuncioDTO altroPubblicato = annuncioDatabase.pubblica(altro);
+
+        // Lo scambio in corso riguarda solo l'altro annuncio
+        creaScambioAccettatoSu(altroPubblicato.getId());
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo aggiornato");
+        AnnuncioDTO esito = annuncioDatabase.modifica(mio.getId(), PROPRIETARIO, aggiornato);
+
+        assertEquals("Titolo aggiornato", esito.getTitolo(),
+                "Il blocco vale solo per l'annuncio con lo scambio in corso");
+    }
 }
