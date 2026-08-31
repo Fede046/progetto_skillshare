@@ -1358,3 +1358,38 @@ textarea.campo-app:focus,
   border-radius: 0;
   padding: 0;
 }
+
+/* ============================================================
+   Upload della foto profilo
+   ============================================================ */
+
+/* Selettore file e pulsante affiancati, a capo sugli schermi stretti */
+.foto-upload-riga {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.foto-upload-riga input[type="file"] {
+  color: var(--grigio-testo);
+  font-family: sans-serif;
+  font-size: 14px;
+  max-width: 100%;
+}
+
+/* Conferma di caricamento riuscito: stesso impianto di .form-errore,
+   in verde invece che in rosso */
+.foto-upload-esito-ok {
+  background-color: #EDF7EE;
+  border: 1px solid #A9D3AC;
+  border-left: 4px solid #2E7D32;
+  border-radius: 6px;
+  color: #2E7D32;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+}
