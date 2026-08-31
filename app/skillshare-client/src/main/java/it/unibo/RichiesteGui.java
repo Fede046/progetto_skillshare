@@ -238,6 +238,9 @@ public class RichiesteGui {
         private final Button btnRifiuta = new Button("Rifiuta");
         private final Button btnChat = new Button("Apri Chat");
         private RichiestaScambioDTO richiesta;
+        // Conservato per aggiornarlo dopo Accetta/Rifiuta: e' lui a mostrare
+        // il pulsante "Segna come completato"
+        private final CompletamentoRecensioneGui blocco;
 
         RigaRichiestaRicevuta(RichiestaScambioDTO richiesta) {
             this.richiesta = richiesta;
@@ -277,7 +280,7 @@ public class RichiesteGui {
 
             // Il completamento aggiorna badge e pulsanti insieme: chiusa la chat,
             // la riga passa da sola alla fase di recensione
-            CompletamentoRecensioneGui blocco = new CompletamentoRecensioneGui(utente, richiesta);
+            blocco = new CompletamentoRecensioneGui(utente, richiesta);
             blocco.setAscoltatoreStato(aggiornata -> {
                 this.richiesta = aggiornata;
                 aggiornaBadge();
@@ -325,6 +328,10 @@ public class RichiesteGui {
                     // Update inline della riga, senza ricaricare la lista
                     richiesta = result;
                     aggiornaBadge();
+                    // Il blocco ha una copia propria della richiesta: senza questa
+                    // riga resterebbe sullo stato precedente e il pulsante
+                    // "Segna come completato" comparirebbe solo dopo un reload
+                    blocco.aggiornaRichiesta(result);
                 }
             };
 
