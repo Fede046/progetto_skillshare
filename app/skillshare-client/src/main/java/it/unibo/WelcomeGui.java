@@ -20,6 +20,7 @@ public class WelcomeGui {
 
         FlowPanel card = new FlowPanel();
         card.addStyleName("auth-card");
+        card.addStyleName("auth-card-welcome");
 
         // Intestazione: il nome della piattaforma in bordeaux e' il primo
         // segno di identita' che l'utente incontra
@@ -47,7 +48,7 @@ public class WelcomeGui {
         btnRegistrati.addClickHandler(event -> new RegistrazioneGui().mostra());
         azioni.add(btnRegistrati);
 
-        Button btnLogin = new Button("Accedi");
+        Button btnLogin = new Button("Login");
         btnLogin.addStyleName("btn-secondary");
         btnLogin.addClickHandler(event -> new LoginGui().mostra());
         azioni.add(btnLogin);

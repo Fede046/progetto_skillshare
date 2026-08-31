@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Schermata di registrazione. Lo stile arriva dalle classi condivise in
@@ -48,17 +49,17 @@ public class RegistrazioneGui {
         FlowPanel form = new FlowPanel();
         form.addStyleName("auth-form");
 
-        TextBox nomeBox = creaCampo("Nome");
-        TextBox cognomeBox = creaCampo("Cognome");
-        TextBox emailBox = creaCampo("Email");
-        form.add(nomeBox);
-        form.add(cognomeBox);
-        form.add(emailBox);
+        TextBox nomeBox = creaCampo("Mario");
+        TextBox cognomeBox = creaCampo("Rossi");
+        TextBox emailBox = creaCampo("nome@unibo.it");
+        form.add(creaGruppoCampo("Nome", nomeBox));
+        form.add(creaGruppoCampo("Cognome", cognomeBox));
+        form.add(creaGruppoCampo("Email", emailBox));
 
         PasswordTextBox passwordBox = new PasswordTextBox();
-        passwordBox.getElement().setPropertyString("placeholder", "Password (min. 8 caratteri)");
+        passwordBox.getElement().setPropertyString("placeholder", "Almeno 8 caratteri");
         passwordBox.addStyleName("auth-campo");
-        form.add(passwordBox);
+        form.add(creaGruppoCampo("Password", passwordBox));
 
         FlowPanel azioni = new FlowPanel();
         azioni.addStyleName("auth-azioni");
@@ -134,6 +135,19 @@ public class RegistrazioneGui {
         Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
         Document.get().getBody().getStyle().setProperty("margin", "0");
         Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
+    }
+
+    /** Campo con la sua etichetta sopra, cosi' resta chiaro cosa si sta scrivendo. */
+    private FlowPanel creaGruppoCampo(String etichetta, Widget campo) {
+        FlowPanel gruppo = new FlowPanel();
+        gruppo.addStyleName("auth-campo-gruppo");
+
+        Label label = new Label(etichetta);
+        label.addStyleName("auth-campo-etichetta");
+
+        gruppo.add(label);
+        gruppo.add(campo);
+        return gruppo;
     }
 
     private TextBox creaCampo(String placeholder) {

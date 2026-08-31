@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Schermata di accesso. Lo stile arriva dalle classi condivise in
@@ -50,14 +51,14 @@ public class LoginGui {
         form.addStyleName("auth-form");
 
         TextBox emailBox = new TextBox();
-        emailBox.getElement().setPropertyString("placeholder", "Email");
+        emailBox.getElement().setPropertyString("placeholder", "nome@unibo.it");
         emailBox.addStyleName("auth-campo");
-        form.add(emailBox);
+        form.add(creaGruppoCampo("Email", emailBox));
 
         PasswordTextBox passwordBox = new PasswordTextBox();
-        passwordBox.getElement().setPropertyString("placeholder", "Password");
+        passwordBox.getElement().setPropertyString("placeholder", "La tua password");
         passwordBox.addStyleName("auth-campo");
-        form.add(passwordBox);
+        form.add(creaGruppoCampo("Password", passwordBox));
 
         FlowPanel azioni = new FlowPanel();
         azioni.addStyleName("auth-azioni");
@@ -116,6 +117,19 @@ public class LoginGui {
         Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
         Document.get().getBody().getStyle().setProperty("margin", "0");
         Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
+    }
+
+    /** Campo con la sua etichetta sopra, cosi' resta chiaro cosa si sta scrivendo. */
+    private FlowPanel creaGruppoCampo(String etichetta, Widget campo) {
+        FlowPanel gruppo = new FlowPanel();
+        gruppo.addStyleName("auth-campo-gruppo");
+
+        Label label = new Label(etichetta);
+        label.addStyleName("auth-campo-etichetta");
+
+        gruppo.add(label);
+        gruppo.add(campo);
+        return gruppo;
     }
 
     private void mostraErrore(Label messaggioErrore, String testo) {
