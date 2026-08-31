@@ -81,6 +81,31 @@
     <url-pattern>/app/reputazione</url-pattern>
   </servlet-mapping>
 
+  <!-- Upload della foto profilo: multipart, fuori dal meccanismo RPC di GWT -->
+  <servlet>
+    <servlet-name>fotoProfiloUploadServlet</servlet-name>
+    <servlet-class>it.unibo.FotoProfiloUploadServlet</servlet-class>
+    <multipart-config>
+      <max-file-size>2097152</max-file-size>
+      <max-request-size>4194304</max-request-size>
+      <file-size-threshold>262144</file-size-threshold>
+    </multipart-config>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>fotoProfiloUploadServlet</servlet-name>
+    <url-pattern>/app/uploadFotoProfilo</url-pattern>
+  </servlet-mapping>
+
+  <!-- Lettura delle foto caricate: stanno in DATA_DIR, fuori dalla webapp -->
+  <servlet>
+    <servlet-name>fotoProfiloServlet</servlet-name>
+    <servlet-class>it.unibo.FotoProfiloServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>fotoProfiloServlet</servlet-name>
+    <url-pattern>/app/fotoProfilo/*</url-pattern>
+  </servlet-mapping>
+
 	<!-- Default page to serve -->
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>

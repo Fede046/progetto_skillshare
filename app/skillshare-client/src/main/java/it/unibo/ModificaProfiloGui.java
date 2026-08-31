@@ -2,16 +2,19 @@ package it.unibo;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +27,15 @@ public class ModificaProfiloGui {
 
     private final FlowPanel tagContainer = new FlowPanel();
     private final TextBox photoUrlBox = new TextBox();
+
+    // Upload della foto: il file non puo' viaggiare sull'RPC di GWT, quindi
+    // si usa un FormPanel multipart verso una servlet dedicata
+    private final FormPanel formUpload = new FormPanel();
+    private final FileUpload selettoreFile = new FileUpload();
+    private final Label esitoUpload = new Label();
+    // Errore di salvataggio mostrato nel form, senza popup
+    private final Label erroreSalvataggio = new Label();
+    private final Button btnCarica = new Button("Carica foto");
     private final TextArea bioArea = new TextArea();
     private final TextBox newTagBox = new TextBox();
 
@@ -52,8 +64,15 @@ public class ModificaProfiloGui {
         HTML title = new HTML("<h2>Modifica Profilo</h2>");
         formContainer.add(title);
 
-        // Campo URL Foto Profilo
-        Label lblPhoto = new Label("URL Foto Profilo:");
+        // Foto profilo: caricamento da file, via principale
+        Label lblUpload = new Label("Foto Profilo:");
+        lblUpload.addStyleName("form-label");
+        formContainer.add(lblUpload);
+        formContainer.add(creaFormUpload());
+
+        // Campo URL, mantenuto come alternativa: i profili gia' salvati
+        // contengono URL remoti che devono restare modificabili
+        Label lblPhoto = new Label("oppure indirizzo di un'immagine online:");
         lblPhoto.addStyleName("form-label");
         formContainer.add(lblPhoto);
 
@@ -101,6 +120,11 @@ public class ModificaProfiloGui {
         tagContainer.addStyleName("tag-badges-container");
         formContainer.add(tagContainer);
         renderTags();
+
+        // Esito del salvataggio: compare qui sopra invece che in un popup
+        erroreSalvataggio.addStyleName("form-errore");
+        erroreSalvataggio.setVisible(false);
+        formContainer.add(erroreSalvataggio);
 
         // Pulsanti Azione (Salva / Annulla)
         FlowPanel buttonPanel = new FlowPanel();
@@ -164,6 +188,82 @@ public class ModificaProfiloGui {
     }
 
     /**
+     * Form multipart per il caricamento della foto dal dispositivo.
+     * Punta alla servlet dedicata: l'upload di file non passa dall'RPC di GWT,
+     * che sa serializzare solo oggetti Java.
+     */
+    private Widget creaFormUpload() {
+        // getHostPageBaseURL punta alla radice dell'app, non al modulo GWT
+        formUpload.setAction(GWT.getHostPageBaseURL() + ProtocolloUploadFoto.PERCORSO_UPLOAD);
+        formUpload.setEncoding(FormPanel.ENCODING_MULTIPART);
+        formUpload.setMethod(FormPanel.METHOD_POST);
+
+        FlowPanel contenuto = new FlowPanel();
+        contenuto.addStyleName("foto-upload-riga");
+
+        selettoreFile.setName(ProtocolloUploadFoto.CAMPO_FILE);
+        selettoreFile.getElement().setAttribute("accept", "image/jpeg,image/png");
+        contenuto.add(selettoreFile);
+
+        // L'email identifica l'utente lato server: viaggia con il form
+        Hidden campoEmail = new Hidden(ProtocolloUploadFoto.CAMPO_EMAIL, utente.getEmail());
+        contenuto.add(campoEmail);
+
+        btnCarica.addStyleName("btn-secondary");
+        btnCarica.addStyleName("btn-sm");
+        btnCarica.addClickHandler(event -> {
+            String nome = selettoreFile.getFilename();
+            if (nome == null || nome.trim().isEmpty()) {
+                mostraEsitoUpload("Scegli prima un'immagine da caricare.", false);
+                return;
+            }
+            btnCarica.setEnabled(false);
+            btnCarica.setText("Caricamento...");
+            formUpload.submit();
+        });
+        contenuto.add(btnCarica);
+
+        formUpload.setWidget(contenuto);
+
+        // La servlet risponde "OK|percorso" oppure "ERRORE|messaggio"
+        formUpload.addSubmitCompleteHandler(event -> {
+            btnCarica.setEnabled(true);
+            btnCarica.setText("Carica foto");
+
+            String risposta = event.getResults() == null ? "" : event.getResults().trim();
+            // Alcuni browser incapsulano la risposta in tag HTML: li si rimuove
+            risposta = risposta.replaceAll("<[^>]*>", "").trim();
+
+            if (risposta.startsWith(ProtocolloUploadFoto.ESITO_OK)) {
+                String percorso = risposta.substring(ProtocolloUploadFoto.ESITO_OK.length());
+                // Allinea il campo URL: il salvataggio successivo non deve
+                // sovrascrivere la foto appena caricata con il valore vecchio
+                photoUrlBox.setText(percorso);
+                mostraEsitoUpload("Foto caricata. Salva il profilo per confermare.", true);
+            } else if (risposta.startsWith(ProtocolloUploadFoto.ESITO_ERRORE)) {
+                mostraEsitoUpload(risposta.substring(ProtocolloUploadFoto.ESITO_ERRORE.length()), false);
+            } else {
+                mostraEsitoUpload("Caricamento non riuscito. Riprova.", false);
+            }
+        });
+
+        FlowPanel blocco = new FlowPanel();
+        blocco.add(formUpload);
+
+        esitoUpload.setVisible(false);
+        blocco.add(esitoUpload);
+
+        return blocco;
+    }
+
+    /** Mostra l'esito dell'upload riusando gli stili di alert del progetto. */
+    private void mostraEsitoUpload(String testo, boolean successo) {
+        esitoUpload.setText(testo);
+        esitoUpload.setStyleName(successo ? "foto-upload-esito-ok" : "form-errore");
+        esitoUpload.setVisible(true);
+    }
+
+    /**
      * Invia i dati aggiornati al server tramite la chiamata asincrona RPC
      */
     private void salvaModifiche() {
@@ -175,18 +275,21 @@ public class ModificaProfiloGui {
         utenteModificato.setBio(bioArea.getText().trim());
         utenteModificato.setTagCompetenza(new ArrayList<>(tagList));
 
+        erroreSalvataggio.setVisible(false);
+
         profileService.updateProfile(utenteModificato, new AsyncCallback<UtenteDTO>() {
             @Override
             public void onFailure(Throwable caught) {
                 // Il salvataggio e' fallito: restiamo sul form per non perdere
-                // le modifiche gia' inserite dall'utente.
-                Window.alert("Errore durante il salvataggio: " + caught.getMessage());
+                // le modifiche gia' inserite dall'utente, e lo diciamo nel form
+                erroreSalvataggio.setText("Salvataggio non riuscito: " + caught.getMessage());
+                erroreSalvataggio.setVisible(true);
             }
 
             @Override
             public void onSuccess(UtenteDTO result) {
-                Window.alert("Profilo aggiornato con successo!");
-                // Ritorna alla schermata del profilo visualizzando i nuovi dati.
+                // Nessuna conferma da chiudere: il profilo aggiornato che
+                // compare subito e' gia' la conferma che il salvataggio e' andato.
                 // Se il server non restituisce l'utente, usiamo i dati locali
                 // appena inviati: cosi' la pagina non resta mai vuota.
                 tornaAlProfilo(result != null ? result : utenteModificato);
