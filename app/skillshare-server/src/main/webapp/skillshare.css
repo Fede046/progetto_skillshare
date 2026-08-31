@@ -386,6 +386,27 @@ button.btn-secondary:focus-visible {
   outline-offset: 2px;
 }
 
+/* Azione non piu' disponibile: grigia, senza hover, cursore di divieto.
+   Usata sul "Proponi scambio" quando esiste gia' una richiesta aperta. */
+button.btn-primary:disabled,
+button.btn-danger:disabled,
+button.btn-secondary:disabled,
+button.btn-primary:disabled:hover,
+button.btn-danger:disabled:hover,
+button.btn-secondary:disabled:hover {
+  background-color: var(--grigio-neutro);
+  border-color: var(--grigio-bordo);
+  box-shadow: none;
+  color: #8a8a8a;
+  cursor: not-allowed;
+}
+
+button.btn-primary:disabled:active,
+button.btn-danger:disabled:active,
+button.btn-secondary:disabled:active {
+  transform: none;
+}
+
 /* Variante compatta, per le azioni dentro un campo */
 button.btn-sm {
   font-size: 13px;
