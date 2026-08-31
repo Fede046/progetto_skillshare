@@ -18,6 +18,10 @@ public class AnnuncioDatabase {
     // Chiave = id (String), Valore = AnnuncioDTO
     private final ConcurrentMap<String, AnnuncioDTO> annunciCollection;
 
+    // Serve a sapere se un annuncio ha uno scambio in corso: condivide lo stesso
+    // DB, cosi' i test con database in memoria restano isolati
+    private final RichiestaScambioDatabase richiesteDatabase;
+
     public AnnuncioDatabase() {
         this(DatabaseCore.getDB());
     }
@@ -29,6 +33,7 @@ public class AnnuncioDatabase {
                 "annunci",
                 Serializer.STRING,
                 Serializer.JAVA).createOrOpen();
+        this.richiesteDatabase = new RichiestaScambioDatabase(db);
     }
 
     public ConcurrentMap<String, AnnuncioDTO> getAnnunciCollection() {
@@ -68,7 +73,8 @@ public class AnnuncioDatabase {
      * @param annuncioAggiornato  L'annuncio con i dati aggiornati.
      * @return L'annuncio aggiornato e salvato.
      * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
-                                        non e' il proprietario o se manca un campo obbligatorio.*/
+                                        non e' il proprietario, se manca un campo obbligatorio
+                                        o se sull'annuncio c'e' uno scambio in corso.*/
     public AnnuncioDTO modifica(String idAnnuncio, String idUtenteRichiedente, AnnuncioDTO annuncioAggiornato) throws IllegalArgumentException {
         if (idAnnuncio == null || idAnnuncio.trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
@@ -88,6 +94,13 @@ public class AnnuncioDatabase {
         // Controllo proprietario: solo chi ha pubblicato l'annuncio puo' modificarlo
         if (!idUtenteRichiedente.equals(esistente.getIdUtente())) {
             throw new IllegalArgumentException("Non autorizzato: l'annuncio appartiene a un altro utente");
+        }
+
+        // Con uno scambio gia' accettato l'annuncio non e' piu' disponibile:
+        // cambiarne i termini in corsa penalizzerebbe chi lo ha ottenuto
+        if (richiesteDatabase.esisteScambioInCorso(idAnnuncio)) {
+            throw new IllegalArgumentException(
+                    "Non puoi modificare un annuncio con uno scambio in corso");
         }
 
         // Validazione dei campi obbligatori
@@ -111,8 +124,9 @@ public class AnnuncioDatabase {
     /* Rimuove un annuncio esistente, consentita solo al proprietario.
      * @param idAnnuncio          L'id dell'annuncio da rimuovere.
      * @param idUtenteRichiedente L'id dell'utente che richiede la rimozione.
-     * @throws IllegalArgumentException Se l'annuncio non esiste o se il richiedente
-     *                                  non e' il proprietario.*/
+     * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
+     *                                  non e' il proprietario o se sull'annuncio
+     *                                  c'e' uno scambio in corso.*/
     public void rimuovi(String idAnnuncio, String idUtenteRichiedente) throws IllegalArgumentException {
         if (idAnnuncio == null || idAnnuncio.trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
@@ -129,6 +143,13 @@ public class AnnuncioDatabase {
         // Controllo proprietario: solo chi ha pubblicato l'annuncio puo' rimuoverlo
         if (!idUtenteRichiedente.equals(esistente.getIdUtente())) {
             throw new IllegalArgumentException("Non autorizzato: l'annuncio appartiene a un altro utente");
+        }
+
+        // Eliminarlo lascerebbe orfana la richiesta accettata: finche' lo scambio
+        // e' in corso l'annuncio resta
+        if (richiesteDatabase.esisteScambioInCorso(idAnnuncio)) {
+            throw new IllegalArgumentException(
+                    "Non puoi rimuovere un annuncio con uno scambio in corso");
         }
 
         // Rimozione e persistenza
