@@ -287,6 +287,26 @@ public class MieiAnnunciGui {
      * Chiede al server la rimozione dell'annuncio e, in caso di successo,
      * lo elimina dalla lista visibile senza ricaricare la pagina.
      */
+    /**
+     * Sospende o riattiva l'annuncio. Al ritorno la lista viene ricaricata:
+     * cosi' l'etichetta del pulsante e la nota di stato restano allineate,
+     * e il server resta l'unica autorita' sul permesso.
+     */
+    private void cambiaDisponibilita(AnnuncioDTO annuncio, RigaAnnuncio riga, boolean sospeso) {
+        annuncioService.cambiaDisponibilita(annuncio.getId(), utente.getEmail(), sospeso,
+                new AsyncCallback<AnnuncioDTO>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        Window.alert(caught.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(AnnuncioDTO result) {
+                        caricaAnnunci();
+                    }
+                });
+    }
+
 private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
     annuncioService.rimuovi(annuncio.getId(), utente.getEmail(), new AsyncCallback<Void>() {
         @Override
@@ -382,6 +402,24 @@ private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
             }
             azioni.add(btnModifica);
 
+            // Sospendere ritira l'annuncio dal marketplace senza eliminarlo:
+            // utile quando non si e' momentaneamente disponibili
+            Button btnDisponibilita = new Button(annuncio.isSospeso() ? "Riattiva" : "Sospendi");
+            btnDisponibilita.addStyleName("btn-secondary");
+            btnDisponibilita.addStyleName("btn-sm");
+            if (scambioInCorso) {
+                btnDisponibilita.setEnabled(false);
+                btnDisponibilita.setTitle(
+                        "Non puoi cambiare la disponibilità di un annuncio con uno scambio in corso");
+            } else {
+                btnDisponibilita.setTitle(annuncio.isSospeso()
+                        ? "Rendi di nuovo visibile l'annuncio nel marketplace"
+                        : "Ritira l'annuncio dal marketplace senza eliminarlo");
+                btnDisponibilita.addClickHandler(
+                        event -> cambiaDisponibilita(this.annuncio, this, !this.annuncio.isSospeso()));
+            }
+            azioni.add(btnDisponibilita);
+
             Button btnElimina = new Button("Elimina");
             btnElimina.addStyleName("btn-secondary");
             btnElimina.addStyleName("btn-sm");
@@ -395,9 +433,14 @@ private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
 
             item.add(azioni);
 
-            // Spiega perche' le azioni sono disabilitate, invece di lasciare due pulsanti muti
+            // Spiega perche' le azioni sono disabilitate, invece di lasciare pulsanti muti
             if (scambioInCorso) {
-                Label nota = new Label("Scambio in corso: l'annuncio non è modificabile né rimovibile");
+                Label nota = new Label("Scambio in corso: l'annuncio non è modificabile, "
+                        + "rimovibile né sospendibile");
+                nota.addStyleName("annuncio-proprio-nota");
+                item.add(nota);
+            } else if (annuncio.isSospeso()) {
+                Label nota = new Label("Annuncio sospeso: non compare nel marketplace");
                 nota.addStyleName("annuncio-proprio-nota");
                 item.add(nota);
             }

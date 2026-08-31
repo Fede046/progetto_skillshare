@@ -23,7 +23,7 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
 
         // 1. Filtraggio per competenza (se il filtro è nullo/vuoto restituisce tutti
         // gli annunci)
-        List<AnnuncioDTO> annunci = db.filtraPerCompetenza(filtroCompetenza);
+        List<AnnuncioDTO> annunci = soloDisponibili(db.filtraPerCompetenza(filtroCompetenza));
         // Arricchimento PRIMA dell'ordinamento per rating (così i dati di valutazione sono presenti)
         for (AnnuncioDTO annuncio : annunci) {
             annuncio.setNomeAutore(nomeAutore(annuncio.getIdUtente()));
@@ -47,8 +47,9 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
     public List<AnnuncioDTO> cercaAnnunci(String query, Set<CampoRicerca> campi, boolean ordinaPerTitolo, boolean ordinaPerRating) {
         AnnuncioDatabase db = new AnnuncioDatabase();
 
-        // 1. Parto da tutti gli annunci in ordine temporale decrescente
-        List<AnnuncioDTO> tutti = db.tuttiGliAnnunci();
+        // 1. Parto da tutti gli annunci in ordine temporale decrescente,
+        // escludendo quelli che il proprietario ha sospeso
+        List<AnnuncioDTO> tutti = soloDisponibili(db.tuttiGliAnnunci());
 
         // 2. Arricchimento con il nome autore e valutazione PRIMA del filtro
         for (AnnuncioDTO annuncio : tutti) {
@@ -80,6 +81,20 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
      * Query nulla/vuota => sempre true (nessun filtro).
      * Campi nulli/vuoti => ricerca su tutti i campi disponibili.
      */
+    /**
+     * Scarta gli annunci sospesi dal proprietario: restano visibili solo
+     * in "I miei annunci", non nel marketplace.
+     */
+    private List<AnnuncioDTO> soloDisponibili(List<AnnuncioDTO> annunci) {
+        List<AnnuncioDTO> disponibili = new ArrayList<>();
+        for (AnnuncioDTO annuncio : annunci) {
+            if (!annuncio.isSospeso()) {
+                disponibili.add(annuncio);
+            }
+        }
+        return disponibili;
+    }
+
     private boolean corrisponde(AnnuncioDTO a, String query, Set<CampoRicerca> campi) {
         if (query == null || query.trim().isEmpty()) {
             return true;

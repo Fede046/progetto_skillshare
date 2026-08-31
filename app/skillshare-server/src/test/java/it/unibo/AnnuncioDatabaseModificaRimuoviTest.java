@@ -293,4 +293,86 @@ public class AnnuncioDatabaseModificaRimuoviTest {
         assertEquals("Titolo aggiornato", esito.getTitolo(),
                 "Il blocco vale solo per l'annuncio con lo scambio in corso");
     }
+
+    // --- Sospensione e riattivazione (disponibilita' dell'annuncio) ---
+
+    @Test
+    void testAnnuncioNasceDisponibile() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        assertFalse(pubblicato.isSospeso(), "Un annuncio appena pubblicato non è sospeso");
+        assertTrue(pubblicato.isDisponibile(), "Un annuncio appena pubblicato è disponibile");
+    }
+
+    @Test
+    void testSospendiERiattivaAnnuncio() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        AnnuncioDTO sospeso = annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+        assertTrue(sospeso.isSospeso(), "L'annuncio deve risultare sospeso");
+        assertTrue(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso(),
+                "Lo stato deve essere persistito");
+
+        AnnuncioDTO riattivato = annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, false);
+        assertFalse(riattivato.isSospeso(), "L'annuncio deve tornare disponibile");
+        assertFalse(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso());
+    }
+
+    @Test
+    void testCambioDisponibilitaComeNonProprietarioRifiutato() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), NON_PROPRIETARIO, true);
+        });
+        assertEquals("Non autorizzato: l'annuncio appartiene a un altro utente", ex.getMessage());
+        assertFalse(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso(),
+                "L'annuncio non deve essere stato sospeso");
+    }
+
+    @Test
+    void testCambioDisponibilitaBloccatoConScambioInCorso() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        creaScambioAccettatoSu(pubblicato.getId());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+        });
+        assertEquals("Non puoi cambiare la disponibilità di un annuncio con uno scambio in corso",
+                ex.getMessage());
+        assertFalse(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso());
+    }
+
+    @Test
+    void testCambioDisponibilitaAnnuncioInesistente() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.cambiaDisponibilita("id-inesistente", PROPRIETARIO, true);
+        });
+        assertEquals("Annuncio non trovato", ex.getMessage());
+    }
+
+    @Test
+    void testModificaPreservaLoStatoDiSospensione() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+
+        // Il form di modifica non porta il flag: la modifica non deve riattivare l'annuncio
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo aggiornato");
+        AnnuncioDTO esito = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+
+        assertEquals("Titolo aggiornato", esito.getTitolo());
+        assertTrue(esito.isSospeso(), "La modifica non deve riattivare un annuncio sospeso");
+    }
+
+    @Test
+    void testAnnuncioSospesoRestaFraQuelliDelProprietario() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+
+        // Sparisce dal marketplace, non da "I miei annunci"
+        assertEquals(1, annuncioDatabase.annunciDiUtente(PROPRIETARIO).size(),
+                "L'annuncio sospeso resta fra quelli del proprietario");
+        assertTrue(annuncioDatabase.annunciDiUtente(PROPRIETARIO).get(0).isSospeso());
+    }
 }

@@ -12,4 +12,7 @@ public interface AnnuncioServiceAsync {
     void modifica(String idAnnuncio, String idUtenteRichiedente, AnnuncioDTO annuncioAggiornato, AsyncCallback<AnnuncioDTO> callback);
 
     void rimuovi(String idAnnuncio, String idUtenteRichiedente, AsyncCallback<Void> callback);
+
+    void cambiaDisponibilita(String idAnnuncio, String idUtenteRichiedente, boolean sospeso,
+            AsyncCallback<AnnuncioDTO> callback);
 }
