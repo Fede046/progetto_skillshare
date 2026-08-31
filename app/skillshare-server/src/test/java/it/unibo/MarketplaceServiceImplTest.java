@@ -367,4 +367,50 @@ public class MarketplaceServiceImplTest {
         assertEquals(a3.getId(), ((AnnuncioDTO) ordinati.get(2)).getId(),
                 "Gli autori senza recensioni devono finire in fondo");
     }
+
+    // --- Disponibilita': il marketplace mostra solo gli annunci non sospesi ---
+
+    @Test
+    void testAnnuncioSospesoNonCompareNelMarketplace() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.sospeso." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "Sospeso", "Utente"));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        annuncio.setTitolo("TitoloSospeso_" + ts);
+        AnnuncioDatabase db = new AnnuncioDatabase();
+        AnnuncioDTO pubblicato = db.pubblica(annuncio);
+
+        // Finche' e' disponibile la ricerca lo trova
+        List<AnnuncioDTO> prima = new MarketplaceServiceImpl()
+                .cercaAnnunci("TitoloSospeso_" + ts, EnumSet.of(CampoRicerca.TITOLO), false, false);
+        assertNotNull(trovaAnnuncio(prima, pubblicato.getId()));
+
+        db.cambiaDisponibilita(pubblicato.getId(), email, true);
+
+        List<AnnuncioDTO> dopo = new MarketplaceServiceImpl()
+                .cercaAnnunci("TitoloSospeso_" + ts, EnumSet.of(CampoRicerca.TITOLO), false, false);
+        assertTrue(dopo.isEmpty(), "Un annuncio sospeso non deve comparire nel marketplace");
+    }
+
+    @Test
+    void testAnnuncioRiattivatoTornaNelMarketplace() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        String email = "test.riattiva." + ts + "@unibo.it";
+        UtenteDatabase.registra(new UtenteDTO(email, "@Password123", "Riattiva", "Utente"));
+
+        AnnuncioDTO annuncio = creaAnnuncio(email);
+        annuncio.setTitolo("TitoloRiattiva_" + ts);
+        AnnuncioDatabase db = new AnnuncioDatabase();
+        AnnuncioDTO pubblicato = db.pubblica(annuncio);
+
+        db.cambiaDisponibilita(pubblicato.getId(), email, true);
+        db.cambiaDisponibilita(pubblicato.getId(), email, false);
+
+        List<AnnuncioDTO> risultato = new MarketplaceServiceImpl()
+                .cercaAnnunci("TitoloRiattiva_" + ts, EnumSet.of(CampoRicerca.TITOLO), false, false);
+
+        assertNotNull(trovaAnnuncio(risultato, pubblicato.getId()),
+                "Riattivato, l'annuncio torna visibile nel marketplace");
+    }
 }
