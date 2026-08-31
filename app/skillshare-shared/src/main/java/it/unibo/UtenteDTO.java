@@ -6,6 +6,13 @@ import java.util.List;
 
 public class UtenteDTO implements Serializable {
 
+    /**
+     * Fissato esplicitamente: i record su MapDB sono scritti con Serializer.JAVA,
+     * quindi un UID calcolato dal compilatore cambierebbe a ogni modifica dei campi
+     * rendendo illeggibili i dati gia' persistiti.
+     */
+    private static final long serialVersionUID = 1L;
+
     private String email;
     private String password;
     private String nome;

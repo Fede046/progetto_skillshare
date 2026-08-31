@@ -5,9 +5,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class AnnuncioServiceImplTest {
+
+    @BeforeAll
+    static void setUpDatabase() {
+        // Database in memoria per i test: non tocca il file progetto_sweng.db
+        DatabaseCore.enableTestMode();
+    }
+
+    @AfterAll
+    static void tearDownDatabase() {
+        DatabaseCore.disableTestMode();
+    }
 
     // Annuncio valido, da modificare nei singoli test
     private AnnuncioDTO creaAnnuncioValido() {

@@ -8,12 +8,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 public class RecensioneServiceImplTest {
+
+    // UtenteDatabase espone metodi statici legati al singleton DatabaseCore:
+    // senza test mode le registrazioni finirebbero sul file progetto_sweng.db
+    @BeforeAll
+    static void setUpDatabase() {
+        DatabaseCore.enableTestMode();
+    }
+
+    @AfterAll
+    static void tearDownDatabase() {
+        DatabaseCore.disableTestMode();
+    }
 
     private static final String CREATORE = "mario.rossi@unibo.it";
     private static final String RICHIEDENTE = "luigi.verdi@unibo.it";

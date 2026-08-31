@@ -9,6 +9,14 @@ import java.io.Serializable;
  * ed essere persistito su MapDB tramite Serializer.JAVA.
  */
 public class AnnuncioDTO implements Serializable {
+
+    /**
+     * Fissato esplicitamente: i record su MapDB sono scritti con Serializer.JAVA,
+     * quindi un UID calcolato dal compilatore cambierebbe a ogni modifica dei campi
+     * rendendo illeggibili i dati gia' persistiti.
+     */
+    private static final long serialVersionUID = 1L;
+
     private String id;
     private String idUtente;
     private String titolo;

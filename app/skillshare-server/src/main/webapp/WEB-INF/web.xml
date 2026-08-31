@@ -37,24 +37,6 @@
     <url-pattern>/app/profile</url-pattern>
   </servlet-mapping>
   <servlet>
-    <servlet-name>greetServlet</servlet-name>
-    <servlet-class>it.unibo.GreetingServiceImpl</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/app/greet</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>ingredentiServlet</servlet-name>
-    <servlet-class>it.unibo.IngredientiServiceImpl</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ingredentiServlet</servlet-name>
-    <url-pattern>/app/ingredienti</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
     <servlet-name>annuncioServlet</servlet-name>
     <servlet-class>it.unibo.AnnuncioServiceImpl</servlet-class>
   </servlet>
