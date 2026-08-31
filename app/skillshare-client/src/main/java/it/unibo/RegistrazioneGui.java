@@ -1,91 +1,90 @@
 package it.unibo;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 
+/**
+ * Schermata di registrazione. Lo stile arriva dalle classi condivise in
+ * skillshare.css (auth-*, btn-*, form-errore), le stesse usate da
+ * WelcomeGui e LoginGui.
+ */
 public class RegistrazioneGui {
 
     private final RegistrazioneServiceAsync registrazioneService = GWT.create(RegistrazioneService.class);
 
     public void mostra() {
-        // Card centrale
-        VerticalPanel card = new VerticalPanel();
-        card.setSpacing(15);
+        FlowPanel sfondo = new FlowPanel();
+        sfondo.addStyleName("auth-sfondo");
 
-        // CSS
-        card.getElement().getStyle().setProperty("backgroundColor", "#ffffff");
-        card.getElement().getStyle().setProperty("padding", "30px");
-        card.getElement().getStyle().setProperty("borderRadius", "10px");
-        card.getElement().getStyle().setProperty("boxShadow", "0 4px 15px rgba(0, 0, 0, 0.1)");
-        card.getElement().getStyle().setProperty("width", "350px");
-        card.getElement().getStyle().setProperty("marginLeft", "auto");
-        card.getElement().getStyle().setProperty("marginRight", "auto");
-        card.getElement().getStyle().setProperty("marginTop", "60px");
+        FlowPanel card = new FlowPanel();
+        card.addStyleName("auth-card");
 
-        // Titolo della card
-        HTML titolo = new HTML(
-                "<h2 style='color: #333333; margin-top: 0; text-align: center; font-family: sans-serif;'>Crea Account</h2>");
+        FlowPanel intestazione = new FlowPanel();
+        intestazione.addStyleName("auth-intestazione");
 
-        // Elemento per i messaggi di errore in rosso 
-        HTML messaggioErrore = new HTML("");
-        messaggioErrore.getElement().getStyle().setProperty("color", "#d9534f");
-        messaggioErrore.getElement().getStyle().setProperty("fontSize", "13px");
-        messaggioErrore.getElement().getStyle().setProperty("textAlign", "center");
+        Label titolo = new Label("Crea account");
+        titolo.addStyleName("auth-titolo");
+        intestazione.add(titolo);
 
-        // Campi di testo
-        TextBox nomeBox = creaCampoStilizzato("Nome");
-        TextBox cognomeBox = creaCampoStilizzato("Cognome");
-        TextBox emailBox = creaCampoStilizzato("Email");
+        Label sottotitolo = new Label("Bastano pochi dati per iniziare a scambiare competenze.");
+        sottotitolo.addStyleName("auth-sottotitolo");
+        intestazione.add(sottotitolo);
+
+        card.add(intestazione);
+
+        // Stesso alert usato negli altri form del progetto
+        Label messaggioErrore = new Label();
+        messaggioErrore.addStyleName("form-errore");
+        messaggioErrore.setVisible(false);
+        card.add(messaggioErrore);
+
+        FlowPanel form = new FlowPanel();
+        form.addStyleName("auth-form");
+
+        TextBox nomeBox = creaCampo("Nome");
+        TextBox cognomeBox = creaCampo("Cognome");
+        TextBox emailBox = creaCampo("Email");
+        form.add(nomeBox);
+        form.add(cognomeBox);
+        form.add(emailBox);
 
         PasswordTextBox passwordBox = new PasswordTextBox();
         passwordBox.getElement().setPropertyString("placeholder", "Password (min. 8 caratteri)");
-        applicaStileInput(passwordBox);
+        passwordBox.addStyleName("auth-campo");
+        form.add(passwordBox);
 
-        // Bottone Registrati
+        FlowPanel azioni = new FlowPanel();
+        azioni.addStyleName("auth-azioni");
+
         Button btnRegistrati = new Button("Registrati");
-        btnRegistrati.getElement().getStyle().setProperty("backgroundColor", "#4CAF50");
-        btnRegistrati.getElement().getStyle().setProperty("color", "white");
-        btnRegistrati.getElement().getStyle().setProperty("border", "none");
-        btnRegistrati.getElement().getStyle().setProperty("padding", "10px");
-        btnRegistrati.getElement().getStyle().setProperty("borderRadius", "5px");
-        btnRegistrati.getElement().getStyle().setProperty("width", "100%");
-        btnRegistrati.getElement().getStyle().setProperty("cursor", "pointer");
-        btnRegistrati.getElement().getStyle().setProperty("fontSize", "16px");
-        btnRegistrati.getElement().getStyle().setProperty("fontWeight", "bold");
-        btnRegistrati.getElement().getStyle().setProperty("backgroundImage", "none");
-        
-        // Tasto Indietro per tornare alla welcome screen
-        Button btnBack = new Button("Indietro");
-        btnBack.getElement().getStyle().setProperty("backgroundColor", "#f0f0f0");
-        btnBack.getElement().getStyle().setProperty("color", "#333333");
-        btnBack.getElement().getStyle().setProperty("border", "1px solid #ccc");
-        btnBack.getElement().getStyle().setProperty("padding", "8px");
-        btnBack.getElement().getStyle().setProperty("borderRadius", "5px");
-        btnBack.getElement().getStyle().setProperty("width", "100%");
-        btnBack.getElement().getStyle().setProperty("cursor", "pointer");
-        btnBack.getElement().getStyle().setProperty("fontSize", "14px");
-        btnBack.getElement().getStyle().setProperty("backgroundImage", "none");
+        btnRegistrati.addStyleName("btn-primary");
 
-        btnBack.addClickHandler(event -> {
-            new WelcomeGui().mostra();
-        });
+        Button btnBack = new Button("Indietro");
+        btnBack.addStyleName("btn-secondary");
+        btnBack.addClickHandler(event -> new WelcomeGui().mostra());
+
+        azioni.add(btnRegistrati);
+        azioni.add(btnBack);
+        form.add(azioni);
+        card.add(form);
 
         // Gestione del Click sul bottone Registrati
         btnRegistrati.addClickHandler(event -> {
-            messaggioErrore.setText(""); // Pulisce eventuali errori precedenti
+            nascondiErrore(messaggioErrore); // Pulisce eventuali errori precedenti
 
             String email = emailBox.getText().trim();
             String password = passwordBox.getText();
 
             // Controllo formato email lato client
             if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
-                messaggioErrore.setText("Inserisci un formato email valido.");
+                mostraErrore(messaggioErrore, "Inserisci un indirizzo email valido, ad esempio nome@unibo.it");
                 return;
             }
 
@@ -93,7 +92,8 @@ public class RegistrazioneGui {
             String regexPassword = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$";
 
             if (!password.matches(regexPassword)) {
-                messaggioErrore.setText("La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo speciale.");
+                mostraErrore(messaggioErrore, "La password deve avere almeno 8 caratteri, "
+                        + "una maiuscola, una minuscola, un numero e un simbolo speciale.");
                 return;
             }
 
@@ -107,51 +107,49 @@ public class RegistrazioneGui {
             registrazioneService.registraUtente(nuovoUtente, new AsyncCallback<Boolean>() {
                 @Override
                 public void onFailure(Throwable caught) {
-                    messaggioErrore.setText("Errore di connessione al server.");
+                    mostraErrore(messaggioErrore, "Errore di connessione al server. Riprova più tardi.");
                 }
 
                 @Override
                 public void onSuccess(Boolean success) {
                     if (success) {
-                        // Reindirizzamento al profilo in caso di successo
+                        // Reindirizzamento al login in caso di successo
                         new LoginGui().mostra();
 
                     } else {
-                        // Errore in rosso se l'email risulta già registrata
-                        messaggioErrore.setText("Questa email risulta già registrata.");
+                        // Errore se l'email risulta gia' registrata
+                        mostraErrore(messaggioErrore,
+                                "Questa email risulta già registrata. Prova ad accedere.");
                     }
                 }
             });
         });
 
-        card.add(titolo);
-        card.add(messaggioErrore);
-        card.add(nomeBox);
-        card.add(cognomeBox);
-        card.add(emailBox);
-        card.add(passwordBox);
-        card.add(btnRegistrati);
-        card.add(btnBack);
+        sfondo.add(card);
 
         RootPanel.get().clear();
-        RootPanel.get().getElement().getStyle().setProperty("backgroundColor", "#f4f7f6");
-        RootPanel.get().getElement().getStyle().setProperty("height", "100vh");
-        RootPanel.get().add(card);
+        RootPanel.get().add(sfondo);
+
+        // Stessa base grafica delle altre schermate
+        Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
+        Document.get().getBody().getStyle().setProperty("margin", "0");
+        Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
     }
 
-    private TextBox creaCampoStilizzato(String placeholder) {
+    private TextBox creaCampo(String placeholder) {
         TextBox box = new TextBox();
         box.getElement().setPropertyString("placeholder", placeholder);
-        applicaStileInput(box);
+        box.addStyleName("auth-campo");
         return box;
     }
 
-    private void applicaStileInput(com.google.gwt.user.client.ui.UIObject widget) {
-        widget.getElement().getStyle().setProperty("width", "100%");
-        widget.getElement().getStyle().setProperty("padding", "10px");
-        widget.getElement().getStyle().setProperty("borderRadius", "5px");
-        widget.getElement().getStyle().setProperty("border", "1px solid #ccc");
-        widget.getElement().getStyle().setProperty("boxSizing", "border-box");
-        widget.getElement().getStyle().setProperty("fontSize", "14px");
+    private void mostraErrore(Label messaggioErrore, String testo) {
+        messaggioErrore.setText(testo);
+        messaggioErrore.setVisible(true);
+    }
+
+    private void nascondiErrore(Label messaggioErrore) {
+        messaggioErrore.setText("");
+        messaggioErrore.setVisible(false);
     }
 }

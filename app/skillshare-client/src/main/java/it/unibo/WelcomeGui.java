@@ -1,72 +1,66 @@
 package it.unibo;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.VerticalPanel;
 
+/**
+ * Prima schermata dell'applicazione: presenta la piattaforma e porta
+ * a registrazione o accesso.
+ * Lo stile arriva dalle classi condivise in skillshare.css (auth-*, btn-*),
+ * le stesse usate da LoginGui e RegistrazioneGui.
+ */
 public class WelcomeGui {
 
     public void mostra() {
-        // Pannello principale (Card centrale)
-        VerticalPanel card = new VerticalPanel();
-        card.setSpacing(20);
+        FlowPanel sfondo = new FlowPanel();
+        sfondo.addStyleName("auth-sfondo");
 
-        // CSS per centrare la card
-        card.getElement().getStyle().setProperty("backgroundColor", "#ffffff");
-        card.getElement().getStyle().setProperty("padding", "40px");
-        card.getElement().getStyle().setProperty("borderRadius", "10px");
-        card.getElement().getStyle().setProperty("boxShadow", "0 4px 15px rgba(0, 0, 0, 0.1)");
-        card.getElement().getStyle().setProperty("width", "350px");
-        card.getElement().getStyle().setProperty("marginLeft", "auto");
-        card.getElement().getStyle().setProperty("marginRight", "auto");
-        card.getElement().getStyle().setProperty("marginTop", "100px");
-        card.getElement().getStyle().setProperty("textAlign", "center");
+        FlowPanel card = new FlowPanel();
+        card.addStyleName("auth-card");
 
-        // Scritta Welcome
-        HTML titolo = new HTML(
-                "<h1 style='color: #b20000; font-size: 35px; margin: 0 0 25px 0; font-family: sans-serif;'>Welcome</h1>"
-                        +
-                        "<p style='color: #666666; font-size: 14px; margin-bottom: 0px; text-align:center;'>Accedi alla piattaforma o crea un nuovo account.</p>");
+        // Intestazione: il nome della piattaforma in bordeaux e' il primo
+        // segno di identita' che l'utente incontra
+        FlowPanel intestazione = new FlowPanel();
+        intestazione.addStyleName("auth-intestazione");
 
-        // Pulsante per la Registrazione
+        Label marchio = new Label("Skillshare");
+        marchio.addStyleName("auth-marchio");
+        intestazione.add(marchio);
+
+        Label sottotitolo = new Label("Scambia competenze con altri studenti: "
+                + "accedi alla piattaforma o crea un nuovo account.");
+        sottotitolo.addStyleName("auth-sottotitolo");
+        intestazione.add(sottotitolo);
+
+        card.add(intestazione);
+
+        FlowPanel azioni = new FlowPanel();
+        azioni.addStyleName("auth-azioni");
+
+        // Registrarsi e' l'azione di maggiore enfasi per un nuovo utente:
+        // prende il bordeaux, accedere resta secondario
         Button btnRegistrati = new Button("Registrati");
-        stileBottone(btnRegistrati, "#4CAF50");
-        btnRegistrati.addClickHandler(event -> {
-            new RegistrazioneGui().mostra();
-        });
+        btnRegistrati.addStyleName("btn-primary");
+        btnRegistrati.addClickHandler(event -> new RegistrazioneGui().mostra());
+        azioni.add(btnRegistrati);
 
-        // Pulsante per il Login
-        Button btnLogin = new Button("Login");
-        stileBottone(btnLogin, "#008CBA");
-        btnLogin.addClickHandler(event -> {
-            new LoginGui().mostra();
-        });
+        Button btnLogin = new Button("Accedi");
+        btnLogin.addStyleName("btn-secondary");
+        btnLogin.addClickHandler(event -> new LoginGui().mostra());
+        azioni.add(btnLogin);
 
-        // Add elementi alla card
-        card.add(titolo);
-        card.add(btnRegistrati);
-        card.add(btnLogin);
+        card.add(azioni);
+        sfondo.add(card);
 
         RootPanel.get().clear();
-        RootPanel.get().add(card);
+        RootPanel.get().add(sfondo);
 
-        com.google.gwt.dom.client.Document.get().getBody().getStyle().setBackgroundColor("#f4f7f6");
-        com.google.gwt.dom.client.Document.get().getBody().getStyle().setProperty("margin", "0");
-        com.google.gwt.dom.client.Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
-    }
-
-    // Metodo di supporto per forzare i colori corretti sui bottoni
-    private void stileBottone(Button button, String coloreSfondo) {
-        button.getElement().getStyle().setProperty("backgroundImage", "none");
-        button.getElement().getStyle().setProperty("backgroundColor", coloreSfondo);
-        button.getElement().getStyle().setProperty("color", "white");
-        button.getElement().getStyle().setProperty("border", "none");
-        button.getElement().getStyle().setProperty("padding", "12px");
-        button.getElement().getStyle().setProperty("borderRadius", "5px");
-        button.getElement().getStyle().setProperty("width", "100%");
-        button.getElement().getStyle().setProperty("cursor", "pointer");
-        button.getElement().getStyle().setProperty("fontSize", "16px");
-        button.getElement().getStyle().setProperty("fontWeight", "bold");
+        // Stessa base grafica delle altre schermate
+        Document.get().getBody().getStyle().setProperty("backgroundColor", "#E8E8E8");
+        Document.get().getBody().getStyle().setProperty("margin", "0");
+        Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
     }
 }

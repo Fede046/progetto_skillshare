@@ -1119,3 +1119,117 @@ button.richieste-tab-attivo {
 .profile-messaggio-azione {
   text-align: center;
 }
+
+/* ============================================================
+   Schermate di accesso: Welcome, Login, Registrazione
+   Riusano .btn-primary, .btn-secondary e .form-errore gia'
+   definiti sopra; qui stanno solo contenitore e campi, che
+   prima erano scritti inline in ogni singola schermata
+   ============================================================ */
+
+/* Sfondo pieno su cui galleggia la card: stessa base grigia
+   delle altre pagine dell'app */
+.auth-sfondo {
+  background-color: var(--grigio-neutro);
+  min-height: 100vh;
+  padding: 48px 16px;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+/* Card centrata che contiene il form o le azioni iniziali */
+.auth-card {
+  background-color: var(--bianco);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 380px;
+  padding: 32px 28px;
+  width: 100%;
+}
+
+/* Marchio e titolo: il bordeaux porta l'identita' della piattaforma
+   sulla prima schermata che l'utente incontra */
+.auth-marchio {
+  color: var(--bordeaux);
+  font-family: sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: -0.4px;
+  margin: 0;
+  text-align: center;
+}
+
+.auth-titolo {
+  color: var(--bordeaux);
+  font-family: sans-serif;
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+}
+
+.auth-sottotitolo {
+  color: var(--grigio-testo);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+  text-align: center;
+}
+
+/* Filetto bordeaux sotto l'intestazione, come stacco fra
+   titolo e contenuto */
+.auth-intestazione {
+  border-bottom: 1px solid var(--grigio-neutro);
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+}
+
+/* Campi del form: stesso trattamento di bordo e focus dei
+   campi del profilo, ma utilizzabili fuori da .profile-container */
+.auth-campo {
+  border: 1px solid var(--grigio-bordo);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--grigio-testo);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 11px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.auth-campo:focus {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3px var(--bordeaux-velo);
+  outline: none;
+}
+
+/* Impila i campi e i pulsanti con un ritmo costante */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Le azioni restano separate dai campi */
+.auth-azioni {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* I pulsanti delle schermate di accesso occupano tutta la larghezza */
+.auth-azioni button.btn-primary,
+.auth-azioni button.btn-secondary {
+  width: 100%;
+}
+
+/* L'alert condiviso qui sta sopra al form, non sotto: annulla
+   il margine superiore pensato per il form del profilo */
+.auth-card .form-errore {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
