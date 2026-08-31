@@ -28,12 +28,33 @@ public class AnnuncioDTO implements Serializable {
     private String nomeAutore;
     private Double valutazioneAutore;
 
+    /**
+     * Annuncio sospeso dal proprietario: resta fra i suoi annunci ma sparisce
+     * dal marketplace. Il campo è espresso come "sospeso" e non "disponibile"
+     * perché la deserializzazione Java non esegue gli inizializzatori: i record
+     * salvati prima di questo campo si rileggono con false, cioè disponibili.
+     */
+    private boolean sospeso;
+
     public Double getValutazioneAutore() {
         return valutazioneAutore;
     }
 
     public void setValutazioneAutore(Double valutazioneAutore) {
         this.valutazioneAutore = valutazioneAutore;
+    }
+
+    public boolean isSospeso() {
+        return sospeso;
+    }
+
+    public void setSospeso(boolean sospeso) {
+        this.sospeso = sospeso;
+    }
+
+    /** Comodità di lettura: un annuncio è disponibile finché non viene sospeso. */
+    public boolean isDisponibile() {
+        return !sospeso;
     }
 
     // Costruttore vuoto OBBLIGATORIO per GWT

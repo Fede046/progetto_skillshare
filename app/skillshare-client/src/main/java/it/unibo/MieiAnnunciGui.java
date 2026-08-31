@@ -1,7 +1,9 @@
 package it.unibo;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -23,9 +25,14 @@ public class MieiAnnunciGui {
 
     private final UtenteDTO utente;
     private final AnnuncioServiceAsync annuncioService = GWT.create(AnnuncioService.class);
+    private final RichiestaScambioServiceAsync richiestaScambioService =
+            GWT.create(RichiestaScambioService.class);
 
     // Riempito dalla risposta RPC: al primo disegno mostra il caricamento
     private final FlowPanel listaAnnunci = new FlowPanel();
+    // Annunci con uno scambio gia' accettato: non sono piu' disponibili,
+    // quindi modifica ed eliminazione restano disabilitate
+    private final Set<String> annunciConScambioInCorso = new HashSet<>();
 
     public MieiAnnunciGui(UtenteDTO utente) {
         this.utente = utente;
@@ -84,7 +91,44 @@ public class MieiAnnunciGui {
     /**
      * Chiede al server gli annunci dell'utente e ridisegna la lista.
      */
+    /**
+     * Ricarica la lista: prima le richieste ricevute, per sapere quali annunci
+     * hanno uno scambio in corso, poi gli annunci veri e propri. Se la prima
+     * chiamata fallisce si prosegue comunque: il blocco autoritativo e' sul server.
+     */
     private void caricaAnnunci() {
+        richiestaScambioService.richiesteRicevuteDaCreatore(utente.getEmail(),
+                new AsyncCallback<List<RichiestaScambioDTO>>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        caricaSoloAnnunci();
+                    }
+
+                    @Override
+                    public void onSuccess(List<RichiestaScambioDTO> result) {
+                        aggiornaAnnunciConScambioInCorso(result);
+                        caricaSoloAnnunci();
+                    }
+                });
+    }
+
+    /**
+     * Un annuncio e' impegnato finche' esiste una richiesta ACCEPTED su di esso:
+     * stessa regola applicata da AnnuncioDatabase.
+     */
+    private void aggiornaAnnunciConScambioInCorso(List<RichiestaScambioDTO> richieste) {
+        annunciConScambioInCorso.clear();
+        if (richieste == null) {
+            return;
+        }
+        for (RichiestaScambioDTO richiesta : richieste) {
+            if (richiesta.getStato() == StatoRichiesta.ACCEPTED) {
+                annunciConScambioInCorso.add(richiesta.getIdAnnuncio());
+            }
+        }
+    }
+
+    private void caricaSoloAnnunci() {
         annuncioService.annunciDiUtente(utente.getEmail(), new AsyncCallback<List<AnnuncioDTO>>() {
             @Override
             public void onFailure(Throwable caught) {
@@ -243,6 +287,26 @@ public class MieiAnnunciGui {
      * Chiede al server la rimozione dell'annuncio e, in caso di successo,
      * lo elimina dalla lista visibile senza ricaricare la pagina.
      */
+    /**
+     * Sospende o riattiva l'annuncio. Al ritorno la lista viene ricaricata:
+     * cosi' l'etichetta del pulsante e la nota di stato restano allineate,
+     * e il server resta l'unica autorita' sul permesso.
+     */
+    private void cambiaDisponibilita(AnnuncioDTO annuncio, RigaAnnuncio riga, boolean sospeso) {
+        annuncioService.cambiaDisponibilita(annuncio.getId(), utente.getEmail(), sospeso,
+                new AsyncCallback<AnnuncioDTO>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        Window.alert(caught.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(AnnuncioDTO result) {
+                        caricaAnnunci();
+                    }
+                });
+    }
+
 private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
     annuncioService.rimuovi(annuncio.getId(), utente.getEmail(), new AsyncCallback<Void>() {
         @Override
@@ -323,19 +387,63 @@ private void rimuoviAnnuncio(AnnuncioDTO annuncio, RigaAnnuncio riga) {
             FlowPanel azioni = new FlowPanel();
             azioni.addStyleName("annuncio-azioni");
 
+            // Con uno scambio accettato in corso l'annuncio non e' piu' disponibile:
+            // entrambe le azioni restano grigie finche' lo scambio non si conclude
+            boolean scambioInCorso = annunciConScambioInCorso.contains(annuncio.getId());
+
             Button btnModifica = new Button("Modifica");
             btnModifica.addStyleName("btn-secondary");
             btnModifica.addStyleName("btn-sm");
-            btnModifica.addClickHandler(event -> apriFormModifica(this.annuncio, this));
+            if (scambioInCorso) {
+                btnModifica.setEnabled(false);
+                btnModifica.setTitle("Non puoi modificare un annuncio con uno scambio in corso");
+            } else {
+                btnModifica.addClickHandler(event -> apriFormModifica(this.annuncio, this));
+            }
             azioni.add(btnModifica);
+
+            // Sospendere ritira l'annuncio dal marketplace senza eliminarlo:
+            // utile quando non si e' momentaneamente disponibili
+            Button btnDisponibilita = new Button(annuncio.isSospeso() ? "Riattiva" : "Sospendi");
+            btnDisponibilita.addStyleName("btn-secondary");
+            btnDisponibilita.addStyleName("btn-sm");
+            if (scambioInCorso) {
+                btnDisponibilita.setEnabled(false);
+                btnDisponibilita.setTitle(
+                        "Non puoi cambiare la disponibilità di un annuncio con uno scambio in corso");
+            } else {
+                btnDisponibilita.setTitle(annuncio.isSospeso()
+                        ? "Rendi di nuovo visibile l'annuncio nel marketplace"
+                        : "Ritira l'annuncio dal marketplace senza eliminarlo");
+                btnDisponibilita.addClickHandler(
+                        event -> cambiaDisponibilita(this.annuncio, this, !this.annuncio.isSospeso()));
+            }
+            azioni.add(btnDisponibilita);
 
             Button btnElimina = new Button("Elimina");
             btnElimina.addStyleName("btn-secondary");
             btnElimina.addStyleName("btn-sm");
-            btnElimina.addClickHandler(event -> mostraConfermaRimozione());
+            if (scambioInCorso) {
+                btnElimina.setEnabled(false);
+                btnElimina.setTitle("Non puoi rimuovere un annuncio con uno scambio in corso");
+            } else {
+                btnElimina.addClickHandler(event -> mostraConfermaRimozione());
+            }
             azioni.add(btnElimina);
 
             item.add(azioni);
+
+            // Spiega perche' le azioni sono disabilitate, invece di lasciare pulsanti muti
+            if (scambioInCorso) {
+                Label nota = new Label("Scambio in corso: l'annuncio non è modificabile, "
+                        + "rimovibile né sospendibile");
+                nota.addStyleName("annuncio-proprio-nota");
+                item.add(nota);
+            } else if (annuncio.isSospeso()) {
+                Label nota = new Label("Annuncio sospeso: non compare nel marketplace");
+                nota.addStyleName("annuncio-proprio-nota");
+                item.add(nota);
+            }
 
             aggiorna(annuncio);
         }

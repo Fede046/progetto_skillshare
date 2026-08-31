@@ -179,4 +179,200 @@ public class AnnuncioDatabaseModificaRimuoviTest {
         AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
         assertEquals(PROPRIETARIO, ricaricato.getIdUtente());
     }
+
+    // --- Annuncio con scambio in corso: non modificabile ne' rimovibile ---
+
+    /**
+     * Porta una richiesta su quell'annuncio fino allo stato ACCEPTED,
+     * cioe' lo scambio e' in corso.
+     */
+    private void creaScambioAccettatoSu(String idAnnuncio) {
+        RichiestaScambioDatabase richieste = new RichiestaScambioDatabase(dbTest);
+
+        RichiestaScambioDTO richiesta = new RichiestaScambioDTO();
+        richiesta.setIdAnnuncio(idAnnuncio);
+        richiesta.setIdRichiedente(NON_PROPRIETARIO);
+        richiesta.setIdCreatoreAnnuncio(PROPRIETARIO);
+        RichiestaScambioDTO salvata = richieste.salva(richiesta);
+
+        richieste.accetta(salvata.getId(), PROPRIETARIO);
+    }
+
+    @Test
+    void testModificaBloccataConScambioInCorso() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        creaScambioAccettatoSu(pubblicato.getId());
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo cambiato");
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        });
+        assertEquals("Non puoi modificare un annuncio con uno scambio in corso", ex.getMessage());
+
+        // L'annuncio deve essere rimasto quello originale
+        AnnuncioDTO ricaricato = annuncioDatabase.getAnnunciCollection().get(pubblicato.getId());
+        assertEquals("Ripetizioni di Java", ricaricato.getTitolo());
+    }
+
+    @Test
+    void testRimozioneBloccataConScambioInCorso() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        creaScambioAccettatoSu(pubblicato.getId());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+        });
+        assertEquals("Non puoi rimuovere un annuncio con uno scambio in corso", ex.getMessage());
+
+        assertTrue(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()),
+                "L'annuncio non deve essere stato rimosso");
+    }
+
+    @Test
+    void testRichiestaSoloPENDINGNonBloccaModificaERimozione() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        // Richiesta ricevuta ma non ancora accettata: l'annuncio resta disponibile
+        RichiestaScambioDatabase richieste = new RichiestaScambioDatabase(dbTest);
+        RichiestaScambioDTO richiesta = new RichiestaScambioDTO();
+        richiesta.setIdAnnuncio(pubblicato.getId());
+        richiesta.setIdRichiedente(NON_PROPRIETARIO);
+        richiesta.setIdCreatoreAnnuncio(PROPRIETARIO);
+        richieste.salva(richiesta);
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo aggiornato");
+        AnnuncioDTO esito = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        assertEquals("Titolo aggiornato", esito.getTitolo(), "Con richieste PENDING la modifica resta possibile");
+
+        annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+        assertFalse(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()),
+                "Con richieste PENDING la rimozione resta possibile");
+    }
+
+    @Test
+    void testScambioCompletatoSbloccaModificaERimozione() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        RichiestaScambioDatabase richieste = new RichiestaScambioDatabase(dbTest);
+        RichiestaScambioDTO richiesta = new RichiestaScambioDTO();
+        richiesta.setIdAnnuncio(pubblicato.getId());
+        richiesta.setIdRichiedente(NON_PROPRIETARIO);
+        richiesta.setIdCreatoreAnnuncio(PROPRIETARIO);
+        RichiestaScambioDTO salvata = richieste.salva(richiesta);
+        richieste.accetta(salvata.getId(), PROPRIETARIO);
+        richieste.completa(salvata.getId(), PROPRIETARIO);
+
+        // Scambio concluso: l'annuncio torna nella piena disponibilita' del proprietario
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Di nuovo modificabile");
+        AnnuncioDTO esito = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+        assertEquals("Di nuovo modificabile", esito.getTitolo());
+
+        annuncioDatabase.rimuovi(pubblicato.getId(), PROPRIETARIO);
+        assertFalse(annuncioDatabase.getAnnunciCollection().containsKey(pubblicato.getId()));
+    }
+
+    @Test
+    void testScambioSuUnAltroAnnuncioNonBlocca() {
+        AnnuncioDTO mio = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        AnnuncioDTO altro = creaAnnuncioValido();
+        altro.setTitolo("Corso di chitarra");
+        AnnuncioDTO altroPubblicato = annuncioDatabase.pubblica(altro);
+
+        // Lo scambio in corso riguarda solo l'altro annuncio
+        creaScambioAccettatoSu(altroPubblicato.getId());
+
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo aggiornato");
+        AnnuncioDTO esito = annuncioDatabase.modifica(mio.getId(), PROPRIETARIO, aggiornato);
+
+        assertEquals("Titolo aggiornato", esito.getTitolo(),
+                "Il blocco vale solo per l'annuncio con lo scambio in corso");
+    }
+
+    // --- Sospensione e riattivazione (disponibilita' dell'annuncio) ---
+
+    @Test
+    void testAnnuncioNasceDisponibile() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        assertFalse(pubblicato.isSospeso(), "Un annuncio appena pubblicato non è sospeso");
+        assertTrue(pubblicato.isDisponibile(), "Un annuncio appena pubblicato è disponibile");
+    }
+
+    @Test
+    void testSospendiERiattivaAnnuncio() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        AnnuncioDTO sospeso = annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+        assertTrue(sospeso.isSospeso(), "L'annuncio deve risultare sospeso");
+        assertTrue(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso(),
+                "Lo stato deve essere persistito");
+
+        AnnuncioDTO riattivato = annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, false);
+        assertFalse(riattivato.isSospeso(), "L'annuncio deve tornare disponibile");
+        assertFalse(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso());
+    }
+
+    @Test
+    void testCambioDisponibilitaComeNonProprietarioRifiutato() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), NON_PROPRIETARIO, true);
+        });
+        assertEquals("Non autorizzato: l'annuncio appartiene a un altro utente", ex.getMessage());
+        assertFalse(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso(),
+                "L'annuncio non deve essere stato sospeso");
+    }
+
+    @Test
+    void testCambioDisponibilitaBloccatoConScambioInCorso() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        creaScambioAccettatoSu(pubblicato.getId());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+        });
+        assertEquals("Non puoi cambiare la disponibilità di un annuncio con uno scambio in corso",
+                ex.getMessage());
+        assertFalse(annuncioDatabase.getAnnunciCollection().get(pubblicato.getId()).isSospeso());
+    }
+
+    @Test
+    void testCambioDisponibilitaAnnuncioInesistente() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            annuncioDatabase.cambiaDisponibilita("id-inesistente", PROPRIETARIO, true);
+        });
+        assertEquals("Annuncio non trovato", ex.getMessage());
+    }
+
+    @Test
+    void testModificaPreservaLoStatoDiSospensione() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+
+        // Il form di modifica non porta il flag: la modifica non deve riattivare l'annuncio
+        AnnuncioDTO aggiornato = creaAnnuncioValido();
+        aggiornato.setTitolo("Titolo aggiornato");
+        AnnuncioDTO esito = annuncioDatabase.modifica(pubblicato.getId(), PROPRIETARIO, aggiornato);
+
+        assertEquals("Titolo aggiornato", esito.getTitolo());
+        assertTrue(esito.isSospeso(), "La modifica non deve riattivare un annuncio sospeso");
+    }
+
+    @Test
+    void testAnnuncioSospesoRestaFraQuelliDelProprietario() {
+        AnnuncioDTO pubblicato = annuncioDatabase.pubblica(creaAnnuncioValido());
+        annuncioDatabase.cambiaDisponibilita(pubblicato.getId(), PROPRIETARIO, true);
+
+        // Sparisce dal marketplace, non da "I miei annunci"
+        assertEquals(1, annuncioDatabase.annunciDiUtente(PROPRIETARIO).size(),
+                "L'annuncio sospeso resta fra quelli del proprietario");
+        assertTrue(annuncioDatabase.annunciDiUtente(PROPRIETARIO).get(0).isSospeso());
+    }
 }

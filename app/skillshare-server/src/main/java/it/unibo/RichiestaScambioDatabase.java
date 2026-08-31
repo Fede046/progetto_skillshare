@@ -40,7 +40,9 @@ public class RichiestaScambioDatabase {
      * L'idRichiedente e l'idCreatoreAnnuncio si assumono già valorizzati dal livello RPC.
      *
      * @return La richiesta salvata (con id, stato PENDING e dataCreazione valorizzati).
-     * @throws IllegalArgumentException Se la richiesta è null o manca un campo obbligatorio.
+     * @throws IllegalArgumentException Se la richiesta è null, manca un campo obbligatorio
+     *                                  o il richiedente ha già una richiesta non completata
+     *                                  sullo stesso annuncio.
      */
     public RichiestaScambioDTO salva(RichiestaScambioDTO richiesta) throws IllegalArgumentException {
         if (richiesta == null) {
@@ -52,17 +54,23 @@ public class RichiestaScambioDatabase {
         validaCampoObbligatorio(richiesta.getIdRichiedente(), "id richiedente");
         validaCampoObbligatorio(richiesta.getIdCreatoreAnnuncio(), "id creatore annuncio");
 
-        // 2. Genero l'id solo se non è già stato impostato
+        // 2. Una nuova richiesta sullo stesso annuncio è ammessa solo se la precedente
+        //    è stata completata: PENDING, ACCEPTED e REJECTED bloccano l'invio.
+        if (esisteRichiestaNonCompletata(richiesta.getIdRichiedente(), richiesta.getIdAnnuncio())) {
+            throw new IllegalArgumentException("Hai già una richiesta su questo annuncio non ancora completata");
+        }
+
+        // 3. Genero l'id solo se non è già stato impostato
         if (richiesta.getId() == null || richiesta.getId().trim().isEmpty()) {
             richiesta.setId(UUID.randomUUID().toString());
         }
 
-        // 3. Le nuove richieste partono sempre con stato PENDING
+        // 4. Le nuove richieste partono sempre con stato PENDING
         richiesta.setStato(StatoRichiesta.PENDING);
 
         richiesta.setDataCreazione(System.currentTimeMillis());
 
-        // 4. Salvataggio e persistenza
+        // 5. Salvataggio e persistenza
         richiesteCollection.put(richiesta.getId(), richiesta);
         DatabaseCore.commit();
 
@@ -227,6 +235,52 @@ public class RichiestaScambioDatabase {
         risultato.sort((a, b) -> Long.compare(b.getDataCreazione(), a.getDataCreazione()));
 
         return risultato;
+    }
+
+    /**
+     * Indica se sull'annuncio c'è uno scambio in corso, cioè una richiesta già
+     * accettata e non ancora completata. Finché dura, l'annuncio non è più
+     * disponibile: chi ha ottenuto lo scambio conta su quei termini.
+     *
+     * @param idAnnuncio L'id dell'annuncio da controllare.
+     * @return true se esiste almeno una richiesta in stato ACCEPTED su quell'annuncio.
+     */
+    public boolean esisteScambioInCorso(String idAnnuncio) {
+        if (idAnnuncio == null || idAnnuncio.trim().isEmpty()) {
+            return false;
+        }
+
+        String annuncio = idAnnuncio.trim();
+        for (RichiestaScambioDTO esistente : richiesteCollection.values()) {
+            if (annuncio.equals(esistente.getIdAnnuncio())
+                    && esistente.getStato() == StatoRichiesta.ACCEPTED) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Indica se il richiedente ha già una richiesta ancora aperta sull'annuncio indicato.
+     * Il controllo è ristretto alla coppia richiedente+annuncio: le richieste dello stesso
+     * utente su annunci diversi non si bloccano a vicenda.
+     *
+     * @return true se esiste una richiesta in stato PENDING, ACCEPTED o REJECTED.
+     */
+    private boolean esisteRichiestaNonCompletata(String idRichiedente, String idAnnuncio) {
+        String richiedente = idRichiedente.trim();
+        String annuncio = idAnnuncio.trim();
+
+        for (RichiestaScambioDTO esistente : richiesteCollection.values()) {
+            if (richiedente.equals(esistente.getIdRichiedente())
+                    && annuncio.equals(esistente.getIdAnnuncio())
+                    && esistente.getStato() != StatoRichiesta.COMPLETED) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Lancia eccezione se il campo è null o vuoto dopo il trim

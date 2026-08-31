@@ -32,6 +32,9 @@ public class MarketplaceGui {
 
     // Riempita dalla risposta RPC: al primo disegno mostra il caricamento
     private final FlowPanel listaAnnunci = new FlowPanel();
+    // Id degli annunci su cui l'utente ha gia' una richiesta non completata:
+    // su questi il pulsante "Proponi scambio" resta disabilitato (Issue #136)
+    private final Set<String> annunciConRichiestaAperta = new HashSet<>();
     // Controlli per ricerca e ordinamento
     private final TextBox searchBox = new TextBox();
     private final ListBox sortBox = new ListBox();
@@ -126,7 +129,45 @@ public class MarketplaceGui {
      * Chiede al server gli annunci che corrispondono alla query nei campi
      * selezionati, ordinati.
      */
+    /**
+     * Ricarica la lista: prima le richieste gia' inviate dall'utente, poi gli annunci.
+     * Serve a sapere su quali annunci il pulsante "Proponi scambio" va disabilitato.
+     * Se la chiamata sulle richieste fallisce si prosegue comunque: il blocco
+     * autoritativo resta sul server, qui e' solo un aiuto visivo.
+     */
     private void caricaAnnunci() {
+        richiestaScambioService.richiesteInviateDaRichiedente(utente.getEmail(),
+                new AsyncCallback<List<RichiestaScambioDTO>>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        cercaEMostraAnnunci();
+                    }
+
+                    @Override
+                    public void onSuccess(List<RichiestaScambioDTO> result) {
+                        aggiornaAnnunciConRichiestaAperta(result);
+                        cercaEMostraAnnunci();
+                    }
+                });
+    }
+
+    /**
+     * Ricostruisce l'elenco degli annunci bloccati: una richiesta blocca finche'
+     * non raggiunge lo stato COMPLETED (stessa regola applicata dal server).
+     */
+    private void aggiornaAnnunciConRichiestaAperta(List<RichiestaScambioDTO> richieste) {
+        annunciConRichiestaAperta.clear();
+        if (richieste == null) {
+            return;
+        }
+        for (RichiestaScambioDTO richiesta : richieste) {
+            if (richiesta.getStato() != StatoRichiesta.COMPLETED) {
+                annunciConRichiestaAperta.add(richiesta.getIdAnnuncio());
+            }
+        }
+    }
+
+    private void cercaEMostraAnnunci() {
         String query = searchBox.getText().trim();
         boolean ordinaPerTitolo = "titolo".equals(sortBox.getSelectedValue());
         boolean ordinaPerRating = "rating".equals(sortBox.getSelectedValue());
@@ -270,7 +311,17 @@ public class MarketplaceGui {
             Button btnProponi = new Button("Proponi scambio");
             btnProponi.addStyleName("btn-primary");
             btnProponi.addStyleName("btn-sm");
-            btnProponi.addClickHandler(event -> apriDettaglioAnnuncio(annuncio));
+
+            // Con una richiesta gia' aperta su questo annuncio il pulsante resta
+            // grigio e inattivo finche' lo scambio non viene completato (Issue #136)
+            if (annunciConRichiestaAperta.contains(annuncio.getId())) {
+                btnProponi.setText("Richiesta già inviata");
+                btnProponi.setEnabled(false);
+                btnProponi.setTitle("Hai già una richiesta su questo annuncio non ancora completata");
+            } else {
+                btnProponi.addClickHandler(event -> apriDettaglioAnnuncio(annuncio));
+            }
+
             azioni.add(btnProponi);
         }
 
@@ -376,6 +427,8 @@ public class MarketplaceGui {
 
                     @Override
                     public void onSuccess(RichiestaScambioDTO result) {
+                        // Blocca subito il pulsante nella lista, senza attendere un refresh
+                        annunciConRichiestaAperta.add(annuncio.getId());
                         mostraConfermaInvio(dialog);
                     }
                 });
@@ -399,7 +452,11 @@ public class MarketplaceGui {
 
         Button btnChiudi = new Button("Chiudi");
         btnChiudi.addStyleName("btn-primary");
-        btnChiudi.addClickHandler(event -> dialog.hide());
+        btnChiudi.addClickHandler(event -> {
+            dialog.hide();
+            // Ridisegna la lista: il pulsante dell'annuncio appena richiesto e' ora grigio
+            caricaAnnunci();
+        });
 
         azioni.add(btnChiudi);
         conferma.add(azioni);

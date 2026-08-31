@@ -32,7 +32,8 @@ public interface AnnuncioService extends RemoteService {
      * @param annuncioAggiornato  L'annuncio con i dati aggiornati.
      * @return L'annuncio aggiornato e salvato.
      * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
-     *                                  non è il proprietario o se manca un campo obbligatorio.
+     *                                  non è il proprietario, se manca un campo obbligatorio
+     *                                  o se sull'annuncio c'è uno scambio in corso.
      */
     AnnuncioDTO modifica(String idAnnuncio, String idUtenteRichiedente, AnnuncioDTO annuncioAggiornato) throws IllegalArgumentException;
 
@@ -41,8 +42,24 @@ public interface AnnuncioService extends RemoteService {
      *
      * @param idAnnuncio          L'id dell'annuncio da rimuovere.
      * @param idUtenteRichiedente L'id dell'utente autenticato che richiede la rimozione.
-     * @throws IllegalArgumentException Se l'annuncio non esiste o se il richiedente
-     *                                  non è il proprietario.
+     * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
+     *                                  non è il proprietario o se sull'annuncio
+     *                                  c'è uno scambio in corso.
      */
     void rimuovi(String idAnnuncio, String idUtenteRichiedente) throws IllegalArgumentException;
+
+    /**
+     * Sospende o riattiva un annuncio: sospeso sparisce dal marketplace
+     * ma resta fra gli annunci del proprietario.
+     *
+     * @param idAnnuncio          L'id dell'annuncio.
+     * @param idUtenteRichiedente L'id dell'utente che richiede il cambio.
+     * @param sospeso             true per sospendere, false per rendere di nuovo disponibile.
+     * @return L'annuncio aggiornato.
+     * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
+     *                                  non è il proprietario o se sull'annuncio
+     *                                  c'è uno scambio in corso.
+     */
+    AnnuncioDTO cambiaDisponibilita(String idAnnuncio, String idUtenteRichiedente, boolean sospeso)
+            throws IllegalArgumentException;
 }

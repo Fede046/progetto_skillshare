@@ -30,4 +30,10 @@ public class AnnuncioServiceImpl extends RemoteServiceServlet implements Annunci
         // Delega la gestione e il controllo del proprietario a AnnuncioDatabase
         new AnnuncioDatabase().rimuovi(idAnnuncio, idUtenteRichiedente);
     }
+
+    @Override
+    public AnnuncioDTO cambiaDisponibilita(String idAnnuncio, String idUtenteRichiedente, boolean sospeso)
+            throws IllegalArgumentException {
+        return new AnnuncioDatabase().cambiaDisponibilita(idAnnuncio, idUtenteRichiedente, sospeso);
+    }
 }
