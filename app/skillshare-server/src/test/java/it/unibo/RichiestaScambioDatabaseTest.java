@@ -3,6 +3,7 @@ package it.unibo;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -146,13 +147,16 @@ public class RichiestaScambioDatabaseTest {
 
     @Test
     void testRichiesteRicevuteFiltratePerCreatore() {
-        // Mario riceve la richiesta di Luigi
+        // Mario riceve la richiesta di Luigi sul proprio annuncio
         RichiestaScambioDTO aMario = creaRichiestaValida();
         aMario.setIdCreatoreAnnuncio("mario.rossi@unibo.it");
         richiestaDatabase.salva(aMario);
 
-        // Anna riceve la richiesta di Luigi sul suo annuncio
+        // Anna riceve la richiesta di Luigi su un annuncio suo: creatore diverso
+        // implica annuncio diverso, altrimenti scatta il blocco sulle richieste
+        // multiple per la stessa coppia utente+annuncio.
         RichiestaScambioDTO adAnna = creaRichiestaValida();
+        adAnna.setIdAnnuncio("annuncio-2");
         adAnna.setIdCreatoreAnnuncio("anna.bianchi@unibo.it");
         richiestaDatabase.salva(adAnna);
 
@@ -368,5 +372,83 @@ public class RichiestaScambioDatabaseTest {
             richiestaDatabase.completa("id-inesistente", "luigi.verdi@unibo.it");
         });
         assertEquals("Richiesta non trovata", ex.getMessage());
+    }
+
+    // --- Richieste multiple sullo stesso annuncio (Issue #136) ---
+
+    @Test
+    void testSecondaRichiestaConPrimaPENDINGRifiutata() {
+        richiestaDatabase.salva(creaRichiestaValida());
+
+        // Stesso richiedente, stesso annuncio: la prima e' ancora PENDING
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.salva(creaRichiestaValida());
+        });
+        assertEquals("Hai già una richiesta su questo annuncio non ancora completata", ex.getMessage());
+
+        // La seconda non deve essere finita nel database
+        assertEquals(1, richiestaDatabase.getRichiesteCollection().size(),
+                "Deve restare salvata solo la prima richiesta");
+    }
+
+    @Test
+    void testSecondaRichiestaConPrimaACCEPTEDRifiutata() {
+        RichiestaScambioDTO prima = richiestaDatabase.salva(creaRichiestaValida());
+        richiestaDatabase.accetta(prima.getId(), "mario.rossi@unibo.it");
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.salva(creaRichiestaValida());
+        });
+        assertEquals("Hai già una richiesta su questo annuncio non ancora completata", ex.getMessage());
+        assertEquals(1, richiestaDatabase.getRichiesteCollection().size());
+    }
+
+    @Test
+    void testSecondaRichiestaConPrimaREJECTEDRifiutata() {
+        RichiestaScambioDTO prima = richiestaDatabase.salva(creaRichiestaValida());
+        richiestaDatabase.rifiuta(prima.getId(), "mario.rossi@unibo.it");
+
+        // Anche il rifiuto blocca: non si puo' insistere sullo stesso annuncio
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            richiestaDatabase.salva(creaRichiestaValida());
+        });
+        assertEquals("Hai già una richiesta su questo annuncio non ancora completata", ex.getMessage());
+        assertEquals(1, richiestaDatabase.getRichiesteCollection().size());
+    }
+
+    @Test
+    void testNuovaRichiestaDopoCOMPLETEDPermessa() {
+        RichiestaScambioDTO prima = richiestaDatabase.salva(creaRichiestaValida());
+        richiestaDatabase.accetta(prima.getId(), "mario.rossi@unibo.it");
+        richiestaDatabase.completa(prima.getId(), "luigi.verdi@unibo.it");
+
+        // Lo scambio precedente si e' concluso: se ne puo' proporre uno nuovo
+        RichiestaScambioDTO seconda = richiestaDatabase.salva(creaRichiestaValida());
+
+        assertNotNull(seconda.getId(), "La seconda richiesta deve essere creata");
+        assertNotEquals(prima.getId(), seconda.getId(), "Deve essere una richiesta distinta");
+        assertEquals(StatoRichiesta.PENDING, seconda.getStato(), "La nuova richiesta riparte da PENDING");
+        assertEquals(2, richiestaDatabase.getRichiesteCollection().size(),
+                "Entrambe le richieste devono coesistere");
+    }
+
+    @Test
+    void testRichiesteSuAnnunciDiversiNonSiBloccano() {
+        // Prima richiesta su annuncio-1, lasciata PENDING
+        richiestaDatabase.salva(creaRichiestaValida());
+
+        // Stesso richiedente, annuncio diverso: il blocco e' per coppia utente+annuncio
+        RichiestaScambioDTO suAltroAnnuncio = creaRichiestaValida();
+        suAltroAnnuncio.setIdAnnuncio("annuncio-2");
+        RichiestaScambioDTO salvata = richiestaDatabase.salva(suAltroAnnuncio);
+
+        assertNotNull(salvata.getId(), "La richiesta su un altro annuncio deve essere creata");
+        assertEquals("annuncio-2", salvata.getIdAnnuncio());
+        assertEquals(StatoRichiesta.PENDING, salvata.getStato());
+
+        // Il richiedente risulta avere due richieste aperte, una per annuncio
+        List<RichiestaScambioDTO> inviate =
+                richiestaDatabase.richiesteInviateDaRichiedente("luigi.verdi@unibo.it");
+        assertEquals(2, inviate.size(), "Le richieste su annunci diversi convivono");
     }
 }

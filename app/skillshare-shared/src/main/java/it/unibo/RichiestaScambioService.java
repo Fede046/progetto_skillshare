@@ -15,8 +15,9 @@ public interface RichiestaScambioService extends RemoteService {
      * @param idRichiedente L'id dell'utente che invia la richiesta.
      * @param messaggio     Messaggio opzionale per il creatore (può essere null).
      * @return La richiesta salvata, con stato PENDING, id e dataCreazione valorizzati.
-     * @throws IllegalArgumentException Se i dati non sono validi, se l'annuncio non esiste
-     *                                  o se il richiedente è il creatore dell'annuncio.
+     * @throws IllegalArgumentException Se i dati non sono validi, se l'annuncio non esiste,
+     *                                  se il richiedente è il creatore dell'annuncio o se ha già
+     *                                  una richiesta non completata sullo stesso annuncio.
      */
     RichiestaScambioDTO inviaRichiestaScambio(String idAnnuncio, String idRichiedente, String messaggio)
             throws IllegalArgumentException;
