@@ -43,6 +43,21 @@ public class CompletamentoRecensioneGui {
     }
 
     /**
+     * Applica al blocco la richiesta aggiornata arrivata dal server e lo ridisegna.
+     * Serve quando lo stato cambia fuori di qui, per esempio dopo che il creatore
+     * ha accettato o rifiutato: senza questo il blocco resterebbe fermo alla copia
+     * ricevuta alla costruzione e il pulsante di completamento comparirebbe solo
+     * dopo un reload della pagina.
+     */
+    public void aggiornaRichiesta(RichiestaScambioDTO aggiornata) {
+        if (aggiornata == null) {
+            return;
+        }
+        this.richiesta = aggiornata;
+        ridisegna();
+    }
+
+    /**
      * Ridisegna il blocco in base allo stato corrente della richiesta.
      */
     private void ridisegna() {
@@ -50,7 +65,8 @@ public class CompletamentoRecensioneGui {
 
         StatoRichiesta stato = richiesta.getStato();
 
-        if (stato == StatoRichiesta.ACCEPTED) {
+        // Regola condivisa con il server: accettata e utente fra i partecipanti
+        if (richiesta.completabileDa(utente.getEmail())) {
             pannello.setVisible(true);
             pannello.add(creaPulsanteCompleta());
             return;

@@ -80,4 +80,26 @@ public class RichiestaScambioDTO implements Serializable {
     public void setDataCreazione(long dataCreazione) {
         this.dataCreazione = dataCreazione;
     }
+
+    /**
+     * Indica se questo utente puo' segnare lo scambio come completato:
+     * lo scambio dev'essere stato accettato e l'utente dev'essere uno dei
+     * due partecipanti. E' la stessa condizione applicata da
+     * RichiestaScambioDatabase.completa(): qui serve alla GUI per decidere
+     * se mostrare il pulsante "Segna come completato".
+     *
+     * @param emailUtente L'utente che sta guardando la schermata.
+     * @return true se il pulsante di completamento va mostrato a questo utente.
+     */
+    public boolean completabileDa(String emailUtente) {
+        if (emailUtente == null || emailUtente.trim().isEmpty()) {
+            return false;
+        }
+        if (stato != StatoRichiesta.ACCEPTED) {
+            return false;
+        }
+
+        String utente = emailUtente.trim();
+        return utente.equals(idRichiedente) || utente.equals(idCreatoreAnnuncio);
+    }
 }
