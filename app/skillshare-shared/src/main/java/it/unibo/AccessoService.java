@@ -3,6 +3,7 @@ package it.unibo;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
+// Servizio RPC per il login: verifica le credenziali di chi prova ad accedere
 @RemoteServiceRelativePath("accesso")
 public interface AccessoService extends RemoteService {
 

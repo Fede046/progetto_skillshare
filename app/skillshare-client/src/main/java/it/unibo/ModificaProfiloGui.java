@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 import java.util.ArrayList;
 import java.util.List;
 
+// Form di modifica del proprio profilo: foto (upload o URL), bio e tag di competenza
 public class ModificaProfiloGui {
 
     private final UtenteDTO utente;
@@ -155,9 +156,7 @@ public class ModificaProfiloGui {
         Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
     }
 
-    /**
-     * Ridisegna graficamente i badge dei tag con il tasto di rimozione
-     */
+    // Ridisegna graficamente i badge dei tag con il tasto di rimozione
     private void renderTags() {
         tagContainer.clear();
         if (tagList.isEmpty()) {
@@ -187,11 +186,8 @@ public class ModificaProfiloGui {
         }
     }
 
-    /**
-     * Form multipart per il caricamento della foto dal dispositivo.
-     * Punta alla servlet dedicata: l'upload di file non passa dall'RPC di GWT,
-     * che sa serializzare solo oggetti Java.
-     */
+    // Form multipart per il caricamento della foto dal dispositivo. Punta alla servlet dedicata:
+    // l'upload di file non passa dall'RPC di GWT, che sa serializzare solo oggetti Java.
     private Widget creaFormUpload() {
         // getHostPageBaseURL punta alla radice dell'app, non al modulo GWT
         formUpload.setAction(GWT.getHostPageBaseURL() + ProtocolloUploadFoto.PERCORSO_UPLOAD);
@@ -263,9 +259,7 @@ public class ModificaProfiloGui {
         esitoUpload.setVisible(true);
     }
 
-    /**
-     * Invia i dati aggiornati al server tramite la chiamata asincrona RPC
-     */
+    // Invia i dati aggiornati al server tramite la chiamata asincrona RPC
     private void salvaModifiche() {
         UtenteDTO utenteModificato = new UtenteDTO();
         utenteModificato.setEmail(utente.getEmail());
@@ -297,16 +291,8 @@ public class ModificaProfiloGui {
         });
     }
 
-    /**
-     * Unico punto di uscita verso la schermata del profilo, usato sia da
-     * "Annulla" sia dal salvataggio.
-     *
-     * <p>Se il profilo da mostrare fosse nullo si ricade sull'utente ricevuto
-     * nel costruttore: {@link ProfiloGui} viene sempre costruita con dati
-     * validi e la pagina non puo' quindi rimanere bianca.</p>
-     *
-     * @param daMostrare il profilo da visualizzare, eventualmente nullo
-     */
+    // Unico punto di uscita verso la schermata del profilo, usato
+    // sia da "Annulla" sia dal salvataggio.
     private void tornaAlProfilo(UtenteDTO daMostrare) {
         UtenteDTO profilo = (daMostrare != null) ? daMostrare : utente;
         new ProfiloGui(profilo).mostra();

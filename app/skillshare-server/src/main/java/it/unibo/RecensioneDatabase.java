@@ -8,9 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
-/**
- * Gestisce la collection MapDB "recensioni".
- */
+// Gestisce la collection MapDB "recensioni".
 public class RecensioneDatabase {
 
     private final DB db;
@@ -39,16 +37,8 @@ public class RecensioneDatabase {
         return recensioniCollection;
     }
 
-    /**
-     * Salva la recensione di uno scambio concluso.
-     * L'idAnnuncio viene sempre ricavato dalla richiesta collegata, non dal
-     * DTO in ingresso: e' il server a stabilire a quale annuncio appartiene.
-     *
-     * @param recensione La recensione da salvare.
-     * @return La recensione salvata, con id, idAnnuncio e dataCreazione valorizzati.
-     * @throws IllegalArgumentException Se lo scambio non e' completato, se il voto e' fuori
-     *                                  intervallo o se l'autore ha gia' recensito lo scambio.
-     */
+    // Salva la recensione di uno scambio concluso. L'idAnnuncio viene sempre ricavato dalla richiesta
+    // collegata, non dal DTO in ingresso: e' il server a stabilire a quale annuncio appartiene.
     public RecensioneDTO lascia(RecensioneDTO recensione) throws IllegalArgumentException {
         if (recensione == null) {
             throw new IllegalArgumentException("Dati non validi");
@@ -86,10 +76,8 @@ public class RecensioneDatabase {
         return recensione;
     }
 
-    /**
-     * Recensioni collegate a un annuncio, dalla piu' recente alla piu' vecchia.
-     * Restituisce lista vuota se l'id e' null/vuoto o non ci sono recensioni.
-     */
+    // Recensioni collegate a un annuncio, dalla piu' recente alla piu' vecchia. Restituisce lista
+    // vuota se l'id e' null/vuoto o non ci sono recensioni.
     public List<RecensioneDTO> recensioniPerAnnuncio(String idAnnuncio) {
         List<RecensioneDTO> risultato = new ArrayList<>();
 
@@ -110,10 +98,8 @@ public class RecensioneDatabase {
         return risultato;
     }
 
-    /**
-     * Recensioni ricevute da un utente, dalla piu' recente alla piu' vecchia.
-     * Restituisce lista vuota se l'id e' null/vuoto o non ci sono recensioni.
-     */
+    // Recensioni ricevute da un utente, dalla piu' recente alla piu' vecchia. Restituisce lista vuota
+    // se l'id e' null/vuoto o non ci sono recensioni.
     public List<RecensioneDTO> recensioniRicevute(String idUtente) {
         List<RecensioneDTO> risultato = new ArrayList<>();
 
@@ -134,14 +120,8 @@ public class RecensioneDatabase {
         return risultato;
     }
 
-    /**
-     * Media dei voti ricevuti da un utente.
-     * Restituisce null quando l'utente non ha ancora recensioni: i voti vanno
-     * da 1 a 5, quindi 0.0 sarebbe indistinguibile da una media reale bassa.
-     *
-     * @param idUtente L'utente di cui calcolare il rating.
-     * @return La media dei voti, oppure null se non ci sono recensioni.
-     */
+    // Media dei voti ricevuti da un utente. Restituisce null quando l'utente non ha ancora
+    // recensioni: i voti vanno da 1 a 5, quindi 0.0 sarebbe indistinguibile da una media reale bassa.
     public Double ratingMedio(String idUtente) {
         List<RecensioneDTO> ricevute = recensioniRicevute(idUtente);
 

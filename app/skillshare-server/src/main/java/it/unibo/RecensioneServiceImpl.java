@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
+// Adattatore RPC per le recensioni: delega a RecensioneDatabase
 public class RecensioneServiceImpl extends RemoteServiceServlet implements RecensioneService {
 
     private static final long serialVersionUID = 1L;

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+// Versione asincrona di AnnuncioService, quella che usa il client GWT
 public interface AnnuncioServiceAsync {
     void pubblica(AnnuncioDTO annuncio, AsyncCallback<AnnuncioDTO> callback);
 

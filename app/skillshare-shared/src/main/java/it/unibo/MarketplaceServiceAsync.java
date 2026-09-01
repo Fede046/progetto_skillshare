@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+// Versione asincrona di MarketplaceService, quella che usa il client GWT
 public interface MarketplaceServiceAsync {
     void listaAnnunci(AsyncCallback<List<AnnuncioDTO>> callback);
 

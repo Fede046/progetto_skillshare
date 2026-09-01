@@ -4,30 +4,18 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-/**
- * Riquadro di una singola recensione: autore, stelle e commento facoltativo.
- * Estratto da RecensioniAnnuncioGui (US-13) per essere condiviso con il
- * profilo pubblico (US-14): le due schermate restano cosi' identiche
- * nell'aspetto senza duplicare la stessa logica di disegno.
- */
+// Riquadro di una singola recensione: autore, stelle e commento facoltativo.
 public final class RecensioneItem {
 
     // Classe di sole utilita': non va istanziata
     private RecensioneItem() {
     }
 
-    /**
-     * Riquadro senza badge accanto al nome dell'autore.
-     */
+    // Riquadro senza badge accanto al nome dell'autore.
     public static Widget crea(RecensioneDTO recensione) {
         return crea(recensione, null);
     }
 
-    /**
-     * @param recensione La recensione da disegnare.
-     * @param testoBadge Etichetta facoltativa accanto al nome dell'autore
-     *                   (es. "Autore dell'annuncio"), null per ometterla.
-     */
     public static Widget crea(RecensioneDTO recensione, String testoBadge) {
         FlowPanel item = new FlowPanel();
         item.addStyleName("annuncio-item");
@@ -48,10 +36,8 @@ public final class RecensioneItem {
         return item;
     }
 
-    /**
-     * Chi ha scritto la recensione, con l'eventuale badge a fianco.
-     * Senza nome risolto resta visibile l'id (l'email) dell'autore.
-     */
+    // Chi ha scritto la recensione, con l'eventuale badge a fianco. Senza nome
+    // risolto resta visibile l'id (l'email) dell'autore.
     private static Widget creaIntestazioneAutore(RecensioneDTO recensione, String testoBadge) {
         FlowPanel intestazione = new FlowPanel();
         intestazione.addStyleName("recensione-autore-riga");

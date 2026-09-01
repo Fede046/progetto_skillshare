@@ -2,12 +2,8 @@ package it.unibo;
 
 import java.io.Serializable;
 
-/**
- * Oggetto di trasferimento dati che rappresenta una richiesta di scambio
- * inviata da un utente verso un annuncio pubblicato da un altro utente.
- * Implementa Serializable per poter viaggiare sulle chiamate RPC di GWT
- * ed essere persistito su MapDB tramite Serializer.JAVA.
- */
+// Oggetto di trasferimento dati che rappresenta una richiesta di scambio inviata da un utente
+// verso un annuncio pubblicato da un altro utente.
 public class RichiestaScambioDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -81,16 +77,8 @@ public class RichiestaScambioDTO implements Serializable {
         this.dataCreazione = dataCreazione;
     }
 
-    /**
-     * Indica se questo utente puo' segnare lo scambio come completato:
-     * lo scambio dev'essere stato accettato e l'utente dev'essere uno dei
-     * due partecipanti. E' la stessa condizione applicata da
-     * RichiestaScambioDatabase.completa(): qui serve alla GUI per decidere
-     * se mostrare il pulsante "Segna come completato".
-     *
-     * @param emailUtente L'utente che sta guardando la schermata.
-     * @return true se il pulsante di completamento va mostrato a questo utente.
-     */
+    // Indica se questo utente puo' segnare lo scambio come completato: lo scambio dev'essere stato
+    // accettato e l'utente dev'essere uno dei due partecipanti.
     public boolean completabileDa(String emailUtente) {
         if (emailUtente == null || emailUtente.trim().isEmpty()) {
             return false;

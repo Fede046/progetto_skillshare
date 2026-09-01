@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+// Un utente registrato: credenziali, dati anagrafici e quello che mostra sul profilo
 public class UtenteDTO implements Serializable {
 
     /**

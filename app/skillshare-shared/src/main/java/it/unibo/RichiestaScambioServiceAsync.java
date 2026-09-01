@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+// Versione asincrona di RichiestaScambioService, quella che usa il client GWT
 public interface RichiestaScambioServiceAsync {
     void inviaRichiestaScambio(String idAnnuncio, String idRichiedente, String messaggio,
             AsyncCallback<RichiestaScambioDTO> callback);

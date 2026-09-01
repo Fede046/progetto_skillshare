@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+// Versione asincrona di ReputazioneService, quella che usa il client GWT
 public interface ReputazioneServiceAsync {
     void ratingMedio(String idUtente, AsyncCallback<Double> callback);
 

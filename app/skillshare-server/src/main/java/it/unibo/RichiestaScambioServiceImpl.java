@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
+// Adattatore RPC per le richieste di scambio. Risolve qui il creatore dell'annuncio,
+// senza fidarsi di quello che arriva dal client
 public class RichiestaScambioServiceImpl extends RemoteServiceServlet implements RichiestaScambioService {
 
     private static final long serialVersionUID = 1L;

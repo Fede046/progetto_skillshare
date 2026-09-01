@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
+// Adattatore RPC per gli annunci: delega tutto ad AnnuncioDatabase, che fa i controlli
 public class AnnuncioServiceImpl extends RemoteServiceServlet implements AnnuncioService {
 
     private static final long serialVersionUID = 1L;

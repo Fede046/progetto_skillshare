@@ -172,8 +172,8 @@ public class MarketplaceGui {
         boolean ordinaPerTitolo = "titolo".equals(sortBox.getSelectedValue());
         boolean ordinaPerRating = "rating".equals(sortBox.getSelectedValue());
 
-        // Campi selezionati con le checkbox; se nessuno e' spuntato si cerca su tutti
-        // (null)
+        // Campi selezionati con le checkbox; se nessuno e'
+        // spuntato si cerca su tutti (null)
         Set<CampoRicerca> campi = new HashSet<>();
         if (chkTitolo.getValue())
             campi.add(CampoRicerca.TITOLO);
@@ -241,8 +241,8 @@ public class MarketplaceGui {
         campi.add(creaCampo("Competenza offerta", annuncio.getCompetenzaOfferta()));
         campi.add(creaCampo("Controprestazione", annuncio.getControprestazione()));
         item.add(campi);
-        // Descrizione estesa: tendina accordion a tutta larghezza, solo visibilita in
-        // memoria
+        // Descrizione estesa: tendina accordion a tutta
+        // larghezza, solo visibilita in memoria
         String descrizione = annuncio.getDescrizione();
         if (descrizione != null && !descrizione.trim().isEmpty()) {
             FocusPanel toggleDescrizione = new FocusPanel();
@@ -406,8 +406,8 @@ public class MarketplaceGui {
             Label messaggioErrore, Button btnProponi, DialogBox dialog) {
         messaggioErrore.setVisible(false);
 
-        // Il messaggio e' facoltativo: se vuoto si invia null (percorso valido nel
-        // Database)
+        // Il messaggio e' facoltativo: se vuoto si invia null
+        // (percorso valido nel Database)
         String messaggio = messaggioArea.getText().trim();
         if (messaggio.isEmpty()) {
             messaggio = null;

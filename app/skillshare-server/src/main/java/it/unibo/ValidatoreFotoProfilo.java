@@ -2,11 +2,8 @@ package it.unibo;
 
 import java.util.Locale;
 
-/**
- * Regole di accettazione per le foto profilo caricate dagli utenti.
- * È una classe di sola logica, senza dipendenze da servlet o filesystem,
- * così le regole restano verificabili con test unitari.
- */
+// Regole di accettazione per le foto profilo caricate dagli utenti. È una classe di sola logica,
+// senza dipendenze da servlet o filesystem, così le regole restano verificabili con test unitari.
 public final class ValidatoreFotoProfilo {
 
     /** Limite di dimensione: 2 MB, condiviso con il client. */
@@ -20,16 +17,7 @@ public final class ValidatoreFotoProfilo {
         // Classe di sole utilità
     }
 
-    /**
-     * Verifica nome, content-type e dimensione del file caricato.
-     *
-     * @param nomeFile    Nome originale del file scelto dall'utente.
-     * @param contentType Content-type dichiarato dal browser; può essere null
-     *                    o generico, nel qual caso decide la sola estensione.
-     * @param dimensione  Dimensione del file in byte.
-     * @throws IllegalArgumentException Con un messaggio pronto da mostrare
-     *                                  all'utente se il file non è accettabile.
-     */
+    // Verifica nome, content-type e dimensione del file caricato.
     public static void valida(String nomeFile, String contentType, long dimensione)
             throws IllegalArgumentException {
         if (nomeFile == null || nomeFile.trim().isEmpty()) {
