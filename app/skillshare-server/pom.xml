@@ -75,6 +75,21 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <plugins>
+      <!-- Popolamento del database con i dati demo (Issue #141):
+           mvn exec:java -pl skillshare-server -Pseed
+           Va lanciato a server fermo: MapDB tiene un lock esclusivo sul file. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <mainClass>it.unibo.DatabaseSeeder</mainClass>
+          <classpathScope>runtime</classpathScope>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>
