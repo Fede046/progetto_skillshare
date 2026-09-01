@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
+// Adattatore RPC per la chat: delega a MessaggioDatabase, che controlla permessi e stato
 public class ChatServiceImpl extends RemoteServiceServlet implements ChatService {
 
     private static final long serialVersionUID = 1L;

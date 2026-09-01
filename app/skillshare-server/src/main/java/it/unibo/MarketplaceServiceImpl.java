@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
+// Adattatore RPC del marketplace. Oltre a delegare, arricchisce gli annunci con nome
+// e rating dell'autore, e scarta quelli sospesi
 public class MarketplaceServiceImpl extends RemoteServiceServlet implements MarketplaceService {
 
     private static final long serialVersionUID = 1L;
@@ -21,8 +23,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
     public List<AnnuncioDTO> listaAnnunci(String filtroCompetenza, boolean ordinaPerTitolo, boolean ordinaPerRating) {
         AnnuncioDatabase db = new AnnuncioDatabase();
 
-        // 1. Filtraggio per competenza (se il filtro è nullo/vuoto restituisce tutti
-        // gli annunci)
+        // 1. Filtraggio per competenza (se il filtro è
+        // nullo/vuoto restituisce tutti gli annunci)
         List<AnnuncioDTO> annunci = soloDisponibili(db.filtraPerCompetenza(filtroCompetenza));
         // Arricchimento PRIMA dell'ordinamento per rating (così i dati di valutazione sono presenti)
         for (AnnuncioDTO annuncio : annunci) {
@@ -130,8 +132,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
         }
     }
 
-    // Nome e cognome dell'autore, con fallback sull'email se l'utente non esiste
-    // piu'
+    // Nome e cognome dell'autore, con fallback sull'email
+    // se l'utente non esiste piu'
     private String nomeAutore(String idUtente) {
         try {
             UtenteDTO autore = UtenteDatabase.getProfilo(idUtente);
@@ -145,8 +147,8 @@ public class MarketplaceServiceImpl extends RemoteServiceServlet implements Mark
         }
     }
 
-    // Valutazione media dell'autore, con restituzione di null se non ci sono
-    // recensioni
+    // Valutazione media dell'autore, con restituzione di
+    // null se non ci sono recensioni
     private Double valutazioneAutore(String idUtente) {
         try {
             RecensioneDatabase recDb = new RecensioneDatabase();

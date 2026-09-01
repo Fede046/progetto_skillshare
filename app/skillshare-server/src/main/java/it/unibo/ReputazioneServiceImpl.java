@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
+// Adattatore RPC per il rating di un utente, calcolato da RecensioneDatabase
 public class ReputazioneServiceImpl extends RemoteServiceServlet implements ReputazioneService {
 
     private static final long serialVersionUID = 1L;

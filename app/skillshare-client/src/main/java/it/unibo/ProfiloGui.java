@@ -12,6 +12,8 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+// Schermata del profilo: avatar, bio, competenze, rating e recensioni ricevute.
+// La stessa classe mostra sia il proprio profilo sia quello pubblico di un altro utente
 public class ProfiloGui {
 
     // Chi sta navigando: serve alla NavBar e a decidere la sola lettura
@@ -42,14 +44,8 @@ public class ProfiloGui {
         this.profiloAltrui = false;
     }
 
-    /**
-     * Profilo pubblico di un altro utente, aperto dal Marketplace: i dati non
-     * sono in mano al chiamante e vengono caricati qui via ProfileService,
-     * cosi' l'eventuale errore si vede sulla schermata del profilo.
-     *
-     * @param utenteLoggato Chi sta navigando.
-     * @param idVisualizzato L'id (email) del profilo da aprire.
-     */
+    // Profilo pubblico di un altro utente, aperto dal Marketplace: i dati non sono in mano al
+    // chiamante e vengono caricati qui via ProfileService, cosi' l'eventuale errore si vede sulla
     public ProfiloGui(UtenteDTO utenteLoggato, String idVisualizzato) {
         this.utenteLoggato = utenteLoggato;
         this.visualizzato = null;
@@ -68,10 +64,8 @@ public class ProfiloGui {
         caricaProfilo();
     }
 
-    /**
-     * Recupera il profilo dell'utente selezionato. Un id inesistente o non
-     * caricabile porta a un messaggio esplicito, non a una pagina vuota.
-     */
+    // Recupera il profilo dell'utente selezionato. Un id inesistente o non caricabile porta a un
+    // messaggio esplicito, non a una pagina vuota.
     private void caricaProfilo() {
         profileService.getProfilo(idVisualizzato, new AsyncCallback<UtenteDTO>() {
             @Override
@@ -103,9 +97,7 @@ public class ProfiloGui {
         caricaReputazione();
     }
 
-    /**
-     * Disegna la pagina completa di barra di navigazione e sfondo.
-     */
+    // Disegna la pagina completa di barra di navigazione e sfondo.
     private void renderizza(Widget contenuto) {
         FlowPanel pagina = new FlowPanel();
 
@@ -123,29 +115,22 @@ public class ProfiloGui {
         Document.get().getBody().getStyle().setProperty("fontFamily", "sans-serif");
     }
 
-    /**
-     * Sul profilo di un altro utente la voce "Profilo" resta cliccabile: porta
-     * al proprio, non a quello in visualizzazione. Si evidenzia il Marketplace,
-     * da cui si arriva, come gia' fa RecensioniAnnuncioGui.
-     */
+    // Sul profilo di un altro utente la voce "Profilo" resta cliccabile:
+    // porta al proprio, non a quello in visualizzazione.
     private String sezioneAttiva() {
         return profiloAltrui ? NavBar.SEZIONE_MARKETPLACE : NavBar.SEZIONE_PROFILO;
     }
 
-    /**
-     * Vero quando le azioni personali non vanno mostrate. Durante il
-     * caricamento il profilo non e' ancora noto e si resta in sola lettura.
-     */
+    // Vero quando le azioni personali non vanno mostrate. Durante il caricamento il profilo non e'
+    // ancora noto e si resta in sola lettura.
     private boolean soloLettura() {
         return ProfiloVisibilita.soloLettura(
                 utenteLoggato != null ? utenteLoggato.getEmail() : null,
                 visualizzato != null ? visualizzato.getEmail() : null);
     }
 
-    /**
-     * Pagina di servizio per attesa ed errore: stessa cornice del profilo,
-     * con la via d'uscita verso il Marketplace.
-     */
+    // Pagina di servizio per attesa ed errore: stessa cornice del
+    // profilo, con la via d'uscita verso il Marketplace.
     private Widget creaPaginaMessaggio(String testo) {
         FlowPanel contenuto = new FlowPanel();
         contenuto.addStyleName("app-page");
@@ -174,9 +159,7 @@ public class ProfiloGui {
         return btnIndietro;
     }
 
-    /**
-     * Intestazione: fascia bordeaux, avatar che la scavalca, dati e azione a fianco.
-     */
+    // Intestazione: fascia bordeaux, avatar che la scavalca, dati e azione a fianco.
     private Widget creaIntestazione() {
         FlowPanel hero = new FlowPanel();
         hero.addStyleName("profile-hero");
@@ -239,9 +222,7 @@ public class ProfiloGui {
         return hero;
     }
 
-    /**
-     * Biografia e competenze affiancate su due colonne.
-     */
+    // Biografia e competenze affiancate su due colonne.
     private Widget creaColonne() {
         FlowPanel colonne = new FlowPanel();
         colonne.addStyleName("profile-colonne");
@@ -303,9 +284,7 @@ public class ProfiloGui {
         return titolo;
     }
 
-    /**
-     * Storico delle recensioni ricevute, a tutta larghezza sotto le due colonne.
-     */
+    // Storico delle recensioni ricevute, a tutta larghezza sotto le due colonne.
     private Widget creaSezioneRecensioni() {
         FlowPanel card = new FlowPanel();
         card.addStyleName("profile-card");
@@ -319,10 +298,8 @@ public class ProfiloGui {
         return card;
     }
 
-    /**
-     * Rating medio e storico dell'utente in visualizzazione: due chiamate
-     * indipendenti, cosi' il rating compare senza attendere l'elenco.
-     */
+    // Rating medio e storico dell'utente in visualizzazione: due chiamate indipendenti, cosi' il
+    // rating compare senza attendere l'elenco.
     private void caricaReputazione() {
         String idUtente = visualizzato.getEmail();
 
@@ -352,12 +329,7 @@ public class ProfiloGui {
         });
     }
 
-    /**
-     * Stelle e valore numerico del rating. La media arriva a null quando
-     * l'utente non ha ancora recensioni: in quel caso si dichiara l'assenza
-     * invece di mostrare cinque stelle vuote, che si leggerebbero come un
-     * giudizio pessimo.
-     */
+    // Stelle e valore numerico del rating.
     private void mostraRating(Double media) {
         rating.clear();
 
@@ -408,11 +380,8 @@ public class ProfiloGui {
         return messaggio;
     }
 
-    /**
-     * Costruisce la foto profilo. Se l'URL non e' stato impostato - oppure se
-     * l'immagine non riesce a caricarsi - viene mostrato un placeholder circolare
-     * con le iniziali dell'utente.
-     */
+    // Costruisce la foto profilo. Se l'URL non e' stato impostato - oppure se l'immagine non riesce a
+    // caricarsi - viene mostrato un placeholder circolare con le iniziali dell'utente.
     private Widget creaAvatar() {
         FlowPanel contenitore = new FlowPanel();
         contenitore.addStyleName("profile-avatar-wrapper");
@@ -434,9 +403,7 @@ public class ProfiloGui {
         return contenitore;
     }
 
-    /**
-     * Placeholder circolare con le iniziali di nome e cognome.
-     */
+    // Placeholder circolare con le iniziali di nome e cognome.
     private Widget creaPlaceholderAvatar() {
         String iniziali = "";
         if (visualizzato.getNome() != null && !visualizzato.getNome().trim().isEmpty()) {

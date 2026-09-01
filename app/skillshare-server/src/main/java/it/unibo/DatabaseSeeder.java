@@ -3,24 +3,8 @@ package it.unibo;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Popola il database con utenti, annunci, richieste, messaggi e recensioni
- * dimostrativi, per avere un'applicazione già navigabile appena avviata.
- *
- * <p>Passa sempre dai metodi pubblici delle classi *Database, mai dalle
- * ConcurrentMap: così i dati demo attraversano le stesse validazioni di un
- * utente reale (formato email, robustezza password, stati delle richieste)
- * e non possono risultare incoerenti con le regole dell'applicazione.
- *
- * <p><b>Ripetibilità</b>: il seeding parte solo se il primo utente demo non
- * esiste già. Rilanciarlo su un database già popolato non produce duplicati
- * né errori, si limita a non fare nulla. È l'approccio più semplice e non
- * distrugge dati reali eventualmente presenti, a differenza di uno svuota-e-
- * ripopola.
- *
- * <p>Esecuzione: {@code mvn exec:java -pl skillshare-server -Dexec.mainClass=it.unibo.DatabaseSeeder}
- * a server fermo, perché MapDB tiene un lock esclusivo sul file.
- */
+// Popola il database con utenti, annunci, richieste, messaggi e recensioni dimostrativi, per
+// avere un'applicazione già navigabile appena avviata.
 public final class DatabaseSeeder {
 
     /** Password condivisa da tutti gli account demo. */
@@ -47,12 +31,7 @@ public final class DatabaseSeeder {
         DatabaseCore.close();
     }
 
-    /**
-     * Crea i dati demo se non ci sono già.
-     *
-     * @return true se il popolamento è stato eseguito, false se era già stato
-     *         fatto in precedenza.
-     */
+    // Crea i dati demo se non ci sono già.
     public static boolean popola() {
         if (giaPopolato()) {
             return false;
@@ -130,11 +109,8 @@ public final class DatabaseSeeder {
                 Arrays.asList("Chitarra acustica", "Teoria musicale", "Produzione audio"));
     }
 
-    /**
-     * Registra l'utente e ne completa il profilo.
-     * La registrazione accetta solo credenziali, bio e tag arrivano dopo
-     * come farebbe un utente dalla schermata di modifica profilo.
-     */
+    // Registra l'utente e ne completa il profilo. La registrazione accetta solo credenziali, bio e
+    // tag arrivano dopo come farebbe un utente dalla schermata di modifica profilo.
     private static void registra(String email, String nome, String cognome,
             String bio, String photoUrl, List<String> tag) {
         UtenteDTO utente = new UtenteDTO(email, PASSWORD_DEMO, nome, cognome);
@@ -159,11 +135,8 @@ public final class DatabaseSeeder {
         return annunci.pubblica(annuncio);
     }
 
-    /**
-     * Crea quattro richieste, una per ogni stato previsto dal dominio.
-     * L'ordine conta: i messaggi richiedono uno scambio ACCEPTED, la
-     * recensione uno COMPLETED.
-     */
+    // Crea quattro richieste, una per ogni stato previsto dal dominio. L'ordine conta: i messaggi
+    // richiedono uno scambio ACCEPTED, la recensione uno COMPLETED.
     private static void creaRichieste(AnnuncioDTO annuncioJava, AnnuncioDTO annuncioInglese,
             AnnuncioDTO annuncioFoto) {
         RichiestaScambioDatabase richieste = new RichiestaScambioDatabase();

@@ -8,9 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
-/**
- * Gestisce la collection MapDB "richiesteScambio".
- */
+// Gestisce la collection MapDB "richiesteScambio".
 public class RichiestaScambioDatabase {
 
     private final DB db;
@@ -35,15 +33,8 @@ public class RichiestaScambioDatabase {
         return richiesteCollection;
     }
 
-    /**
-     * Salva una nuova richiesta di scambio su MapDB con stato PENDING.
-     * L'idRichiedente e l'idCreatoreAnnuncio si assumono già valorizzati dal livello RPC.
-     *
-     * @return La richiesta salvata (con id, stato PENDING e dataCreazione valorizzati).
-     * @throws IllegalArgumentException Se la richiesta è null, manca un campo obbligatorio
-     *                                  o il richiedente ha già una richiesta non completata
-     *                                  sullo stesso annuncio.
-     */
+    // Salva una nuova richiesta di scambio su MapDB con stato PENDING. L'idRichiedente e
+    // l'idCreatoreAnnuncio si assumono già valorizzati dal livello RPC.
     public RichiestaScambioDTO salva(RichiestaScambioDTO richiesta) throws IllegalArgumentException {
         if (richiesta == null) {
             throw new IllegalArgumentException("Dati non validi");
@@ -77,41 +68,17 @@ public class RichiestaScambioDatabase {
         return richiesta;
     }
 
-    /**
-     * Accetta una richiesta di scambio: solo il creatore dell'annuncio può accettarla.
-     *
-     * @param idRichiesta L'id della richiesta da accettare.
-     * @param idCreatore  L'id dell'utente autenticato che accetta (deve essere il creatore dell'annuncio).
-     * @return La richiesta aggiornata con stato ACCEPTED.
-     * @throws IllegalArgumentException Se l'id è nullo/vuoto, se la richiesta non esiste
-     *                                  o se l'utente non è il creatore dell'annuncio.
-     */
+    // Accetta una richiesta di scambio: solo il creatore dell'annuncio può accettarla.
     public RichiestaScambioDTO accetta(String idRichiesta, String idCreatore) throws IllegalArgumentException {
         return aggiornaStatoRichiesta(idRichiesta, idCreatore, StatoRichiesta.ACCEPTED, "accettare");
     }
 
-    /**
-     * Rifiuta una richiesta di scambio: solo il creatore dell'annuncio può rifiutarla.
-     *
-     * @param idRichiesta L'id della richiesta da rifiutare.
-     * @param idCreatore  L'id dell'utente autenticato che rifiuta (deve essere il creatore dell'annuncio).
-     * @return La richiesta aggiornata con stato REJECTED.
-     * @throws IllegalArgumentException Se l'id è nullo/vuoto, se la richiesta non esiste
-     *                                  o se l'utente non è il creatore dell'annuncio.
-     */
+    // Rifiuta una richiesta di scambio: solo il creatore dell'annuncio può rifiutarla.
     public RichiestaScambioDTO rifiuta(String idRichiesta, String idCreatore) throws IllegalArgumentException {
         return aggiornaStatoRichiesta(idRichiesta, idCreatore, StatoRichiesta.REJECTED, "rifiutare");
     }
 
-    /**
-     * Aggiorna lo stato di una richiesta esistente, consentito solo al creatore dell'annuncio.
-     * Nessuna guardia sulle transizioni: cambia lo stato a prescindere da quello corrente
-     * (la regola "solo PENDING è decidibile" appartiene al layer di orchestrazione di US-11,
-     * non alla persistenza).
-     *
-     * @param verbo Il verbo all'infinito usato nel messaggio di non autorizzazione
-     *              ("accettare" per accetta, "rifiutare" per rifiuta).
-     */
+    // Aggiorna lo stato di una richiesta esistente, consentito solo al creatore dell'annuncio.
     private RichiestaScambioDTO aggiornaStatoRichiesta(String idRichiesta, String idCreatore,
             StatoRichiesta nuovoStato, String verbo) throws IllegalArgumentException {
         if (idRichiesta == null || idRichiesta.trim().isEmpty()) {
@@ -140,18 +107,8 @@ public class RichiestaScambioDatabase {
         return esistente;
     }
 
-    /**
-     * Segna come COMPLETED uno scambio gia' accettato.
-     * A differenza di accetta/rifiuta, qui puo' agire ciascuno dei due
-     * partecipanti: lo scambio si conclude per entrambi.
-     *
-     * @param idRichiesta          L'id della richiesta da completare.
-     * @param idUtenteRichiedente  L'id dell'utente autenticato che completa
-     *                             (il richiedente o il creatore dell'annuncio).
-     * @return La richiesta aggiornata con stato COMPLETED.
-     * @throws IllegalArgumentException Se l'id e' nullo/vuoto, se la richiesta non esiste,
-     *                                  se non e' ancora accettata o se l'utente non partecipa allo scambio.
-     */
+    // Segna come COMPLETED uno scambio gia' accettato. A differenza di accetta/rifiuta, qui puo'
+    // agire ciascuno dei due partecipanti: lo scambio si conclude per entrambi.
     public RichiestaScambioDTO completa(String idRichiesta, String idUtenteRichiedente) throws IllegalArgumentException {
         if (idRichiesta == null || idRichiesta.trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
@@ -187,11 +144,8 @@ public class RichiestaScambioDatabase {
         return esistente;
     }
 
-    /**
-     * Richieste di scambio ricevute da un creatore di annunci,
-     * dalla più recente alla più vecchia.
-     * Restituisce lista vuota se l'id è null/vuoto o non ci sono richieste.
-     */
+    // Richieste di scambio ricevute da un creatore di annunci, dalla più recente alla più vecchia.
+    // Restituisce lista vuota se l'id è null/vuoto o non ci sono richieste.
     public List<RichiestaScambioDTO> richiesteRicevuteDaCreatore(String idCreatore) {
         List<RichiestaScambioDTO> risultato = new ArrayList<>();
 
@@ -212,11 +166,8 @@ public class RichiestaScambioDatabase {
         return risultato;
     }
 
-    /**
-     * Richieste di scambio inviate da un utente richiedente,
-     * dalla più recente alla più vecchia.
-     * Restituisce lista vuota se l'id è null/vuoto o non ci sono richieste.
-     */
+    // Richieste di scambio inviate da un utente richiedente, dalla più recente alla più vecchia.
+    // Restituisce lista vuota se l'id è null/vuoto o non ci sono richieste.
     public List<RichiestaScambioDTO> richiesteInviateDaRichiedente(String idRichiedente) {
         List<RichiestaScambioDTO> risultato = new ArrayList<>();
 
@@ -237,14 +188,8 @@ public class RichiestaScambioDatabase {
         return risultato;
     }
 
-    /**
-     * Indica se sull'annuncio c'è uno scambio in corso, cioè una richiesta già
-     * accettata e non ancora completata. Finché dura, l'annuncio non è più
-     * disponibile: chi ha ottenuto lo scambio conta su quei termini.
-     *
-     * @param idAnnuncio L'id dell'annuncio da controllare.
-     * @return true se esiste almeno una richiesta in stato ACCEPTED su quell'annuncio.
-     */
+    // Indica se sull'annuncio c'è uno scambio in corso, cioè una
+    // richiesta già accettata e non ancora completata.
     public boolean esisteScambioInCorso(String idAnnuncio) {
         if (idAnnuncio == null || idAnnuncio.trim().isEmpty()) {
             return false;
@@ -261,13 +206,7 @@ public class RichiestaScambioDatabase {
         return false;
     }
 
-    /**
-     * Indica se il richiedente ha già una richiesta ancora aperta sull'annuncio indicato.
-     * Il controllo è ristretto alla coppia richiedente+annuncio: le richieste dello stesso
-     * utente su annunci diversi non si bloccano a vicenda.
-     *
-     * @return true se esiste una richiesta in stato PENDING, ACCEPTED o REJECTED.
-     */
+    // Indica se il richiedente ha già una richiesta ancora aperta sull'annuncio indicato.
     private boolean esisteRichiestaNonCompletata(String idRichiedente, String idAnnuncio) {
         String richiedente = idRichiedente.trim();
         String annuncio = idAnnuncio.trim();

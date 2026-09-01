@@ -3,6 +3,7 @@ package it.unibo;
 import java.io.Serializable;
 import java.util.Objects;
 
+// Un singolo messaggio della chat, legato alla richiesta di scambio su cui si sta parlando
 public class MessaggioDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 

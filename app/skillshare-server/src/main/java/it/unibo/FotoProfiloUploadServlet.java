@@ -26,8 +26,8 @@ public class FotoProfiloUploadServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    // Nomi dei campi e prefissi di risposta vivono in ProtocolloUploadFoto,
-    // condiviso con il client
+    // Nomi dei campi e prefissi di risposta vivono in
+    // ProtocolloUploadFoto, condiviso con il client
     private static final String CAMPO_FILE = ProtocolloUploadFoto.CAMPO_FILE;
     private static final String CAMPO_EMAIL = ProtocolloUploadFoto.CAMPO_EMAIL;
     private static final String ESITO_OK = ProtocolloUploadFoto.ESITO_OK;

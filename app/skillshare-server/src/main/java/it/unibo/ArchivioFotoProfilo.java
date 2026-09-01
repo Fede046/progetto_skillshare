@@ -8,15 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 
-/**
- * Salva e rilegge le foto profilo sul filesystem del server.
- *
- * La cartella è "foto-profilo" dentro la directory indicata dalla variabile
- * d'ambiente DATA_DIR, la stessa già usata da {@link DatabaseCore} per il file
- * del database: così il volume Docker che rende persistente il database rende
- * persistenti anche le immagini, senza configurazione aggiuntiva.
- * Senza DATA_DIR si ricade su una cartella locale, come fa il database.
- */
+// Salva e rilegge le foto profilo sul filesystem del server.
 public final class ArchivioFotoProfilo {
 
     /** Sottocartella dedicata alle immagini dei profili. */
@@ -29,9 +21,7 @@ public final class ArchivioFotoProfilo {
         // Classe di sole utilità
     }
 
-    /**
-     * Directory in cui vivono le immagini, creata se non esiste.
-     */
+    // Directory in cui vivono le immagini, creata se non esiste.
     public static File cartella() {
         String dataDir = System.getenv("DATA_DIR");
         File base;
@@ -49,15 +39,7 @@ public final class ArchivioFotoProfilo {
         return cartella;
     }
 
-    /**
-     * Scrive l'immagine caricata, sostituendo l'eventuale foto precedente
-     * dello stesso utente.
-     *
-     * @param email      Email dell'utente, usata per costruire il nome del file.
-     * @param estensione Estensione già validata (jpg, jpeg o png).
-     * @param contenuto  Flusso del file caricato.
-     * @return Il percorso pubblico da salvare in UtenteDTO.photoUrl.
-     */
+    // Scrive l'immagine caricata, sostituendo l'eventuale foto precedente dello stesso utente.
     public static String salva(String email, String estensione, InputStream contenuto) throws IOException {
         String nomeFile = nomeFileDi(email, estensione);
         Path destinazione = cartella().toPath().resolve(nomeFile);
@@ -72,12 +54,8 @@ public final class ArchivioFotoProfilo {
         return PERCORSO_PUBBLICO + nomeFile + "?v=" + System.currentTimeMillis();
     }
 
-    /**
-     * Restituisce il file di una foto a partire dal nome richiesto dal browser,
-     * oppure null se non esiste.
-     *
-     * @param nomeRichiesto Nome del file, così come compare nell'URL.
-     */
+    // Restituisce il file di una foto a partire dal nome richiesto
+    // dal browser, oppure null se non esiste.
     public static File trova(String nomeRichiesto) {
         if (nomeRichiesto == null || nomeRichiesto.trim().isEmpty()) {
             return null;
@@ -102,10 +80,8 @@ public final class ArchivioFotoProfilo {
         return "image/jpeg";
     }
 
-    /**
-     * Nome del file di un utente: l'email normalizzata, ripulita dai caratteri
-     * che non possono comparire in un nome di file.
-     */
+    // Nome del file di un utente: l'email normalizzata, ripulita dai
+    // caratteri che non possono comparire in un nome di file.
     public static String nomeFileDi(String email, String estensione) {
         String base = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         base = base.replaceAll("[^a-z0-9._-]", "_");

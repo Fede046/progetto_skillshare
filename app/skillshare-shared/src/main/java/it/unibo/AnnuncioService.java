@@ -5,61 +5,23 @@ import java.util.List;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
+// Servizio RPC per gli annunci: pubblicazione, modifica, rimozione e disponibilita'
 @RemoteServiceRelativePath("annuncio")
 public interface AnnuncioService extends RemoteService {
-    /**
-     * Pubblica un nuovo annuncio.
-     * 
-     * @param annuncio L'annuncio da pubblicare, con idUtente già valorizzato.
-     * @return AnnuncioDTO salvato, completo di id e dataCreazione.
-     * @throws IllegalArgumentException Se manca un campo obbligatorio.
-     */
+    // Pubblica un nuovo annuncio.
     AnnuncioDTO pubblica(AnnuncioDTO annuncio) throws IllegalArgumentException;
 
-    /**
-     * Annunci pubblicati da un utente, dal piu' recente al piu' vecchio.
-     *
-     * @param idUtente L'identificativo dell'utente di cui leggere gli annunci.
-     * @return Lista degli annunci, vuota se l'utente non ne ha.
-     */
+    // Annunci pubblicati da un utente, dal piu' recente al piu' vecchio.
     List<AnnuncioDTO> annunciDiUtente(String idUtente);
 
-    /**
-     * Modifica un annuncio esistente, consentita solo al proprietario.
-     *
-     * @param idAnnuncio          L'id dell'annuncio da modificare.
-     * @param idUtenteRichiedente L'id dell'utente autenticato che richiede la modifica.
-     * @param annuncioAggiornato  L'annuncio con i dati aggiornati.
-     * @return L'annuncio aggiornato e salvato.
-     * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
-     *                                  non è il proprietario, se manca un campo obbligatorio
-     *                                  o se sull'annuncio c'è uno scambio in corso.
-     */
+    // Modifica un annuncio esistente, consentita solo al proprietario.
     AnnuncioDTO modifica(String idAnnuncio, String idUtenteRichiedente, AnnuncioDTO annuncioAggiornato) throws IllegalArgumentException;
 
-    /**
-     * Rimuove un annuncio esistente, consentita solo al proprietario.
-     *
-     * @param idAnnuncio          L'id dell'annuncio da rimuovere.
-     * @param idUtenteRichiedente L'id dell'utente autenticato che richiede la rimozione.
-     * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
-     *                                  non è il proprietario o se sull'annuncio
-     *                                  c'è uno scambio in corso.
-     */
+    // Rimuove un annuncio esistente, consentita solo al proprietario.
     void rimuovi(String idAnnuncio, String idUtenteRichiedente) throws IllegalArgumentException;
 
-    /**
-     * Sospende o riattiva un annuncio: sospeso sparisce dal marketplace
-     * ma resta fra gli annunci del proprietario.
-     *
-     * @param idAnnuncio          L'id dell'annuncio.
-     * @param idUtenteRichiedente L'id dell'utente che richiede il cambio.
-     * @param sospeso             true per sospendere, false per rendere di nuovo disponibile.
-     * @return L'annuncio aggiornato.
-     * @throws IllegalArgumentException Se l'annuncio non esiste, se il richiedente
-     *                                  non è il proprietario o se sull'annuncio
-     *                                  c'è uno scambio in corso.
-     */
+    // Sospende o riattiva un annuncio: sospeso sparisce dal marketplace
+    // ma resta fra gli annunci del proprietario.
     AnnuncioDTO cambiaDisponibilita(String idAnnuncio, String idUtenteRichiedente, boolean sospeso)
             throws IllegalArgumentException;
 }

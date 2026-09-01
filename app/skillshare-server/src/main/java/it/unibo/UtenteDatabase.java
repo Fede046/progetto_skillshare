@@ -9,16 +9,15 @@ import java.util.concurrent.ConcurrentMap;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
+// Gestisce la collection MapDB "utenti": registrazione, login e profilo.
+// I metodi sono statici perche' l'utente serve un po' ovunque nel server
 public class UtenteDatabase {
 
     private static DB dbAttuale;
     private static ConcurrentMap<String, UtenteDTO> utentiCollection;
 
-    /**
-     * Risolve la collection sul database attualmente attivo.
-     * Se il DB cambia (es. passaggio da file a memoria nei test),
-     * la riapre sulla nuova istanza.
-     */
+    // Risolve la collection sul database attualmente attivo. Se il DB cambia (es. passaggio da file a
+    // memoria nei test), la riapre sulla nuova istanza.
     private static ConcurrentMap<String, UtenteDTO> collection() {
         DB dbCorrente = DatabaseCore.getDB();
         if (utentiCollection == null || dbAttuale != dbCorrente) {
@@ -46,9 +45,7 @@ public class UtenteDatabase {
         return utentiCollection;
     }
 
-    /**
-     * Registra un nuovo utente applicando l'hashing SHA-256 alla password.
-     */
+    // Registra un nuovo utente applicando l'hashing SHA-256 alla password.
     public static boolean registra(UtenteDTO utente) throws IllegalArgumentException {
         // 1. Controlli preliminari sui dati nulli
         if (utente == null || utente.getEmail() == null || utente.getPassword() == null) {
@@ -86,9 +83,7 @@ public class UtenteDatabase {
         return true;
     }
 
-    /**
-     * Metodo di supporto per generare l'hash SHA-256 di una stringa.
-     */
+    // Metodo di supporto per generare l'hash SHA-256 di una stringa.
     public static String hashPassword(String password) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -106,10 +101,8 @@ public class UtenteDatabase {
         }
     }
 
-    /**
-     * Verifica le credenziali dell'utente per il login.
-     * Cifra la password inserita con SHA-256 e la confronta con quella salvata.
-     */
+    // Verifica le credenziali dell'utente per il login. Cifra la password
+    // inserita con SHA-256 e la confronta con quella salvata.
     public static UtenteDTO verificaCredenziali(String email, String password) throws IllegalArgumentException {
         if (email == null || password == null) {
             throw new IllegalArgumentException("Dati non validi");
@@ -136,13 +129,7 @@ public class UtenteDatabase {
         // 5. Restituisce direttamente l'utente trovato!
         return utenteRegistrato;
     }
-    /**
-     * Recupera un utente dal database tramite email per la visualizzazione del profilo.
-     * 
-     * @param email L'indirizzo email dell'utente da recuperare
-     * @return L'oggetto UtenteDTO corrispondente
-     * @throws IllegalArgumentException Se l'email è nulla/vuota o se l'utente non esiste
-     */
+    // Recupera un utente dal database tramite email per la visualizzazione del profilo.
     public static UtenteDTO getProfilo(String email) throws IllegalArgumentException {
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
@@ -156,13 +143,8 @@ public class UtenteDatabase {
 
         return collection().get(emailTrimmed);
     }
-    /**
-     * Aggiorna bio, photoUrl e tagCompetenza di un utente preservandone credenziali e dati anagrafici.
-     * 
-     * @param utenteAggiornato UtenteDTO contenente le modifiche
-     * @return UtenteDTO aggiornato e salvato su MapDB
-     * @throws IllegalArgumentException se i dati sono null o l'utente non esiste
-     */
+    // Aggiorna bio, photoUrl e tagCompetenza di un utente
+    // preservandone credenziali e dati anagrafici.
     public static UtenteDTO aggiornaProfilo(UtenteDTO utenteAggiornato) throws IllegalArgumentException {
         if (utenteAggiornato == null || utenteAggiornato.getEmail() == null || utenteAggiornato.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Dati non validi");
